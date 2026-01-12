@@ -1,18 +1,16 @@
 import React, { useState, useEffect, useRef } from "react";
 import { HashRouter, Routes, Route, Navigate } from "react-router-dom";
-import { Ritual, UserProfile, RitualLog, SocialPost } from "./types";
+import { Ritual, RitualLog, SocialPost } from "./types";
 import { Layout } from "./src/components/Layout.tsx";
-import  LandingPage  from "./src/pages/LandingPages.tsx";
-import  Dashboard  from "./src/pages/Dashboard";
-import  HabitsPage  from "./src/pages/HabitsPage.tsx";
-import  SocialPage  from "./src/pages/SocialPage.tsx";
-import  ShopPage  from "./src/pages/ShopPage.tsx";
-import { useAuth } from "./src/hooks/useAuth.ts";   
-import setUser from "./src/pages/LandingPages.tsx";
-
+import LandingPage from "./src/pages/LandingPage.tsx";
+import Dashboard from "./src/pages/Dashboard";
+import HabitsPage from "./src/pages/HabitsPage.tsx";
+import SocialPage from "./src/pages/SocialPage.tsx";
+import ShopPage from "./src/pages/ShopPage.tsx";
+import { useAuth } from "./src/hooks/useAuth.ts";
+import "./styles/main.css";
 
 // --- Mock Data Constants ---
-
 
 const MOCK_POSTS: SocialPost[] = [
   {
@@ -40,27 +38,34 @@ const MOCK_POSTS: SocialPost[] = [
   },
 ];
 
-
-
 // --- Main App Logic ---
 
 function App() {
-    const { user, loading } = useAuth();
+  const { user, loading } = useAuth();
   const [rituals, setRituals] = useState<Ritual[]>([]);
   const [logs, setLogs] = useState<RitualLog[]>([]);
 
   if (loading) {
-    return <div className="bg-black h-screen flex items-center justify-center text-ritual-accent" >Loading...</div>;
     return (
-        <HashRouter>
+      <div className="bg-black h-screen flex items-center justify-center text-ritual-accent">
+        Loading...
+      </div>
+    );
+    return (
+      <HashRouter>
         <Routes>
-            <Route path="/" element={user ? <Navigate to="/app/dashboard" /> : <LandingPage />}/>
-            <Route path="/app/*" element={user ? <AppRoutes user={user}/> : <Navigate to="/" />} />
-            
+          <Route
+            path="/"
+            element={user ? <Navigate to="/app/dashboard" /> : <LandingPage />}
+          />
+          <Route
+            path="/app/*"
+            element={user ? <AppRoutes user={user} /> : <Navigate to="/" />}
+          />
         </Routes>
-        </HashRouter>
-    )
-}
+      </HashRouter>
+    );
+  }
 
   // Initialize from LocalStorage
   useEffect(() => {
