@@ -1,0 +1,5 @@
+{
+  "name": "RitualKiller",
+  "description": "A gamified habit tracking platform with a dark, necromantic aesthetic. Users perform 'rituals' (habits) to earn 'Essence', track progress via contribution heatmaps, and unlock rewards.",
+  "requestFramePermissions": []
+}
