@@ -1,0 +1,15 @@
+@font-face {
+  font-family: 'RitualTitle';
+  src: url('../assets/fonts/Cinzel/Cinzel-VariableFont_wght.ttf') format('truetype');
+  font-weight: bold;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'RitualBody';
+  src: url('../assets/fonts/Montserrat/Montserrat-VariableFont_wght.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
