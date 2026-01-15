@@ -49,7 +49,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onAuth }) => {
                 }
              `}</style>
 
-      <div className="ring">
+      <div className="login-ring">
         <i style={{ "--clr": "#00ff0a" } as React.CSSProperties}></i>
         <i style={{ "--clr": "#ff0057" } as React.CSSProperties}></i>
         <i style={{ "--clr": "#fffd44" } as React.CSSProperties}></i>
