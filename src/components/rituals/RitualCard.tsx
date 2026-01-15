@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { Ritual } from "../../types";
+import Ritual from "../../types/index.ts";
 import { Check, Trash2, Zap } from "lucide-react";
 import gsap from "gsap";
 

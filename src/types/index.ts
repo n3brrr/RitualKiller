@@ -1,7 +1,7 @@
 export type Difficulty = "Novato" | "Intermedio" | "Maestro";
 export type Rarity = "common" | "rare" | "legendary";
 
-export interface UserProfile {
+export interface User {
     id: string;
     username: string;
     essence: number;
@@ -38,4 +38,12 @@ export interface ShopItem {
     cost: number;
     icon: string; 
     rarity: Rarity;
+}
+export interface SocialPost {
+    id: string;
+    author: string;
+    content: string;
+    likes: number;
+    timestamp: string;
+    isSystem?: boolean;
 }
