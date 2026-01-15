@@ -7,6 +7,7 @@ import Dashboard from "./pages/Dashboard.tsx"; // Ensure extension match
 import HabitsPage from "./pages/HabitsPage.tsx";
 import SocialPage from "./pages/SocialPage.tsx";
 import ShopPage from "./pages/ShopPage.tsx";
+import LoginPage from "./pages/LoginPage.tsx";
 import { useAuth } from "./hooks/useAuth.ts";
 import "./styles/main.css";
 
@@ -73,7 +74,7 @@ function App() {
 
   if (loading) {
     return (
-      <div className="bg- ritual-black h-screen flex items-center justify-center text-ritual-accent font-display text-xl animate-pulse">
+      <div className="bg-ritual-black h-screen flex items-center justify-center text-ritual-accent font-display text-xl animate-pulse">
         Loading Rituals...
       </div>
     );
@@ -102,6 +103,8 @@ function App() {
             )
           }
         />
+
+        <Route path="/login" element={<LoginPage onAuth={setUser} />} />
 
         <Route
           path="/app/dashboard"

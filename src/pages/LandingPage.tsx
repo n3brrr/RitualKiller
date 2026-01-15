@@ -30,16 +30,7 @@ const LandingPage = ({ onAuth }: { onAuth: (user: User) => void }) => {
   }, []);
 
   const handleLogin = () => {
-    // Aquí es donde luego conectarás Supabase.
-    // Por ahora mantienes tu lógica de demo.
-    const userToLoad: User = {
-      id: "demo",
-      username: "Novice",
-      essence: 0,
-      inventory: [],
-    };
-    onAuth(userToLoad);
-    navigate("/app/dashboard");
+    navigate("/login");
   };
 
   return (
@@ -56,9 +47,9 @@ const LandingPage = ({ onAuth }: { onAuth: (user: User) => void }) => {
         </div>
         <button
           onClick={handleLogin}
-          className="text-xs font-ritual tracking-widest hover:text-ritual-accent transition-colors"
+          className="text-xs font-ritual tracking-widest uppercase border border-ritual-accent px-2 py-2 shadow-xl hover:text-black hover:bg-ritual-accent "
         >
-          INITIATE_SESSION
+          Iniciar Sesión
         </button>
       </nav>
 
