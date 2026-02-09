@@ -1,19 +1,44 @@
 import React, { useState, lazy, Suspense } from "react";
-import { Frequency, Ritual, RitualLog } from "../types";
+import { Frequency, Ritual, RitualLog } from "@/types";
 import { Plus, PenTool, Sparkles, BookOpen } from "lucide-react";
-import { generateRitualSuggestions } from "../utils/aiRitualGenerator";
-import RitualItem from "../components/rituals/RitualCard";
-import { useAppContext } from "../contexts/AppContext";
-import Loading from "../components/animations/Loading";
+import { generateRitualSuggestions } from "@/utils/aiRitualGenerator";
+import RitualItem from "@/components/rituals/RitualCard";
+import Loading from "@/components/animations/Loading";
+import { ritualService } from "@/services/api/ritualService";
+import { useAuthStore } from "@/features/auth/stores/useAuthStore";
+import { useRitualStore } from "@/features/rituals/stores/useRitualStore";
+import { useLoaderData } from "react-router-dom";
+
+// Loader para React Router v7
+export const habitsLoader = async () => {
+  const user = useAuthStore.getState().user;
+  if (!user) return [];
+  return ritualService.getRituals(user.id);
+};
 
 // Carga diferenciada (lazy loading) de la biblioteca de rituales para optimizar rendimiento
-const RitualLibrary = lazy(() => import("../components/rituals/RitualLibrary"));
+const RitualLibrary = lazy(() => import("@/components/rituals/RitualLibrary"));
 
 const HabitsPage = () => {
-  // Obtiene el estado global necesario
-  const { user, rituals, setRituals, logs, setLogs, setUser } = useAppContext();
+  // Datos cargados por el loader
+  const loadedRituals = useLoaderData() as Ritual[];
+
+  // Obtiene el estado global de los stores
+  const user = useAuthStore((state) => state.user);
+  const setUser = useAuthStore((state) => state.setUser);
+  const { rituals, setRituals, logs, setLogs } = useRitualStore();
 
   if (!user) return null;
+
+  // Si hay datos cargados y el store está vacío, sincronizar
+  React.useEffect(() => {
+    if (loadedRituals?.length > 0 && rituals.length === 0) {
+      setRituals(loadedRituals);
+    }
+  }, [loadedRituals, rituals.length, setRituals]);
+
+  // Create a local non-nullable reference for TS narrowing
+  const currentUser = user;
 
   // Controladores y estados locales del componente
   const [isGenerating, setIsGenerating] = useState(false);
@@ -32,7 +57,7 @@ const HabitsPage = () => {
   });
 
   // Cadena con la fecha de hoy en formato AAAA-MM-DD
-  const todayStr = new Date().toISOString().split("T")[0];
+  const todayStr = new Date().toISOString().split("T")[0] || "";
 
   /**
    * Marca o desmarca la finalización de un ritual para el día actual.
@@ -64,10 +89,10 @@ const HabitsPage = () => {
       const bonusToRemove = wasBonusApplied ? 10 : 0;
 
       setUser({
-        ...user,
+        ...currentUser,
         essence: Math.max(
           0,
-          user.essence - ritual.essenceReward - bonusToRemove,
+          currentUser.essence - ritual.essenceReward - bonusToRemove,
         ),
       });
       setRituals(
@@ -90,7 +115,7 @@ const HabitsPage = () => {
       const newLog: RitualLog = {
         id: Date.now().toString(),
         ritualId: ritual.id,
-        user_id: user.id,
+        user_id: currentUser.id,
         date: todayStr,
         timestamp: Date.now(),
         essence_gained: ritual.essenceReward + streakBonus,
@@ -98,8 +123,8 @@ const HabitsPage = () => {
       setLogs([...logs, newLog]);
 
       setUser({
-        ...user,
-        essence: user.essence + ritual.essenceReward + streakBonus,
+        ...currentUser,
+        essence: currentUser.essence + ritual.essenceReward + streakBonus,
       });
       setRituals(
         rituals.map((r) =>
@@ -125,7 +150,7 @@ const HabitsPage = () => {
       if (suggestions.length > 0) {
         const newRituals: Ritual[] = suggestions.map((s: any, idx: number) => ({
           id: Date.now().toString() + idx,
-          user_id: user.id,
+          user_id: currentUser.id,
           title: s.title,
           description: s.description,
           difficulty: s.difficulty,
@@ -145,7 +170,7 @@ const HabitsPage = () => {
       if (!manualForm.title) return;
       const newRitual: Ritual = {
         id: Date.now().toString(),
-        user_id: user.id,
+        user_id: currentUser.id,
         title: manualForm.title,
         description: manualForm.description,
         difficulty: manualForm.difficulty,

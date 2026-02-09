@@ -3,10 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { Skull, Play } from "lucide-react";
 import gsap from "gsap";
 import { motion } from "framer-motion";
-import { User } from "@/types";
-import { FeatureCard } from "../components/ui/FeatureCard.tsx";
+import { FeatureCard } from "@/components/ui/FeatureCard";
 
-const LandingPage = ({ onAuth }: { onAuth: (user: User) => void }) => {
+const LandingPage: React.FC = () => {
   const navigate = useNavigate();
 
   // Animaciones de entrada para los elementos principales de la página

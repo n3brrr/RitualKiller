@@ -18,7 +18,7 @@ describe('Validation Utils', () => {
     });
 
     it('should reject short password', () => {
-      const result = validatePassword('short');
+      const result = validatePassword('tiny');
       expect(result.valid).toBe(false);
       expect(result.message).toBeDefined();
     });

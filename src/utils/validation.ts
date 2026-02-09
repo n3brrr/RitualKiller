@@ -4,8 +4,8 @@ export const validateEmail = (email: string): boolean => {
 };
 
 export const validatePassword = (password: string): { valid: boolean; message?: string } => {
-  if (password.length < 6) {
-    return { valid: false, message: "La contraseña debe tener al menos 6 caracteres" };
+  if (password.length < 5) {
+    return { valid: false, message: "La contraseña debe tener al menos 5 caracteres" };
   }
   return { valid: true };
 };

@@ -1,30 +1,54 @@
 import React, { lazy, Suspense } from "react";
-import { Heatmap } from "../components/Heatmap";
+import { Heatmap } from "@/components/Heatmap";
 import { Zap, Flame, Clock, Check, AlertCircle, Trophy } from "lucide-react";
-import { useAppContext } from "../contexts/AppContext";
-import Loading from "../components/animations/Loading";
+import Loading from "@/components/animations/Loading";
+import { ritualService } from "@/services/api/ritualService";
+import { useLoaderData } from "react-router-dom";
+import { Ritual, RitualLog } from "@/types";
 
 // Carga diferida (lazy loading) de componentes grandes para mejorar el rendimiento de la página
 const AchievementsList = lazy(
-  () => import("../components/achievements/AchievementsList"),
+  () => import("@/components/achievements/AchievementsList"),
 );
 const AdvancedAnalytics = lazy(
-  () => import("../components/analytics/AdvancedAnalytics"),
+  () => import("@/components/analytics/AdvancedAnalytics"),
 );
 const RitualCalendar = lazy(
-  () => import("../components/calendar/RitualCalendar"),
+  () => import("@/components/calendar/RitualCalendar"),
 );
 const ProductivityMetrics = lazy(
-  () => import("../components/productivity/ProductivityMetrics"),
+  () => import("@/components/productivity/ProductivityMetrics"),
 );
 
+import { useAuthStore } from "@/features/auth/stores/useAuthStore";
+
+// Loader para Dashboard
+export const dashboardLoader = async () => {
+  const user = useAuthStore.getState().user;
+  if (!user) return { rituals: [], logs: [] };
+
+  const [rituals, logs] = await Promise.all([
+    ritualService.getRituals(user.id),
+    ritualService.getLogs(user.id),
+  ]);
+  return { rituals, logs };
+};
+
 const Dashboard = () => {
-  const { user, rituals, logs } = useAppContext();
+  const { rituals: loadedRituals, logs: loadedLogs } = useLoaderData() as {
+    rituals: Ritual[];
+    logs: RitualLog[];
+  };
+  const user = useAuthStore((state) => state.user);
+
+  // Use loaded data if available, fallback to empty (Zustand will sync if needed)
+  const rituals = loadedRituals || [];
+  const logs = loadedLogs || [];
 
   if (!user) return null; // Si no hay usuario autenticado, no se muestra el dashboard
 
   // Calcula la fecha actual en formato YYYY-MM-DD
-  const todayStr = new Date().toISOString().split("T")[0];
+  const todayStr = new Date().toISOString().split("T")[0] || "";
   // Filtra los logs para los rituales completados hoy
   const todaysLogs = logs.filter((l) => l.date === todayStr);
   // Guarda los IDs de rituales ya completados hoy en un Set para rápida comprobación
@@ -184,33 +208,21 @@ const Dashboard = () => {
 
       {/* Sección: Métricas de productividad */}
       <div className="mt-8">
-        <Suspense
-          fallback={
-            <Loading />
-          }
-        >
+        <Suspense fallback={<Loading />}>
           <ProductivityMetrics />
         </Suspense>
       </div>
 
       {/* Sección: Analíticas avanzadas */}
       <div className="mt-8">
-        <Suspense
-          fallback={
-           <Loading />   
-          }
-        >
+        <Suspense fallback={<Loading />}>
           <AdvancedAnalytics />
         </Suspense>
       </div>
 
       {/* Sección: Logros */}
       <div className="mt-8">
-        <Suspense
-          fallback={
-            <Loading />
-          }
-        >
+        <Suspense fallback={<Loading />}>
           <AchievementsList />
         </Suspense>
       </div>

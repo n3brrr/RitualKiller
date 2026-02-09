@@ -1,139 +1,102 @@
-import React, { lazy, Suspense } from "react";
-import { HashRouter, Routes, Route, Navigate } from "react-router-dom";
-import { User } from "./types/index.ts";
-import { Layout } from "./components/Layout.tsx";
-import { AppProvider, useAppContext } from "./contexts/AppContext.tsx";
-import { ErrorBoundary } from "./components/ui/ErrorBoundary.tsx";
+import React, { lazy } from "react";
+import { createHashRouter, RouterProvider, Navigate } from "react-router-dom";
+import { AppLayout } from "./components/layout/AppLayout";
+import { ErrorBoundary } from "./components/ui/ErrorBoundary";
 import "./styles/main.css";
+import { useAuthStore } from "./features/auth/stores/useAuthStore";
 
-// Lazy loading de páginas para mejorar el rendimiento
-const LandingPage = lazy(() => import("./pages/LandingPage.tsx"));
-const Dashboard = lazy(() => import("./pages/Dashboard.tsx"));
-const HabitsPage = lazy(() => import("./pages/HabitsPage.tsx"));
-const SocialPage = lazy(() => import("./pages/SocialPage.tsx"));
-const ShopPage = lazy(() => import("./pages/ShopPage.tsx"));
-const LoginPage = lazy(() => import("./pages/LoginPage.tsx"));
+// Lazy loading primary routes
+const LandingPage = lazy(() => import("./features/auth/pages/LandingPage"));
+const LoginPage = lazy(() => import("./features/auth/pages/LoginPage"));
 
-// Componente mostrado mientras se cargan otros componentes (fallback de carga)
-const LoadingFallback = () => (
-  <div className="bg-ritual-black h-screen flex items-center justify-center text-ritual-accent font-display text-xl animate-pulse">
-    Cargando...
-  </div>
-);
-
-// Protege rutas que requieren autenticación
-const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { user, logout } = useAppContext();
-
-  if (!user) {
-    // Redirige si no hay usuario autenticado
-    return <Navigate to="/" replace />;
-  }
-
-  return (
-    <Layout user={user} onLogout={logout}>
-      {children}
-    </Layout>
-  );
+const authLoader = async () => {
+  return useAuthStore.getState().user;
 };
 
-// Componente principal de la aplicación
-function AppContent() {
-  const { user, rituals, logs, setUser, loading } = useAppContext();
-
-  if (loading) {
-    // Muestra un mensaje de carga inicial mientras se resuelve el contexto
-    return (
-      <div className="bg-ritual-black h-screen flex items-center justify-center text-ritual-accent font-display text-xl animate-pulse">
-        Loading Rituals...
-      </div>
-    );
+const protectedLoader = async () => {
+  const user = useAuthStore.getState().user;
+  if (!user) {
+    throw new Error("Unauthorized");
   }
+  return user;
+};
 
-  return (
-    <HashRouter>
-      <Suspense fallback={<LoadingFallback />}>
-        <Routes>
-          <Route
-            path="/"
-            element={
-              user ? (
-                <Navigate to="/app/dashboard" replace />
-              ) : (
-                <Suspense fallback={<LoadingFallback />}>
-                  <LandingPage onAuth={setUser} />
-                </Suspense>
-              )
-            }
-          />
+const router = createHashRouter([
+  {
+    path: "/",
+    errorElement: (
+      <ErrorBoundary>
+        <div>Error loading app</div>
+      </ErrorBoundary>
+    ),
+    children: [
+      {
+        index: true,
+        loader: authLoader,
+        element: <LandingPage />,
+      },
+      {
+        path: "login",
+        element: <LoginPage />,
+      },
+      {
+        path: "app",
+        element: <AppLayout />,
+        loader: protectedLoader,
+        children: [
+          {
+            path: "dashboard",
+            async lazy() {
+              const { default: Dashboard, dashboardLoader } =
+                await import("./features/dashboard/pages/DashboardPage");
+              return { Component: Dashboard, loader: dashboardLoader };
+            },
+          },
+          {
+            path: "habits",
+            async lazy() {
+              const { default: HabitsPage, habitsLoader } =
+                await import("./features/rituals/pages/HabitsPage");
+              return { Component: HabitsPage, loader: habitsLoader };
+            },
+          },
+          {
+            path: "social",
+            async lazy() {
+              const { default: SocialPage } =
+                await import("./features/social/pages/SocialPage");
+              return { Component: SocialPage };
+            },
+          },
+          {
+            path: "shop",
+            async lazy() {
+              const { default: ShopPage } =
+                await import("./features/shop/pages/ShopPage");
+              return { Component: ShopPage };
+            },
+          },
+          {
+            path: "",
+            element: <Navigate to="dashboard" replace />,
+          },
+        ],
+      },
+      {
+        path: "*",
+        element: <Navigate to="/" replace />,
+      },
+    ],
+  },
+]);
 
-          <Route 
-            path="/login" 
-            element={
-              <Suspense fallback={<LoadingFallback />}>
-                <LoginPage onAuth={setUser} />
-              </Suspense>
-            } 
-          />
+import { AppProvider } from "./contexts/AppContext";
 
-          <Route
-            path="/app/dashboard"
-            element={
-              <ProtectedRoute>
-                <Suspense fallback={<LoadingFallback />}>
-                  <Dashboard />
-                </Suspense>
-              </ProtectedRoute>
-            }
-          />
-
-          <Route
-            path="/app/habits"
-            element={
-              <ProtectedRoute>
-                <Suspense fallback={<LoadingFallback />}>
-                  <HabitsPage />
-                </Suspense>
-              </ProtectedRoute>
-            }
-          />
-
-          <Route
-            path="/app/social"
-            element={
-              <ProtectedRoute>
-                <Suspense fallback={<LoadingFallback />}>
-                  <SocialPage />
-                </Suspense>
-              </ProtectedRoute>
-            }
-          />
-
-          <Route
-            path="/app/shop"
-            element={
-              <ProtectedRoute>
-                <Suspense fallback={<LoadingFallback />}>
-                  <ShopPage />
-                </Suspense>
-              </ProtectedRoute>
-            }
-          />
-
-          {/* Redirección para rutas no existentes */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </Suspense>
-    </HashRouter>
-  );
-}
-
-// Render principal de la aplicación, manejando errores y contexto global
 function App() {
   return (
     <ErrorBoundary>
       <AppProvider>
-        <AppContent />
+        <RouterProvider router={router} />
       </AppProvider>
     </ErrorBoundary>
   );

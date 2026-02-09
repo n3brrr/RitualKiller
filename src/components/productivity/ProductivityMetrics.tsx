@@ -1,50 +1,49 @@
-import React, { useMemo } from 'react';
-import { Clock, Target, TrendingUp, Zap, BarChart3 } from 'lucide-react';
-import { useAppContext } from '../../contexts/AppContext';
-import { ProductivityMetrics as ProductivityMetricsType } from '../../types';
+import React, { useMemo } from "react";
+import { Clock, Target, TrendingUp, Zap, BarChart3 } from "lucide-react";
+import { ProductivityMetrics as ProductivityMetricsType } from "../../types";
+import { useAuthStore } from "../../features/auth/stores/useAuthStore";
+import { useRitualStore } from "../../features/rituals/stores/useRitualStore";
 
 const ProductivityMetrics: React.FC = () => {
-  const { rituals, logs, user } = useAppContext();
+  const user = useAuthStore((state) => state.user);
+  const { rituals, logs } = useRitualStore();
 
   const metrics: ProductivityMetricsType = useMemo(() => {
     const today = new Date();
-    const todayStr = today.toISOString().split('T')[0];
-    
+    const todayStr = today.toISOString().split("T")[0];
+
     // Calculate daily efficiency
-    const todayLogs = logs.filter(l => l.date === todayStr);
-    const dailyEfficiency = rituals.length > 0 
-      ? (todayLogs.length / rituals.length) * 100 
-      : 0;
+    const todayLogs = logs.filter((l) => l.date === todayStr);
+    const dailyEfficiency =
+      rituals.length > 0 ? (todayLogs.length / rituals.length) * 100 : 0;
 
     // Calculate weekly efficiency
     const weekAgo = new Date(today);
     weekAgo.setDate(weekAgo.getDate() - 7);
-    const weekLogs = logs.filter(l => {
+    const weekLogs = logs.filter((l) => {
       const logDate = new Date(l.date);
       return logDate >= weekAgo;
     });
-    const weeklyEfficiency = rituals.length > 0
-      ? (weekLogs.length / (rituals.length * 7)) * 100
-      : 0;
+    const weeklyEfficiency =
+      rituals.length > 0 ? (weekLogs.length / (rituals.length * 7)) * 100 : 0;
 
     // Average completion rate
     const totalPossible = rituals.length * 30; // Last 30 days
-    const averageCompletionRate = totalPossible > 0
-      ? (logs.length / totalPossible) * 100
-      : 0;
+    const averageCompletionRate =
+      totalPossible > 0 ? (logs.length / totalPossible) * 100 : 0;
 
     // Best day (most completions)
     const dayCounts: { [key: string]: number } = {};
-    logs.forEach(log => {
+    logs.forEach((log) => {
       dayCounts[log.date] = (dayCounts[log.date] || 0) + 1;
     });
-    const bestDayEntry = Object.entries(dayCounts).reduce((a, b) => 
-      dayCounts[a[0]] > dayCounts[b[0]] ? a : b,
-      ['', 0]
+    const bestDayEntry = Object.entries(dayCounts).reduce(
+      (a, b) => (dayCounts[a[0]] > dayCounts[b[0]] ? a : b),
+      ["", 0],
     );
-    const bestDay = bestDayEntry[0] 
-      ? new Date(bestDayEntry[0]).toLocaleDateString('es-ES')
-      : 'N/A';
+    const bestDay = bestDayEntry[0]
+      ? new Date(bestDayEntry[0]).toLocaleDateString("es-ES")
+      : "N/A";
 
     // Total time spent (estimated 15 min per ritual)
     const totalTimeSpent = logs.length * 15; // minutes
@@ -53,7 +52,7 @@ const ProductivityMetrics: React.FC = () => {
     const ritualsCompleted = logs.length;
 
     // Streak days
-    const maxStreak = Math.max(...rituals.map(r => r.streak || 0), 0);
+    const maxStreak = Math.max(...rituals.map((r) => r.streak || 0), 0);
 
     return {
       dailyEfficiency,
@@ -79,7 +78,9 @@ const ProductivityMetrics: React.FC = () => {
     <div className="space-y-6">
       <div className="flex items-center gap-2 mb-6">
         <BarChart3 className="text-ritual-accent" size={24} />
-        <h2 className="text-2xl font-display font-bold">Métricas de Productividad</h2>
+        <h2 className="text-2xl font-display font-bold">
+          Métricas de Productividad
+        </h2>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -88,7 +89,9 @@ const ProductivityMetrics: React.FC = () => {
             <div className="p-2 bg-ritual-accent/10 rounded-lg">
               <Clock className="text-ritual-accent" size={20} />
             </div>
-            <div className="text-zinc-500 text-xs uppercase">Eficiencia Diaria</div>
+            <div className="text-zinc-500 text-xs uppercase">
+              Eficiencia Diaria
+            </div>
           </div>
           <div className="text-3xl font-mono font-bold text-white mb-2">
             {metrics.dailyEfficiency.toFixed(1)}%
@@ -106,7 +109,9 @@ const ProductivityMetrics: React.FC = () => {
             <div className="p-2 bg-yellow-500/10 rounded-lg">
               <TrendingUp className="text-yellow-500" size={20} />
             </div>
-            <div className="text-zinc-500 text-xs uppercase">Eficiencia Semanal</div>
+            <div className="text-zinc-500 text-xs uppercase">
+              Eficiencia Semanal
+            </div>
           </div>
           <div className="text-3xl font-mono font-bold text-white mb-2">
             {metrics.weeklyEfficiency.toFixed(1)}%
@@ -139,18 +144,26 @@ const ProductivityMetrics: React.FC = () => {
             </div>
             <div className="text-zinc-500 text-xs uppercase">Mejor Día</div>
           </div>
-          <div className="text-lg font-bold text-white">
-            {metrics.bestDay}
-          </div>
+          <div className="text-lg font-bold text-white">{metrics.bestDay}</div>
           <div className="text-xs text-zinc-500 mt-1">
-            {logs.filter(l => l.date === Object.keys(
-              logs.reduce((acc: { [key: string]: number }, log) => {
-                acc[log.date] = (acc[log.date] || 0) + 1;
-                return acc;
-              }, {})
-            ).reduce((a, b) => 
-              logs.filter(l => l.date === a).length > logs.filter(l => l.date === b).length ? a : b
-            )).length} completados
+            {
+              logs.filter(
+                (l) =>
+                  l.date ===
+                  Object.keys(
+                    logs.reduce((acc: { [key: string]: number }, log) => {
+                      acc[log.date] = (acc[log.date] || 0) + 1;
+                      return acc;
+                    }, {}),
+                  ).reduce((a, b) =>
+                    logs.filter((l) => l.date === a).length >
+                    logs.filter((l) => l.date === b).length
+                      ? a
+                      : b,
+                  ),
+              ).length
+            }{" "}
+            completados
           </div>
         </div>
       </div>
@@ -158,7 +171,9 @@ const ProductivityMetrics: React.FC = () => {
       {/* Detailed Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-6">
-          <div className="text-zinc-500 text-sm mb-2">Tiempo Total Invertido</div>
+          <div className="text-zinc-500 text-sm mb-2">
+            Tiempo Total Invertido
+          </div>
           <div className="text-2xl font-mono font-bold text-ritual-accent">
             {formatTime(metrics.totalTimeSpent)}
           </div>
@@ -172,9 +187,7 @@ const ProductivityMetrics: React.FC = () => {
           <div className="text-2xl font-mono font-bold text-white">
             {metrics.ritualsCompleted}
           </div>
-          <div className="text-xs text-zinc-500 mt-1">
-            Total histórico
-          </div>
+          <div className="text-xs text-zinc-500 mt-1">Total histórico</div>
         </div>
 
         <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-6">
@@ -182,9 +195,7 @@ const ProductivityMetrics: React.FC = () => {
           <div className="text-2xl font-mono font-bold text-yellow-500">
             {metrics.streakDays}
           </div>
-          <div className="text-xs text-zinc-500 mt-1">
-            Mejor racha actual
-          </div>
+          <div className="text-xs text-zinc-500 mt-1">Mejor racha actual</div>
         </div>
       </div>
 
@@ -198,14 +209,16 @@ const ProductivityMetrics: React.FC = () => {
           {metrics.dailyEfficiency >= 80 && (
             <div className="p-3 bg-ritual-accent/10 border border-ritual-accent/30 rounded-lg">
               <p className="text-sm text-ritual-accent">
-                ✨ Excelente trabajo hoy. Mantén este ritmo para alcanzar tus objetivos.
+                ✨ Excelente trabajo hoy. Mantén este ritmo para alcanzar tus
+                objetivos.
               </p>
             </div>
           )}
           {metrics.weeklyEfficiency < 50 && (
             <div className="p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
               <p className="text-sm text-yellow-500">
-                ⚠️ Tu eficiencia semanal está por debajo del 50%. Considera ajustar tus rituales.
+                ⚠️ Tu eficiencia semanal está por debajo del 50%. Considera
+                ajustar tus rituales.
               </p>
             </div>
           )}
@@ -219,7 +232,8 @@ const ProductivityMetrics: React.FC = () => {
           {rituals.length === 0 && (
             <div className="p-3 bg-zinc-800/50 border border-zinc-700 rounded-lg">
               <p className="text-sm text-zinc-400">
-                💡 Crea tu primer ritual para comenzar a rastrear tu productividad.
+                💡 Crea tu primer ritual para comenzar a rastrear tu
+                productividad.
               </p>
             </div>
           )}

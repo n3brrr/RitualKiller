@@ -1,9 +1,7 @@
 import React, { lazy, Suspense } from "react";
-import Loading from "../components/animations/Loading";
+import Loading from "@/components/animations/Loading";
 
-const EnhancedSocial = lazy(
-  () => import("../components/social/EnhancedSocial"),
-);
+const EnhancedSocial = lazy(() => import("@/components/social/EnhancedSocial"));
 
 const SocialPage = () => {
   return (

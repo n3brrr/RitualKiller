@@ -1,16 +1,13 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { User } from "../types";
-import { signInWithGoogle, signInWithGitHub, signInWithEmail, signUpWithEmail } from "../services/authService";
-import { Github, Mail } from "lucide-react";
-import "../styles/login.css";
+import { User } from "@/types";
+import { signInWithEmail, signUpWithEmail } from "@/services/authService";
+import { useAuthStore } from "@/features/auth/stores/useAuthStore";
+import "@/styles/login.css";
 
-interface LoginPageProps {
-  onAuth: (user: User) => void;
-}
-
-const LoginPage: React.FC<LoginPageProps> = ({ onAuth }) => {
+const LoginPage: React.FC = () => {
   const navigate = useNavigate();
+  const setUser = useAuthStore((state) => state.setUser);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isSignUp, setIsSignUp] = useState(false);
@@ -37,46 +34,30 @@ const LoginPage: React.FC<LoginPageProps> = ({ onAuth }) => {
       // Crea el objeto usuario a partir de la respuesta de autenticación
       if (result.data?.user) {
         // Determina si es admin por metadata o por credenciales de prueba
-        const isAdmin = result.data.user.user_metadata?.isAdmin || 
-                       (email.toLowerCase() === 'admin' && password === 'admin');
-        
+        const isAdminUser =
+          result.data.user.user_metadata?.isAdmin ||
+          (email.toLowerCase() === "admin" && password === "admin");
+
         const user: User = {
           id: result.data.user.id,
-          username: result.data.user.user_metadata?.username || 
-                   result.data.user.email?.split("@")[0] || 
-                   "Usuario",
-          essence: isAdmin ? 10000 : 0, // Asigna más esencia a admin
-          rank: isAdmin ? "Semidiós" : "Iniciado",
-          inventory: isAdmin ? ['admin-badge'] : [],
+          username:
+            result.data.user.user_metadata?.username ||
+            result.data.user.email?.split("@")[0] ||
+            "Usuario",
+          essence: isAdminUser ? 10000 : 0, // Asigna más esencia a admin
+          rank: isAdminUser ? "Semidiós" : "Iniciado",
+          inventory: isAdminUser ? ["admin-badge"] : [],
           created_at: new Date().toISOString(),
-          isAdmin: isAdmin,
+          isAdmin: isAdminUser,
         };
 
-        onAuth(user);
+        setUser(user);
         navigate("/app/dashboard");
       }
     } catch (err: any) {
       setError(err.message || "Error de autenticación");
     } finally {
       setLoading(false);
-    }
-  };
-
-  // Login con Google
-  const handleGoogleAuth = async () => {
-    setError(null);
-    const result = await signInWithGoogle();
-    if (result.error) {
-      setError(result.error.message);
-    }
-  };
-
-  // Login con GitHub
-  const handleGitHubAuth = async () => {
-    setError(null);
-    const result = await signInWithGitHub();
-    if (result.error) {
-      setError(result.error.message);
     }
   };
 
@@ -106,7 +87,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onAuth }) => {
 
         <div className="login">
           <h2>{isSignUp ? "Registro" : "Iniciar Sesión"}</h2>
-          
+
           {/* Muestra error si existe */}
           {error && (
             <div className="mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-500 text-sm">
@@ -115,13 +96,19 @@ const LoginPage: React.FC<LoginPageProps> = ({ onAuth }) => {
           )}
 
           {/* Hint de credenciales admin solo para desarrollo */}
-          {process.env.NODE_ENV === 'development' && (
+          {import.meta.env.DEV && (
             <div className="mb-4 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg text-yellow-500 text-xs">
-              <strong>Modo Desarrollo:</strong> Usa <code className="bg-black/30 px-1 rounded">admin</code> / <code className="bg-black/30 px-1 rounded">admin</code> para iniciar sesión como administrador
+              <strong>Modo Desarrollo:</strong> Usa{" "}
+              <code className="bg-black/30 px-1 rounded">admin</code> /{" "}
+              <code className="bg-black/30 px-1 rounded">admin</code> para
+              pruebas rápidas
             </div>
           )}
 
-          <form className="w-full flex flex-col gap-5" onSubmit={handleEmailAuth}>
+          <form
+            className="w-full flex flex-col gap-5"
+            onSubmit={handleEmailAuth}
+          >
             <div className="inputBx">
               <input
                 type="text"
@@ -138,42 +125,39 @@ const LoginPage: React.FC<LoginPageProps> = ({ onAuth }) => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                minLength={6}
+                minLength={5}
               />
             </div>
             <div className="inputBx">
-              <input 
-                type="submit" 
-                value={loading ? "Cargando..." : (isSignUp ? "Registrarse" : "Iniciar Sesión")}
+              <input
+                type="submit"
+                value={
+                  loading
+                    ? "Cargando..."
+                    : isSignUp
+                      ? "Registrarse"
+                      : "Iniciar Sesión"
+                }
                 disabled={loading}
               />
             </div>
           </form>
-
-          {/* Botones de login social */}
-          <div className="w-full flex flex-col gap-3 mt-4">
-            <button
-              onClick={handleGoogleAuth}
-              className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-white text-black rounded-lg font-bold hover:bg-gray-200 transition-colors"
+          <div className="flex flex-row gap-2">
+            <a
+              href="#"
+              onClick={(e) => {
+                e.preventDefault(); /* TODO: Reset password */
+              }}
             >
-              <Mail size={18} />
-              Continuar con Google
-            </button>
-            <button
-              onClick={handleGitHubAuth}
-              className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-zinc-800 text-white rounded-lg font-bold hover:bg-zinc-700 transition-colors border border-zinc-700"
-            >
-              <Github size={18} />
-              Continuar con GitHub
-            </button>
-          </div>
-
-          <div className="links">
-            {/* Futuro: implementar recuperación de contraseña */}
-            <a href="#" onClick={(e) => { e.preventDefault(); /* TODO: Reset password */ }}>
               Olvidé mi contraseña
             </a>
-            <a href="#" onClick={(e) => { e.preventDefault(); setIsSignUp(!isSignUp); }}>
+            <a
+              href="#"
+              onClick={(e) => {
+                e.preventDefault();
+                setIsSignUp(!isSignUp);
+              }}
+            >
               {isSignUp ? "Ya tengo cuenta" : "Crear cuenta"}
             </a>
           </div>

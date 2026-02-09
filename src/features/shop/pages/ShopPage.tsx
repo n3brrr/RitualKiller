@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { ShopItem } from "../types";
+import { ShopItem } from "@/types";
 import { Zap, Check, X } from "lucide-react";
 import { gsap } from "gsap";
-import { MOCK_SHOP_ITEMS } from "../mocks";
-import { useAppContext } from "../contexts/AppContext";
+import { MOCK_SHOP_ITEMS } from "@/mocks";
+import { useAppContext } from "@/contexts/AppContext";
 
 const ShopPage = () => {
   const { user, setUser } = useAppContext();

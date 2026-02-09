@@ -61,14 +61,17 @@ const ADMIN_CREDENTIALS = {
 };
 
 export const signInWithEmail = async (email: string, password: string) => {
-  // Verificar si es el usuario admin
-  if (email.toLowerCase() === ADMIN_CREDENTIALS.email && password === ADMIN_CREDENTIALS.password) {
+  // Verificar si es el usuario admin (soporta tanto email@gmail.com como el usuario simple 'admin')
+  const isTestAdmin = (email.toLowerCase() === ADMIN_CREDENTIALS.email && password === ADMIN_CREDENTIALS.password) || 
+                     (email.toLowerCase() === 'admin' && password === 'admin');
+
+  if (isTestAdmin) {
     // Retornar datos mock del admin sin usar Supabase
     return {
       data: {
         user: {
           id: ADMIN_CREDENTIALS.id,
-          email: `${ADMIN_CREDENTIALS.email}@ritualkiller.local`,
+          email: ADMIN_CREDENTIALS.email,
           user_metadata: {
             username: ADMIN_CREDENTIALS.username,
             isAdmin: true,
