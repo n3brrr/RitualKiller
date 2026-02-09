@@ -78,7 +78,7 @@ const AchievementsList: React.FC = () => {
                 <div className="flex items-start justify-between mb-3">
                   <div className="text-4xl">{achievement.icon}</div>
                   <span className={`text-xs px-2 py-1 rounded border ${getRarityTextColor(achievement.rarity)} border-current`}>
-                    {achievement.rarity}
+                    {achievement.rarity === 'common' ? 'Común' : achievement.rarity === 'rare' ? 'Raro' : 'Legendario'}
                   </span>
                 </div>
                 <h3 className="font-bold text-lg text-white mb-1">{achievement.name}</h3>
@@ -113,7 +113,7 @@ const AchievementsList: React.FC = () => {
                   <div className="flex items-start justify-between mb-3">
                     <div className="text-4xl grayscale">{achievement.icon}</div>
                     <span className="text-xs px-2 py-1 rounded border border-zinc-700 text-zinc-600">
-                      {achievement.rarity}
+                      {achievement.rarity === 'common' ? 'Común' : achievement.rarity === 'rare' ? 'Raro' : 'Legendario'}
                     </span>
                   </div>
                   <h3 className="font-bold text-lg text-zinc-500 mb-1">{achievement.name}</h3>

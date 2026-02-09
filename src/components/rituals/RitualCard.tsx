@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import { Ritual } from "../../types/index.ts";
 import { Check, Trash2, Zap } from "lucide-react";
 import gsap from "gsap";
+import { translateDifficulty } from "../../utils/translations";
 
 const RitualItem = ({
   ritual,
@@ -72,7 +73,7 @@ const RitualItem = ({
           </h4>
           {ritual.streak > 1 && (
             <div className="flex items-center gap-1 text-xs text-yellow-500 font-mono bg-yellow-500/10 px-2 py-0.5 rounded border border-yellow-500/20">
-              <Zap size={10} fill="currentColor" /> {ritual.streak} Day Streak
+              <Zap size={10} fill="currentColor" /> Racha de {ritual.streak} días
             </div>
           )}
         </div>
@@ -87,10 +88,10 @@ const RitualItem = ({
                 : "border-green-900 text-green-500"
             }`}
           >
-            {ritual.difficulty}
+            {translateDifficulty(ritual.difficulty)}
           </span>
           <span className="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded border border-zinc-800 text-zinc-400">
-            +{ritual.essenceReward} Essence
+            +{ritual.essenceReward} Esencia
           </span>
         </div>
       </div>

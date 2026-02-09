@@ -46,9 +46,9 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
           // Create default user from auth
           setUser({
             id: authUser.id,
-            username: authUser.email?.split("@")[0] || "Unknown",
+            username: authUser.email?.split("@")[0] || "Desconocido",
             essence: 0,
-            rank: "Unkindled",
+            rank: "Iniciado",
             inventory: [],
             created_at: new Date().toISOString(),
           });
@@ -62,9 +62,9 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
           id: authUser.id,
           username: authUser.user_metadata?.username || 
                    authUser.email?.split("@")[0] || 
-                   "Unknown",
+                   "Desconocido",
           essence: isAdminUser ? 10000 : 0,
-          rank: isAdminUser ? "Demi-God" : "Unkindled",
+          rank: isAdminUser ? "Semidiós" : "Iniciado",
           inventory: isAdminUser ? ['admin-badge'] : [],
           created_at: new Date().toISOString(),
           isAdmin: isAdminUser,

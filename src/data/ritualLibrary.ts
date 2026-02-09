@@ -26,7 +26,7 @@ export const RITUAL_LIBRARY: RitualTemplate[] = [
   // Salud
   {
     id: 'lib-health-1',
-    title: 'Morning Hydration',
+    title: 'Hidratación Matutina',
     description: 'Bebe 500ml de agua al despertar antes de cualquier otra bebida.',
     difficulty: 'novice',
     category: 'health',
@@ -37,7 +37,7 @@ export const RITUAL_LIBRARY: RitualTemplate[] = [
   },
   {
     id: 'lib-health-2',
-    title: 'Cold Shower Protocol',
+    title: 'Protocolo de Ducha Fría',
     description: 'Ducha fría de al menos 2 minutos para fortalecer la voluntad.',
     difficulty: 'adept',
     category: 'health',
@@ -48,7 +48,7 @@ export const RITUAL_LIBRARY: RitualTemplate[] = [
   },
   {
     id: 'lib-health-3',
-    title: '10K Steps Daily',
+    title: '10K Pasos Diarios',
     description: 'Camina al menos 10,000 pasos cada día sin excepciones.',
     difficulty: 'adept',
     category: 'health',
@@ -60,7 +60,7 @@ export const RITUAL_LIBRARY: RitualTemplate[] = [
   // Productividad
   {
     id: 'lib-prod-1',
-    title: 'Deep Work Session',
+    title: 'Sesión de Trabajo Profundo',
     description: '90 minutos de trabajo profundo sin distracciones ni interrupciones.',
     difficulty: 'adept',
     category: 'productivity',
@@ -71,7 +71,7 @@ export const RITUAL_LIBRARY: RitualTemplate[] = [
   },
   {
     id: 'lib-prod-2',
-    title: '5AM Wake Protocol',
+    title: 'Protocolo de Despertar 5AM',
     description: 'Despierta a las 5:00 AM sin usar el botón de snooze.',
     difficulty: 'master',
     category: 'productivity',
@@ -82,7 +82,7 @@ export const RITUAL_LIBRARY: RitualTemplate[] = [
   },
   {
     id: 'lib-prod-3',
-    title: 'No Social Media Before Noon',
+    title: 'Sin Redes Sociales Antes del Mediodía',
     description: 'Evita todas las redes sociales hasta el mediodía.',
     difficulty: 'adept',
     category: 'productivity',
@@ -94,7 +94,7 @@ export const RITUAL_LIBRARY: RitualTemplate[] = [
   // Mental
   {
     id: 'lib-mental-1',
-    title: 'Morning Meditation',
+    title: 'Meditación Matutina',
     description: 'Meditación de 10 minutos al despertar para claridad mental.',
     difficulty: 'novice',
     category: 'mental',
@@ -105,7 +105,7 @@ export const RITUAL_LIBRARY: RitualTemplate[] = [
   },
   {
     id: 'lib-mental-2',
-    title: 'Gratitude Journal',
+    title: 'Diario de Gratitud',
     description: 'Escribe 3 cosas por las que estás agradecido cada noche.',
     difficulty: 'novice',
     category: 'mental',
@@ -115,7 +115,7 @@ export const RITUAL_LIBRARY: RitualTemplate[] = [
   },
   {
     id: 'lib-mental-3',
-    title: 'Digital Sunset',
+    title: 'Ocaso Digital',
     description: 'Apaga todos los dispositivos electrónicos 2 horas antes de dormir.',
     difficulty: 'adept',
     category: 'mental',
@@ -127,7 +127,7 @@ export const RITUAL_LIBRARY: RitualTemplate[] = [
   // Físico
   {
     id: 'lib-physical-1',
-    title: 'Daily Push-ups',
+    title: 'Flexiones Diarias',
     description: 'Completa 50 flexiones distribuidas durante el día.',
     difficulty: 'adept',
     category: 'physical',
@@ -137,7 +137,7 @@ export const RITUAL_LIBRARY: RitualTemplate[] = [
   },
   {
     id: 'lib-physical-2',
-    title: 'Plank Challenge',
+    title: 'Desafío de Plancha',
     description: 'Mantén una plancha durante 2 minutos sin interrupciones.',
     difficulty: 'master',
     category: 'physical',
@@ -149,7 +149,7 @@ export const RITUAL_LIBRARY: RitualTemplate[] = [
   // Aprendizaje
   {
     id: 'lib-learning-1',
-    title: 'Read 20 Pages',
+    title: 'Leer 20 Páginas',
     description: 'Lee al menos 20 páginas de un libro educativo cada día.',
     difficulty: 'novice',
     category: 'learning',
@@ -160,7 +160,7 @@ export const RITUAL_LIBRARY: RitualTemplate[] = [
   },
   {
     id: 'lib-learning-2',
-    title: 'Code for 1 Hour',
+    title: 'Programar por 1 Hora',
     description: 'Dedica 1 hora completa a programar o aprender programación.',
     difficulty: 'adept',
     category: 'learning',
@@ -172,7 +172,7 @@ export const RITUAL_LIBRARY: RitualTemplate[] = [
   // Creatividad
   {
     id: 'lib-creativity-1',
-    title: 'Daily Creative Output',
+    title: 'Producción Creativa Diaria',
     description: 'Crea algo nuevo cada día: dibujo, escritura, música, etc.',
     difficulty: 'novice',
     category: 'creativity',
@@ -184,7 +184,7 @@ export const RITUAL_LIBRARY: RitualTemplate[] = [
   // Espiritual
   {
     id: 'lib-spiritual-1',
-    title: 'Evening Reflection',
+    title: 'Reflexión Vespertina',
     description: 'Reflexiona sobre el día durante 15 minutos antes de dormir.',
     difficulty: 'novice',
     category: 'spiritual',

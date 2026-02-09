@@ -44,7 +44,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onAuth }) => {
                    result.data.user.email?.split("@")[0] || 
                    "Usuario",
           essence: isAdmin ? 10000 : 0, // Admin empieza con más esencia
-          rank: isAdmin ? "Demi-God" : "Unkindled",
+          rank: isAdmin ? "Semidiós" : "Iniciado",
           inventory: isAdmin ? ['admin-badge'] : [],
           created_at: new Date().toISOString(),
           isAdmin: isAdmin,
@@ -100,7 +100,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onAuth }) => {
         <i style={{ "--clr": "#fffd44" } as React.CSSProperties}></i>
 
         <div className="login">
-          <h2>{isSignUp ? "Registro" : "Login"}</h2>
+          <h2>{isSignUp ? "Registro" : "Iniciar Sesión"}</h2>
           
           {error && (
             <div className="mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-500 text-sm">
@@ -111,7 +111,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onAuth }) => {
           {/* Admin credentials hint for development */}
           {process.env.NODE_ENV === 'development' && (
             <div className="mb-4 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg text-yellow-500 text-xs">
-              <strong>Modo Desarrollo:</strong> Usa <code className="bg-black/30 px-1 rounded">admin@gmail.com</code> / <code className="bg-black/30 px-1 rounded">123456</code> para login como administrador
+              <strong>Modo Desarrollo:</strong> Usa <code className="bg-black/30 px-1 rounded">admin</code> / <code className="bg-black/30 px-1 rounded">admin</code> para iniciar sesión como administrador
             </div>
           )}
 
@@ -128,7 +128,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onAuth }) => {
             <div className="inputBx">
               <input
                 type="password"
-                placeholder="Password"
+                placeholder="Contraseña"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required

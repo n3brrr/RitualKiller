@@ -67,14 +67,14 @@ const LandingPage = ({ onAuth }: { onAuth: (user: User) => void }) => {
         </motion.div>
 
         <h1 className="hero-text text-6xl md:text-9xl font-ritual font-black mb-6 uppercase tracking-tighter leading-none">
-          Kill The <br />
+          Mata al <br />
           <span className="text-transparent bg-clip-text bg-gradient-to-b from-ritual-accent to-emerald-900">
-            Old You
+            Viejo Tú
           </span>
         </h1>
 
         <p className="hero-text text-zinc-500 text-lg md:text-xl max-w-2xl mb-10 leading-relaxed font-light uppercase tracking-widest">
-          Build rituals. Earn essence. Ascend.
+          Construye rituales. Gana esencia. Asciende.
         </p>
 
         <button
@@ -82,7 +82,7 @@ const LandingPage = ({ onAuth }: { onAuth: (user: User) => void }) => {
           className="hero-text group relative px-10 py-5 bg-transparent border border-ritual-accent text-ritual-accent font-ritual font-bold text-lg uppercase tracking-[0.3em] overflow-hidden transition-all"
         >
           <span className="relative z-10 flex items-center gap-3 group-hover:text-black">
-            Begin The Ritual <Play size={18} fill="currentColor" />
+            Comenzar el Ritual <Play size={18} fill="currentColor" />
           </span>
           <div className="absolute inset-0 bg-ritual-accent translate-y-[101%] group-hover:translate-y-0 transition-transform duration-300 -z-10"></div>
         </button>
@@ -91,18 +91,18 @@ const LandingPage = ({ onAuth }: { onAuth: (user: User) => void }) => {
       <section className="max-w-7xl mx-auto px-4 py-20 grid md:grid-cols-3 gap-8 relative z-10">
         <FeatureCard
           index={0}
-          title="Rituals"
-          desc="Define your daily sacrifices. Strict tracking creates iron discipline."
+          title="Rituales"
+          desc="Define tus sacrificios diarios. El seguimiento estricto crea disciplina de hierro."
         />
         <FeatureCard
           index={1}
-          title="Heatmap"
-          desc="Visualize your consistency. Watch your dormant potential awaken."
+          title="Mapa de Calor"
+          desc="Visualiza tu consistencia. Observa cómo despierta tu potencial dormido."
         />
         <FeatureCard
           index={2}
-          title="Black Market"
-          desc="Exchange your suffering for digital glory and artifacts."
+          title="Mercado Negro"
+          desc="Intercambia tu sufrimiento por gloria digital y artefactos."
         />
       </section>
     </div>

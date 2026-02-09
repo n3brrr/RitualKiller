@@ -175,7 +175,7 @@ const HabitsPage = () => {
             }}
             className="bg-zinc-800 hover:bg-zinc-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 text-sm transition-colors border border-zinc-700"
           >
-            {showCreator ? "Close" : "New Ritual"} <Plus size={16} />
+            {showCreator ? "Cerrar" : "Nuevo Ritual"} <Plus size={16} />
           </button>
         </div>
       </div>
@@ -203,7 +203,7 @@ const HabitsPage = () => {
                   : "text-zinc-500 hover:text-zinc-300"
               }`}
             >
-              <PenTool size={14} /> Manual Entry
+              <PenTool size={14} /> Entrada Manual
             </button>
             <button
               onClick={() => setCreateMode("ai")}
@@ -213,7 +213,7 @@ const HabitsPage = () => {
                   : "text-zinc-500 hover:text-zinc-300"
               }`}
             >
-              <Sparkles size={14} /> AI Summoner
+              <Sparkles size={14} /> Invocador IA
             </button>
           </div>
 
@@ -221,15 +221,15 @@ const HabitsPage = () => {
             {createMode === "ai" ? (
               <>
                 <p className="text-zinc-400 text-sm mb-2">
-                  State your desire (e.g., "Become physically unstoppable" or
-                  "Learn to code"). The system will prescribe your suffering.
+                  Expresa tu deseo (ej: "Ser físicamente imparable" o
+                  "Aprender a programar"). El sistema prescribirá tu sufrimiento.
                 </p>
                 <div className="flex gap-2">
                   <input
                     type="text"
                     value={goalInput}
                     onChange={(e) => setGoalInput(e.target.value)}
-                    placeholder="What do you seek?"
+                    placeholder="¿Qué buscas?"
                     className="flex-1 bg-black border border-zinc-700 rounded-lg px-4 py-3 text-white focus:border-ritual-accent outline-none"
                   />
                   <button
@@ -237,7 +237,7 @@ const HabitsPage = () => {
                     disabled={isGenerating}
                     className="bg-ritual-accent text-black font-bold px-6 py-3 rounded-lg hover:bg-emerald-400 disabled:opacity-50 transition-colors"
                   >
-                    {isGenerating ? "Summoning..." : "Summon"}
+                    {isGenerating ? "Invocando..." : "Invocar"}
                   </button>
                 </div>
               </>
@@ -245,7 +245,7 @@ const HabitsPage = () => {
               <div className="space-y-4">
                 <div>
                   <label className="text-xs text-zinc-500 uppercase font-bold block mb-1">
-                    Ritual Title
+                    Título del Ritual
                   </label>
                   <input
                     type="text"
@@ -253,14 +253,14 @@ const HabitsPage = () => {
                     onChange={(e) =>
                       setManualForm({ ...manualForm, title: e.target.value })
                     }
-                    placeholder="e.g., Morning Run"
+                    placeholder="ej: Carrera Matutina"
                     className="w-full bg-black border border-zinc-700 rounded-lg px-4 py-2 text-white focus:border-ritual-accent outline-none"
                     required
                   />
                 </div>
                 <div>
                   <label className="text-xs text-zinc-500 uppercase font-bold block mb-1">
-                    Description
+                    Descripción
                   </label>
                   <input
                     type="text"
@@ -271,14 +271,14 @@ const HabitsPage = () => {
                         description: e.target.value,
                       })
                     }
-                    placeholder="Specific conditions for completion..."
+                    placeholder="Condiciones específicas para completar..."
                     className="w-full bg-black border border-zinc-700 rounded-lg px-4 py-2 text-white focus:border-ritual-accent outline-none"
                   />
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
                     <label className="text-xs text-zinc-500 uppercase font-bold block mb-1">
-                      Difficulty
+                      Dificultad
                     </label>
                     <select
                       value={manualForm.difficulty}
@@ -290,14 +290,14 @@ const HabitsPage = () => {
                       }
                       className="w-full bg-black border border-zinc-700 rounded-lg px-4 py-2 text-white focus:border-ritual-accent outline-none appearance-none"
                     >
-                      <option value="novice">Novice</option>
-                      <option value="adept">Adept</option>
-                      <option value="master">Master</option>
+                      <option value="novice">Novato</option>
+                      <option value="adept">Intermedio</option>
+                      <option value="master">Maestro</option>
                     </select>
                   </div>
                   <div>
                     <label className="text-xs text-zinc-500 uppercase font-bold block mb-1">
-                      Frequency
+                      Frecuencia
                     </label>
                     <select
                       value={manualForm.frequency}
@@ -309,13 +309,13 @@ const HabitsPage = () => {
                       }
                       className="w-full bg-black border border-zinc-700 rounded-lg px-4 py-2 text-white focus:border-ritual-accent outline-none appearance-none"
                     >
-                      <option value="daily">Daily</option>
-                      <option value="weekly">Weekly</option>
+                      <option value="daily">Diario</option>
+                      <option value="weekly">Semanal</option>
                     </select>
                   </div>
                   <div>
                     <label className="text-xs text-zinc-500 uppercase font-bold block mb-1">
-                      Essence Reward
+                      Recompensa de Esencia
                     </label>
                     <input
                       type="number"
@@ -335,7 +335,7 @@ const HabitsPage = () => {
                     type="submit"
                     className="bg-white text-black font-bold px-6 py-2 rounded-lg hover:bg-zinc-200 transition-colors"
                   >
-                    Create Ritual
+                    Crear Ritual
                   </button>
                 </div>
               </div>
@@ -347,7 +347,7 @@ const HabitsPage = () => {
       <div className="space-y-3">
         {rituals.length === 0 ? (
           <div className="text-center py-20 text-zinc-600 italic">
-            No rituals established. The void awaits your command.
+            No hay rituales establecidos. El vacío espera tu orden.
           </div>
         ) : (
           rituals.map((ritual) => {

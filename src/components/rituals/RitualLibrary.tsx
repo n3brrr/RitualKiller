@@ -3,6 +3,7 @@ import { Search, Filter, BookOpen, Star, Plus } from 'lucide-react';
 import { RitualTemplate, RitualCategory, RITUAL_LIBRARY, getRitualsByCategory, getPopularRituals, searchRituals, convertTemplateToRitual } from '../../data/ritualLibrary';
 import { useAppContext } from '../../contexts/AppContext';
 import { Difficulty } from '../../types';
+import { translateDifficulty, translateFrequency } from '../../utils/translations';
 
 const CATEGORIES: { value: RitualCategory; label: string }[] = [
   { value: 'health', label: 'Salud' },
@@ -143,13 +144,13 @@ const RitualLibrary: React.FC = () => {
 
               <div className="flex flex-wrap gap-2 mb-4">
                 <span className={`text-xs px-2 py-1 rounded border ${getDifficultyColor(template.difficulty)}`}>
-                  {template.difficulty}
+                  {translateDifficulty(template.difficulty)}
                 </span>
                 <span className="text-xs px-2 py-1 rounded border border-zinc-800 text-zinc-400">
-                  {template.frequency}
+                  {translateFrequency(template.frequency)}
                 </span>
                 <span className="text-xs px-2 py-1 rounded border border-ritual-accent/30 text-ritual-accent">
-                  +{template.essenceReward} Essence
+                  +{template.essenceReward} Esencia
                 </span>
               </div>
 

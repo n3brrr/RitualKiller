@@ -65,9 +65,9 @@ const ShopPage = () => {
   return (
     <div>
       <div className="flex justify-between items-center mb-8">
-        <h2 className="text-3xl font-display font-bold">Black Market</h2>
+        <h2 className="text-3xl font-display font-bold">Mercado Negro</h2>
         <div className="bg-zinc-900 px-4 py-2 rounded-lg border border-zinc-800 text-ritual-accent font-mono font-bold">
-          {user.essence} Essence
+          {user.essence} Esencia
         </div>
       </div>
 
@@ -107,11 +107,11 @@ const ShopPage = () => {
                 }`}
               >
                 {owned ? (
-                  "Acquired"
+                  "Adquirido"
                 ) : (
                   <>
                     {item.cost}{" "}
-                    <span className="text-xs opacity-70">Essence</span>
+                    <span className="text-xs opacity-70">Esencia</span>
                   </>
                 )}
               </div>
@@ -154,7 +154,7 @@ const ShopPage = () => {
                     : "border-zinc-500/30 text-zinc-500 bg-zinc-500/10"
                 }`}
               >
-                {selectedItem.rarity}
+                {selectedItem.rarity === 'common' ? 'Común' : selectedItem.rarity === 'rare' ? 'Raro' : 'Legendario'}
               </div>
               <p className="text-zinc-400 leading-relaxed">
                 {selectedItem.description}
@@ -166,7 +166,7 @@ const ShopPage = () => {
                 onClick={() => buyItem(selectedItem)}
                 className="flex-1 bg-ritual-accent text-black font-bold py-3 rounded-lg hover:bg-emerald-400 transition-colors flex items-center justify-center gap-2 uppercase tracking-wider text-sm"
               >
-                Purchase for {selectedItem.cost} <Zap size={16} fill="black" />
+                Comprar por {selectedItem.cost} <Zap size={16} fill="black" />
               </button>
             </div>
           </div>

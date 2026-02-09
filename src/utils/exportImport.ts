@@ -30,7 +30,7 @@ export const exportToCSV = (rituals: Ritual[], logs: RitualLog[]): string => {
     return [
       log.date,
       ritual?.title || 'Desconocido',
-      ritual?.difficulty || 'N/A',
+      ritual?.difficulty ? (ritual.difficulty === 'novice' ? 'Novato' : ritual.difficulty === 'adept' ? 'Intermedio' : 'Maestro') : 'N/A',
       log.essence_gained?.toString() || '0',
     ];
   });

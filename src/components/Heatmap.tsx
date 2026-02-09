@@ -53,7 +53,7 @@ export const Heatmap: React.FC<HeatmapProps> = ({ logs }) => {
             {heatmapData.slice(weekIndex * 7, (weekIndex * 7) + 7).map((day) => (
               <div
                 key={day.date}
-                title={`${day.date}: ${day.count} Rituals`}
+                title={`${day.date}: ${day.count} Rituales`}
                 className={`w-3 h-3 rounded-sm transition-all duration-300 hover:scale-125 ${getColor(day.count)}`}
               />
             ))}
@@ -61,11 +61,11 @@ export const Heatmap: React.FC<HeatmapProps> = ({ logs }) => {
         ))}
       </div>
       <div className="mt-2 flex items-center justify-end text-xs text-zinc-500 gap-1">
-        <span>Dormant</span>
+        <span>Inactivo</span>
         <div className="w-3 h-3 bg-ritual-gray/30 rounded-sm"></div>
         <div className="w-3 h-3 bg-ritual-accent/40 rounded-sm"></div>
         <div className="w-3 h-3 bg-ritual-accent rounded-sm"></div>
-        <span>Awakened</span>
+        <span>Despierto</span>
       </div>
     </div>
   );

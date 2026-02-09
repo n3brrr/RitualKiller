@@ -51,7 +51,7 @@ export const ACHIEVEMENTS: Omit<Achievement, 'progress' | 'unlockedAt'>[] = [
   },
   {
     id: 'ach-essence-50000',
-    name: 'Demi-God',
+    name: 'Semidiós',
     description: 'Acumula 50,000 esencia',
     icon: '🌟',
     rarity: 'legendary',

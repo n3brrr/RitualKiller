@@ -15,7 +15,7 @@ export const getAdminUser = (): User => {
     id: 'admin-user-id-12345',
     username: 'admin',
     essence: 100000,
-    rank: 'Demi-God',
+    rank: 'Semidiós',
     inventory: ['admin-badge', 'crown-of-silence', 'neon-skull'],
     created_at: new Date().toISOString(),
     isAdmin: true,

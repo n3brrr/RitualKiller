@@ -46,7 +46,7 @@ const AdvancedAnalytics: React.FC = () => {
     });
 
     return Object.entries(distribution).map(([name, value]) => ({
-      name: name.charAt(0).toUpperCase() + name.slice(1),
+      name: name === 'novice' ? 'Novato' : name === 'adept' ? 'Intermedio' : 'Maestro',
       Completados: value,
     }));
   }, [rituals, logs]);
