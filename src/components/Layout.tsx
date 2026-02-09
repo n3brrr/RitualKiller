@@ -1,7 +1,8 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { Skull, LayoutDashboard, CheckSquare, ShoppingBag, Users, LogOut, Shield, Crown, Zap } from 'lucide-react';
+import { Skull, LayoutDashboard, CheckSquare, ShoppingBag, Users, LogOut, Shield, Crown, Zap, ShieldCheck } from 'lucide-react';
 import { User } from '../types';
+import { isAdmin } from '../utils/adminUtils';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -10,12 +11,12 @@ interface LayoutProps {
 }
 
 const getRank = (essence: number) => {
-    if (essence < 100) return { title: "Unkindled", next: 100, icon: <Shield size={12}/> };
-    if (essence < 500) return { title: "Neophyte", next: 500, icon: <Shield size={12}/> };
-    if (essence < 1000) return { title: "Adept", next: 1000, icon: <Skull size={12}/> };
-    if (essence < 2500) return { title: "Warlock", next: 2500, icon: <Skull size={12}/> };
-    if (essence < 5000) return { title: "Lich", next: 5000, icon: <Crown size={12}/> };
-    return { title: "Demi-God", next: 10000, icon: <Zap size={12}/> };
+    if (essence < 100) return { title: "Iniciado", next: 100, icon: <Shield size={12}/> };
+    if (essence < 500) return { title: "Neófito", next: 500, icon: <Shield size={12}/> };
+    if (essence < 1000) return { title: "Adepto", next: 1000, icon: <Skull size={12}/> };
+    if (essence < 2500) return { title: "Brujo", next: 2500, icon: <Skull size={12}/> };
+    if (essence < 5000) return { title: "Liche", next: 5000, icon: <Crown size={12}/> };
+    return { title: "Semidiós", next: 10000, icon: <Zap size={12}/> };
 }
 
 export const Layout: React.FC<LayoutProps> = ({ children, user, onLogout }) => {
@@ -51,15 +52,15 @@ export const Layout: React.FC<LayoutProps> = ({ children, user, onLogout }) => {
           </NavLink>
           <NavLink to="/app/habits" className={navItemClass}>
             <CheckSquare size={20} />
-            <span>Rituals</span>
+            <span>Rituales</span>
           </NavLink>
           <NavLink to="/app/social" className={navItemClass}>
             <Users size={20} />
-            <span>Coven</span>
+            <span>Aquelarre</span>
           </NavLink>
           <NavLink to="/app/shop" className={navItemClass}>
             <ShoppingBag size={20} />
-            <span>Black Market</span>
+            <span>Mercado Negro</span>
           </NavLink>
         </nav>
 
@@ -70,7 +71,15 @@ export const Layout: React.FC<LayoutProps> = ({ children, user, onLogout }) => {
                     {user.username.charAt(0).toUpperCase()}
                 </div>
                 <div>
-                    <div className="font-bold text-sm text-zinc-100">{user.username}</div>
+                    <div className="font-bold text-sm text-zinc-100 flex items-center gap-2">
+                        {user.username}
+                        {isAdmin(user) && (
+                            <span className="text-[10px] px-1.5 py-0.5 bg-yellow-500/20 text-yellow-500 rounded border border-yellow-500/30 flex items-center gap-1">
+                                <ShieldCheck size={10} />
+                                ADMIN
+                            </span>
+                        )}
+                    </div>
                     <div className="text-[10px] text-ritual-accent flex items-center gap-1 uppercase tracking-wider">
                         {rank.icon} {rank.title}
                     </div>
@@ -79,7 +88,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, user, onLogout }) => {
             
             <div className="mb-4">
                  <div className="flex justify-between text-[10px] text-zinc-500 mb-1 uppercase tracking-wider">
-                    <span>Progress</span>
+                    <span>Progreso</span>
                     <span>{user.essence} / {rank.next}</span>
                  </div>
                  <div className="h-1.5 w-full bg-zinc-800 rounded-full overflow-hidden border border-zinc-800">
@@ -92,7 +101,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, user, onLogout }) => {
                 className="flex items-center gap-2 text-zinc-500 hover:text-red-500 transition-colors text-xs uppercase tracking-widest w-full pt-3 border-t border-zinc-800/50"
             >
                 <LogOut size={14} />
-                <span>Sever Connection</span>
+                <span>Cortar vínculo</span>
             </button>
         </div>
       </aside>

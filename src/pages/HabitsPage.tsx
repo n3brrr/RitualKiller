@@ -1,28 +1,21 @@
-import React, { useState } from "react";
-import { Ritual, RitualLog, User } from "../types";
-import { Plus, PenTool, Sparkles } from "lucide-react";
+import React, { useState, lazy, Suspense } from "react";
+import { Frequency } from "../types";
+import { Plus, PenTool, Sparkles, BookOpen } from "lucide-react";
 import { generateRitualSuggestions } from "../utils/aiRitualGenerator";
-import RitualItem from "../components/rituals/RitualCard"; // Correct path
+import RitualItem from "../components/rituals/RitualCard";
+import { useAppContext } from "../contexts/AppContext";
 
-const HabitsPage = ({
-  rituals,
-  setRituals,
-  logs,
-  setLogs,
-  user,
-  setUser,
-}: {
-  rituals: Ritual[];
-  setRituals: Function;
-  logs: RitualLog[];
-  setLogs: Function;
-  user: User;
-  setUser: Function;
-}) => {
+const RitualLibrary = lazy(() => import("../components/rituals/RitualLibrary"));
+
+const HabitsPage = () => {
+  const { user, rituals, setRituals, logs, setLogs, setUser } = useAppContext();
+  
+  if (!user) return null;
   const [isGenerating, setIsGenerating] = useState(false);
   const [goalInput, setGoalInput] = useState("");
   const [showCreator, setShowCreator] = useState(false);
-  const [createMode, setCreateMode] = useState<"ai" | "manual">("manual");
+  const [createMode, setCreateMode] = useState<"ai" | "manual" | "library">("manual");
+  const [showLibrary, setShowLibrary] = useState(false);
   const [manualForm, setManualForm] = useState({
     title: "",
     description: "",
@@ -85,8 +78,10 @@ const HabitsPage = ({
       const newLog: RitualLog = {
         id: Date.now().toString(),
         ritualId: ritual.id,
+        user_id: user.id,
         date: todayStr,
         timestamp: Date.now(),
+        essence_gained: ritual.essenceReward + streakBonus,
       };
       setLogs([...logs, newLog]);
 
@@ -113,13 +108,15 @@ const HabitsPage = ({
       if (suggestions.length > 0) {
         const newRituals: Ritual[] = suggestions.map((s: any, idx: number) => ({
           id: Date.now().toString() + idx,
+          user_id: user.id,
           title: s.title,
           description: s.description,
           difficulty: s.difficulty,
-          frequency: "daily",
+          frequency: "daily" as Frequency,
           essenceReward:
             s.difficulty === "master" ? 50 : s.difficulty === "adept" ? 25 : 10,
           streak: 0,
+          created_at: new Date().toISOString(),
         }));
         setRituals([...rituals, ...newRituals]);
         setGoalInput("");
@@ -131,12 +128,14 @@ const HabitsPage = ({
       if (!manualForm.title) return;
       const newRitual: Ritual = {
         id: Date.now().toString(),
+        user_id: user.id,
         title: manualForm.title,
         description: manualForm.description,
         difficulty: manualForm.difficulty,
         frequency: manualForm.frequency,
         essenceReward: Number(manualForm.essenceReward),
         streak: 0,
+        created_at: new Date().toISOString(),
       };
       setRituals([...rituals, newRitual]);
       setManualForm({
@@ -156,15 +155,42 @@ const HabitsPage = ({
 
   return (
     <div className="max-w-3xl mx-auto space-y-8">
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center mb-4">
         <h2 className="text-3xl font-display font-bold">Grimoire</h2>
-        <button
-          onClick={() => setShowCreator(!showCreator)}
-          className="bg-zinc-800 hover:bg-zinc-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 text-sm transition-colors border border-zinc-700"
-        >
-          {showCreator ? "Close" : "New Ritual"} <Plus size={16} />
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={() => {
+              setShowLibrary(!showLibrary);
+              setShowCreator(false);
+            }}
+            className="bg-zinc-800 hover:bg-zinc-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 text-sm transition-colors border border-zinc-700"
+          >
+            <BookOpen size={16} />
+            Biblioteca
+          </button>
+          <button
+            onClick={() => {
+              setShowCreator(!showCreator);
+              setShowLibrary(false);
+            }}
+            className="bg-zinc-800 hover:bg-zinc-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 text-sm transition-colors border border-zinc-700"
+          >
+            {showCreator ? "Close" : "New Ritual"} <Plus size={16} />
+          </button>
+        </div>
       </div>
+
+      {showLibrary && (
+        <div className="mb-8">
+          <Suspense fallback={
+            <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-8 text-center text-zinc-500">
+              Cargando biblioteca...
+            </div>
+          }>
+            <RitualLibrary />
+          </Suspense>
+        </div>
+      )}
 
       {showCreator && (
         <div className="bg-zinc-900 p-6 rounded-xl border border-zinc-800 shadow-xl animate-fade-in-down">

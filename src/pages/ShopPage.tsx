@@ -1,10 +1,14 @@
 import { useState } from "react";
-import { User, ShopItem } from "../types";
+import { ShopItem } from "../types";
 import { Zap, Check, X } from "lucide-react";
 import { gsap } from "gsap";
 import { MOCK_SHOP_ITEMS } from "../mocks";
+import { useAppContext } from "../contexts/AppContext";
 
-const ShopPage = ({ user, setUser }: { user: User; setUser: Function }) => {
+const ShopPage = () => {
+  const { user, setUser } = useAppContext();
+  
+  if (!user) return null;
   const [selectedItem, setSelectedItem] = useState<ShopItem | null>(null);
 
   const buyItem = (item: ShopItem) => {

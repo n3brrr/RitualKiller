@@ -1,9 +1,17 @@
-import React from 'react';
-import { User, Ritual, RitualLog } from '../types';
+import React, { lazy, Suspense } from 'react';
 import { Heatmap } from '../components/Heatmap';
-import { Zap, Flame, Clock, Check, AlertCircle } from 'lucide-react';
+import { Zap, Flame, Clock, Check, AlertCircle, Trophy } from 'lucide-react';
+import { useAppContext } from '../contexts/AppContext';
 
-const Dashboard = ({ user, rituals, logs }: { user: User, rituals: Ritual[], logs: RitualLog[] }) => {
+const AchievementsList = lazy(() => import('../components/achievements/AchievementsList'));
+const AdvancedAnalytics = lazy(() => import('../components/analytics/AdvancedAnalytics'));
+const RitualCalendar = lazy(() => import('../components/calendar/RitualCalendar'));
+const ProductivityMetrics = lazy(() => import('../components/productivity/ProductivityMetrics'));
+
+const Dashboard = () => {
+    const { user, rituals, logs } = useAppContext();
+    
+    if (!user) return null;
     // Sort rituals by completion status for the day
     const todayStr = new Date().toISOString().split('T')[0];
     const todaysLogs = logs.filter(l => l.date === todayStr);
@@ -66,6 +74,15 @@ const Dashboard = ({ user, rituals, logs }: { user: User, rituals: Ritual[], log
                     <Heatmap logs={logs} />
                 </div>
 
+                {/* Calendar Section */}
+                <div className="bg-zinc-950/50 border border-zinc-900 p-6 rounded-2xl h-fit">
+                    <Suspense fallback={
+                        <div className="animate-pulse text-zinc-500 text-center py-8">Cargando calendario...</div>
+                    }>
+                        <RitualCalendar />
+                    </Suspense>
+                </div>
+
                 {/* Pending Rituals Section */}
                 <div className="bg-zinc-950/50 border border-zinc-900 p-6 rounded-2xl h-full flex flex-col">
                     <h3 className="text-sm font-bold text-zinc-400 uppercase tracking-wider flex items-center gap-2 mb-6">
@@ -105,6 +122,39 @@ const Dashboard = ({ user, rituals, logs }: { user: User, rituals: Ritual[], log
                         ))}
                     </div>
                 </div>
+            </div>
+
+            {/* Productivity Metrics Section */}
+            <div className="mt-8">
+                <Suspense fallback={
+                    <div className="bg-zinc-950/50 border border-zinc-900 p-6 rounded-2xl">
+                        <div className="animate-pulse text-zinc-500">Cargando métricas...</div>
+                    </div>
+                }>
+                    <ProductivityMetrics />
+                </Suspense>
+            </div>
+
+            {/* Advanced Analytics Section */}
+            <div className="mt-8">
+                <Suspense fallback={
+                    <div className="bg-zinc-950/50 border border-zinc-900 p-6 rounded-2xl">
+                        <div className="animate-pulse text-zinc-500">Cargando analytics...</div>
+                    </div>
+                }>
+                    <AdvancedAnalytics />
+                </Suspense>
+            </div>
+
+            {/* Achievements Section */}
+            <div className="mt-8">
+                <Suspense fallback={
+                    <div className="bg-zinc-950/50 border border-zinc-900 p-6 rounded-2xl">
+                        <div className="animate-pulse text-zinc-500">Cargando logros...</div>
+                    </div>
+                }>
+                    <AchievementsList />
+                </Suspense>
             </div>
         </div>
     );

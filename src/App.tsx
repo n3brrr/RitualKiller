@@ -1,76 +1,43 @@
-import React, { useState, useEffect } from "react";
+import React, { lazy, Suspense } from "react";
 import { HashRouter, Routes, Route, Navigate } from "react-router-dom";
-import { Ritual, RitualLog, SocialPost, User } from "./types/index.ts";
+import { User } from "./types/index.ts";
 import { Layout } from "./components/Layout.tsx";
-import LandingPage from "./pages/LandingPage.tsx";
-import Dashboard from "./pages/Dashboard.tsx"; // Ensure extension match
-import HabitsPage from "./pages/HabitsPage.tsx";
-import SocialPage from "./pages/SocialPage.tsx";
-import ShopPage from "./pages/ShopPage.tsx";
-import LoginPage from "./pages/LoginPage.tsx";
-import { useAuth } from "./hooks/useAuth.ts";
+import { AppProvider, useAppContext } from "./contexts/AppContext.tsx";
+import { ErrorBoundary } from "./components/ui/ErrorBoundary.tsx";
 import "./styles/main.css";
 
-// --- Mock Data Constants --- (If needed, otherwise remove)
+// Lazy loading de páginas para code splitting
+const LandingPage = lazy(() => import("./pages/LandingPage.tsx"));
+const Dashboard = lazy(() => import("./pages/Dashboard.tsx"));
+const HabitsPage = lazy(() => import("./pages/HabitsPage.tsx"));
+const SocialPage = lazy(() => import("./pages/SocialPage.tsx"));
+const ShopPage = lazy(() => import("./pages/ShopPage.tsx"));
+const LoginPage = lazy(() => import("./pages/LoginPage.tsx"));
 
-function App() {
-  const { user: authUser, loading } = useAuth();
-  const [user, setUser] = useState<User | null>(null);
-  const [rituals, setRituals] = useState<Ritual[]>([]);
-  const [logs, setLogs] = useState<RitualLog[]>([]);
+const LoadingFallback = () => (
+  <div className="bg-ritual-black h-screen flex items-center justify-center text-ritual-accent font-display text-xl animate-pulse">
+    Cargando...
+  </div>
+);
 
-  // Effect to sync authUser with local user state, but allow local overrides
-  // (IMPORTANT: This is a hack for the TFG/Demo nature where we might not have a full backend user profile yet)
-  useEffect(() => {
-    if (authUser && !user) {
-      // Here we'd ideally fetch the full profile from Supabase 'profiles' table.
-      // For now, we'll try to load from local storage OR create a placeholder from auth user.
-      const storedUser = localStorage.getItem("rk_user");
-      if (storedUser) {
-        setUser(JSON.parse(storedUser));
-      } else {
-        // Create a default user structure if not in local storage but authed
-        setUser({
-          id: authUser.id,
-          username: authUser.email?.split("@")[0] || "Unknown",
-          essence: 0,
-          rank: "Unkindled",
-          inventory: [],
-          created_at: new Date().toISOString(),
-        } as User);
-      }
-    }
-  }, [authUser]);
+// Protected Route Wrapper Component
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  const { user, logout } = useAppContext();
+  
+  if (!user) {
+    return <Navigate to="/" replace />;
+  }
+  
+  return (
+    <Layout user={user} onLogout={logout}>
+      {children}
+    </Layout>
+  );
+};
 
-  // Initialize Data from LocalStorage
-  useEffect(() => {
-    const storedRituals = localStorage.getItem("rk_rituals");
-    const storedLogs = localStorage.getItem("rk_logs");
-
-    if (storedRituals) setRituals(JSON.parse(storedRituals));
-    if (storedLogs) setLogs(JSON.parse(storedLogs));
-  }, []);
-
-  // Save to LocalStorage on changes
-  useEffect(() => {
-    if (user) {
-      localStorage.setItem("rk_user", JSON.stringify(user));
-    }
-  }, [user]);
-
-  useEffect(() => {
-    localStorage.setItem("rk_rituals", JSON.stringify(rituals));
-  }, [rituals]);
-
-  useEffect(() => {
-    localStorage.setItem("rk_logs", JSON.stringify(logs));
-  }, [logs]);
-
-  const handleLogout = () => {
-    setUser(null);
-    localStorage.removeItem("rk_user");
-    // Also sign out from Supabase if needed: supabase.auth.signOut();
-  };
+// Main App Component
+function AppContent() {
+  const { user, rituals, logs, setUser, loading } = useAppContext();
 
   if (loading) {
     return (
@@ -80,79 +47,91 @@ function App() {
     );
   }
 
-  // Protected Route Wrapper
-  const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-    if (!user) return <Navigate to="/" replace />;
-    return (
-      <Layout user={user} onLogout={handleLogout}>
-        {children}
-      </Layout>
-    );
-  };
-
   return (
     <HashRouter>
-      <Routes>
-        <Route
-          path="/"
-          element={
-            user ? (
-              <Navigate to="/app/dashboard" replace />
-            ) : (
-              <LandingPage onAuth={setUser} />
-            )
-          }
-        />
+      <Suspense fallback={<LoadingFallback />}>
+        <Routes>
+          <Route
+            path="/"
+            element={
+              user ? (
+                <Navigate to="/app/dashboard" replace />
+              ) : (
+                <Suspense fallback={<LoadingFallback />}>
+                  <LandingPage onAuth={setUser} />
+                </Suspense>
+              )
+            }
+          />
 
-        <Route path="/login" element={<LoginPage onAuth={setUser} />} />
+          <Route 
+            path="/login" 
+            element={
+              <Suspense fallback={<LoadingFallback />}>
+                <LoginPage onAuth={setUser} />
+              </Suspense>
+            } 
+          />
 
-        <Route
-          path="/app/dashboard"
-          element={
-            <ProtectedRoute>
-              <Dashboard user={user!} rituals={rituals} logs={logs} />
-            </ProtectedRoute>
-          }
-        />
+          <Route
+            path="/app/dashboard"
+            element={
+              <ProtectedRoute>
+                <Suspense fallback={<LoadingFallback />}>
+                  <Dashboard />
+                </Suspense>
+              </ProtectedRoute>
+            }
+          />
 
-        <Route
-          path="/app/habits"
-          element={
-            <ProtectedRoute>
-              <HabitsPage
-                rituals={rituals}
-                setRituals={setRituals}
-                logs={logs}
-                setLogs={setLogs}
-                user={user!}
-                setUser={setUser}
-              />
-            </ProtectedRoute>
-          }
-        />
+          <Route
+            path="/app/habits"
+            element={
+              <ProtectedRoute>
+                <Suspense fallback={<LoadingFallback />}>
+                  <HabitsPage />
+                </Suspense>
+              </ProtectedRoute>
+            }
+          />
 
-        <Route
-          path="/app/social"
-          element={
-            <ProtectedRoute>
-              <SocialPage />
-            </ProtectedRoute>
-          }
-        />
+          <Route
+            path="/app/social"
+            element={
+              <ProtectedRoute>
+                <Suspense fallback={<LoadingFallback />}>
+                  <SocialPage />
+                </Suspense>
+              </ProtectedRoute>
+            }
+          />
 
-        <Route
-          path="/app/shop"
-          element={
-            <ProtectedRoute>
-              <ShopPage user={user!} setUser={setUser} />
-            </ProtectedRoute>
-          }
-        />
+          <Route
+            path="/app/shop"
+            element={
+              <ProtectedRoute>
+                <Suspense fallback={<LoadingFallback />}>
+                  <ShopPage />
+                </Suspense>
+              </ProtectedRoute>
+            }
+          />
 
-        {/* Catch all redirect */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+          {/* Catch all redirect */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Suspense>
     </HashRouter>
+  );
+}
+
+function App() {
+  return (
+    <ErrorBoundary>
+      <AppProvider>
+        <AppContent />
+      </AppProvider>
+    </ErrorBoundary>
   );
 }
 
