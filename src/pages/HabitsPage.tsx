@@ -1,20 +1,27 @@
 import React, { useState, lazy, Suspense } from "react";
-import { Frequency } from "../types";
+import { Frequency, Ritual, RitualLog } from "../types";
 import { Plus, PenTool, Sparkles, BookOpen } from "lucide-react";
 import { generateRitualSuggestions } from "../utils/aiRitualGenerator";
 import RitualItem from "../components/rituals/RitualCard";
 import { useAppContext } from "../contexts/AppContext";
+import Loading from "../components/animations/Loading";
 
+// Carga diferenciada (lazy loading) de la biblioteca de rituales para optimizar rendimiento
 const RitualLibrary = lazy(() => import("../components/rituals/RitualLibrary"));
 
 const HabitsPage = () => {
+  // Obtiene el estado global necesario
   const { user, rituals, setRituals, logs, setLogs, setUser } = useAppContext();
-  
+
   if (!user) return null;
+
+  // Controladores y estados locales del componente
   const [isGenerating, setIsGenerating] = useState(false);
   const [goalInput, setGoalInput] = useState("");
   const [showCreator, setShowCreator] = useState(false);
-  const [createMode, setCreateMode] = useState<"ai" | "manual" | "library">("manual");
+  const [createMode, setCreateMode] = useState<"ai" | "manual" | "library">(
+    "manual",
+  );
   const [showLibrary, setShowLibrary] = useState(false);
   const [manualForm, setManualForm] = useState({
     title: "",
@@ -24,17 +31,22 @@ const HabitsPage = () => {
     essenceReward: 10,
   });
 
+  // Cadena con la fecha de hoy en formato AAAA-MM-DD
   const todayStr = new Date().toISOString().split("T")[0];
 
+  /**
+   * Marca o desmarca la finalización de un ritual para el día actual.
+   * Gestiona tanto la lógica de completar, como deshacer la acción, actualizando los estados necesarios.
+   */
   const toggleCompletion = (ritual: Ritual) => {
     const isCompleted = logs.some(
-      (l) => l.ritualId === ritual.id && l.date === todayStr
+      (l) => l.ritualId === ritual.id && l.date === todayStr,
     );
 
     if (isCompleted) {
-      // --- UNDO LOGIC ---
+      // Lógica para deshacer la finalización
       const newLogs = logs.filter(
-        (l) => !(l.ritualId === ritual.id && l.date === todayStr)
+        (l) => !(l.ritualId === ritual.id && l.date === todayStr),
       );
       setLogs(newLogs);
 
@@ -42,7 +54,7 @@ const HabitsPage = () => {
       yesterday.setDate(yesterday.getDate() - 1);
       const yesterdayStr = yesterday.toISOString().split("T")[0];
       const hadStreakYesterday = newLogs.some(
-        (l) => l.ritualId === ritual.id && l.date === yesterdayStr
+        (l) => l.ritualId === ritual.id && l.date === yesterdayStr,
       );
       const recoveredStreak = hadStreakYesterday
         ? Math.max(0, ritual.streak - 1)
@@ -55,21 +67,21 @@ const HabitsPage = () => {
         ...user,
         essence: Math.max(
           0,
-          user.essence - ritual.essenceReward - bonusToRemove
+          user.essence - ritual.essenceReward - bonusToRemove,
         ),
       });
       setRituals(
         rituals.map((r) =>
-          r.id === ritual.id ? { ...r, streak: recoveredStreak } : r
-        )
+          r.id === ritual.id ? { ...r, streak: recoveredStreak } : r,
+        ),
       );
     } else {
-      // --- COMPLETE LOGIC ---
+      // Lógica para marcar como completado y otorgar recompensa/esencia
       const yesterday = new Date();
       yesterday.setDate(yesterday.getDate() - 1);
       const yesterdayStr = yesterday.toISOString().split("T")[0];
       const hasYesterday = logs.some(
-        (l) => l.ritualId === ritual.id && l.date === yesterdayStr
+        (l) => l.ritualId === ritual.id && l.date === yesterdayStr,
       );
 
       const newStreak = hasYesterday ? ritual.streak + 1 : 1;
@@ -91,12 +103,17 @@ const HabitsPage = () => {
       });
       setRituals(
         rituals.map((r) =>
-          r.id === ritual.id ? { ...r, streak: newStreak } : r
-        )
+          r.id === ritual.id ? { ...r, streak: newStreak } : r,
+        ),
       );
     }
   };
 
+  /**
+   * Crea un nuevo ritual basado en modo IA o manual.
+   * - En modo IA invoca la función generadora de sugerencias.
+   * - En modo manual toma los valores del formulario.
+   */
   const handleCreateRitual = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -124,7 +141,7 @@ const HabitsPage = () => {
       }
       setIsGenerating(false);
     } else {
-      // Manual Mode
+      // Modo manual
       if (!manualForm.title) return;
       const newRitual: Ritual = {
         id: Date.now().toString(),
@@ -133,7 +150,7 @@ const HabitsPage = () => {
         description: manualForm.description,
         difficulty: manualForm.difficulty,
         frequency: manualForm.frequency,
-        essenceReward: Number(manualForm.essenceReward),
+        essenceReward: Number(manualForm.essenceReward), //Cambiar esto por esencia determinada dependiendo de la dificultad y frecuencia
         streak: 0,
         created_at: new Date().toISOString(),
       };
@@ -149,6 +166,7 @@ const HabitsPage = () => {
     }
   };
 
+  // Elimina un ritual por su ID
   const deleteRitual = (id: string) => {
     setRituals(rituals.filter((r) => r.id !== id));
   };
@@ -180,18 +198,16 @@ const HabitsPage = () => {
         </div>
       </div>
 
+      {/* Mostrar biblioteca de rituales si está activa */}
       {showLibrary && (
         <div className="mb-8">
-          <Suspense fallback={
-            <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-8 text-center text-zinc-500">
-              Cargando biblioteca...
-            </div>
-          }>
+          <Suspense fallback={<Loading />}>
             <RitualLibrary />
           </Suspense>
         </div>
       )}
 
+      {/* Formulario para crear ritual nuevo (manual o IA) */}
       {showCreator && (
         <div className="bg-zinc-900 p-6 rounded-xl border border-zinc-800 shadow-xl animate-fade-in-down">
           <div className="flex gap-4 mb-6 border-b border-zinc-800 pb-4">
@@ -221,8 +237,8 @@ const HabitsPage = () => {
             {createMode === "ai" ? (
               <>
                 <p className="text-zinc-400 text-sm mb-2">
-                  Expresa tu deseo (ej: "Ser físicamente imparable" o
-                  "Aprender a programar"). El sistema prescribirá tu sufrimiento.
+                  Expresa tu deseo (ej: "Ser físicamente imparable" o "Aprender
+                  a programar"). El sistema prescribirá tu sufrimiento.
                 </p>
                 <div className="flex gap-2">
                   <input
@@ -344,6 +360,7 @@ const HabitsPage = () => {
         </div>
       )}
 
+      {/* Renderiza los rituales creados por el usuario, o muestra mensaje si no existen */}
       <div className="space-y-3">
         {rituals.length === 0 ? (
           <div className="text-center py-20 text-zinc-600 italic">
@@ -351,8 +368,9 @@ const HabitsPage = () => {
           </div>
         ) : (
           rituals.map((ritual) => {
+            // Verifica si el ritual está completado hoy
             const isDone = logs.some(
-              (l) => l.ritualId === ritual.id && l.date === todayStr
+              (l) => l.ritualId === ritual.id && l.date === todayStr,
             );
             return (
               <RitualItem

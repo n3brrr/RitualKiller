@@ -6,7 +6,7 @@ import { AppProvider, useAppContext } from "./contexts/AppContext.tsx";
 import { ErrorBoundary } from "./components/ui/ErrorBoundary.tsx";
 import "./styles/main.css";
 
-// Lazy loading de páginas para code splitting
+// Lazy loading de páginas para mejorar el rendimiento
 const LandingPage = lazy(() => import("./pages/LandingPage.tsx"));
 const Dashboard = lazy(() => import("./pages/Dashboard.tsx"));
 const HabitsPage = lazy(() => import("./pages/HabitsPage.tsx"));
@@ -14,20 +14,22 @@ const SocialPage = lazy(() => import("./pages/SocialPage.tsx"));
 const ShopPage = lazy(() => import("./pages/ShopPage.tsx"));
 const LoginPage = lazy(() => import("./pages/LoginPage.tsx"));
 
+// Componente mostrado mientras se cargan otros componentes (fallback de carga)
 const LoadingFallback = () => (
   <div className="bg-ritual-black h-screen flex items-center justify-center text-ritual-accent font-display text-xl animate-pulse">
     Cargando...
   </div>
 );
 
-// Protected Route Wrapper Component
+// Protege rutas que requieren autenticación
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, logout } = useAppContext();
-  
+
   if (!user) {
+    // Redirige si no hay usuario autenticado
     return <Navigate to="/" replace />;
   }
-  
+
   return (
     <Layout user={user} onLogout={logout}>
       {children}
@@ -35,11 +37,12 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   );
 };
 
-// Main App Component
+// Componente principal de la aplicación
 function AppContent() {
   const { user, rituals, logs, setUser, loading } = useAppContext();
 
   if (loading) {
+    // Muestra un mensaje de carga inicial mientras se resuelve el contexto
     return (
       <div className="bg-ritual-black h-screen flex items-center justify-center text-ritual-accent font-display text-xl animate-pulse">
         Loading Rituals...
@@ -117,7 +120,7 @@ function AppContent() {
             }
           />
 
-          {/* Catch all redirect */}
+          {/* Redirección para rutas no existentes */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Suspense>
@@ -125,6 +128,7 @@ function AppContent() {
   );
 }
 
+// Render principal de la aplicación, manejando errores y contexto global
 function App() {
   return (
     <ErrorBoundary>

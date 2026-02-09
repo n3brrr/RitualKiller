@@ -17,6 +17,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onAuth }) => {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
+  // Maneja el login/registro por email y contraseña
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -33,8 +34,9 @@ const LoginPage: React.FC<LoginPageProps> = ({ onAuth }) => {
         return;
       }
 
-      // Create user object from auth result
+      // Crea el objeto usuario a partir de la respuesta de autenticación
       if (result.data?.user) {
+        // Determina si es admin por metadata o por credenciales de prueba
         const isAdmin = result.data.user.user_metadata?.isAdmin || 
                        (email.toLowerCase() === 'admin' && password === 'admin');
         
@@ -43,7 +45,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onAuth }) => {
           username: result.data.user.user_metadata?.username || 
                    result.data.user.email?.split("@")[0] || 
                    "Usuario",
-          essence: isAdmin ? 10000 : 0, // Admin empieza con más esencia
+          essence: isAdmin ? 10000 : 0, // Asigna más esencia a admin
           rank: isAdmin ? "Semidiós" : "Iniciado",
           inventory: isAdmin ? ['admin-badge'] : [],
           created_at: new Date().toISOString(),
@@ -60,6 +62,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onAuth }) => {
     }
   };
 
+  // Login con Google
   const handleGoogleAuth = async () => {
     setError(null);
     const result = await signInWithGoogle();
@@ -68,6 +71,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onAuth }) => {
     }
   };
 
+  // Login con GitHub
   const handleGitHubAuth = async () => {
     setError(null);
     const result = await signInWithGitHub();
@@ -78,6 +82,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onAuth }) => {
 
   return (
     <div className="login-container">
+      {/* Estilos en línea para el contenedor principal de la pantalla de login */}
       <style>{`
                 .login-container {
                     display: flex;
@@ -87,7 +92,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onAuth }) => {
                     background: #111;
                     width: 100%;
                     overflow: hidden;
-                    position: fixed; /* Ensure it covers everything */
+                    position: fixed;
                     top: 0;
                     left: 0;
                     z-index: 100;
@@ -102,13 +107,14 @@ const LoginPage: React.FC<LoginPageProps> = ({ onAuth }) => {
         <div className="login">
           <h2>{isSignUp ? "Registro" : "Iniciar Sesión"}</h2>
           
+          {/* Muestra error si existe */}
           {error && (
             <div className="mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-500 text-sm">
               {error}
             </div>
           )}
 
-          {/* Admin credentials hint for development */}
+          {/* Hint de credenciales admin solo para desarrollo */}
           {process.env.NODE_ENV === 'development' && (
             <div className="mb-4 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg text-yellow-500 text-xs">
               <strong>Modo Desarrollo:</strong> Usa <code className="bg-black/30 px-1 rounded">admin</code> / <code className="bg-black/30 px-1 rounded">admin</code> para iniciar sesión como administrador
@@ -144,6 +150,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onAuth }) => {
             </div>
           </form>
 
+          {/* Botones de login social */}
           <div className="w-full flex flex-col gap-3 mt-4">
             <button
               onClick={handleGoogleAuth}
@@ -162,6 +169,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onAuth }) => {
           </div>
 
           <div className="links">
+            {/* Futuro: implementar recuperación de contraseña */}
             <a href="#" onClick={(e) => { e.preventDefault(); /* TODO: Reset password */ }}>
               Olvidé mi contraseña
             </a>

@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Zap, Skull, Shield, Crown } from "lucide-react";
 import { ShopItem, SocialPost } from "../types";

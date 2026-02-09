@@ -1,49 +1,62 @@
-import React, { useState } from 'react';
-import { Users, MessageCircle, Heart, Share2, UserPlus, Trophy, TrendingUp } from 'lucide-react';
-import { SocialPost, Comment } from '../../types';
-import { useAppContext } from '../../contexts/AppContext';
+import React, { useState } from "react";
+import {
+  Users,
+  MessageCircle,
+  Heart,
+  Share2,
+  UserPlus,
+  Trophy,
+  TrendingUp,
+} from "lucide-react";
+import { SocialPost, Comment } from "../../types";
+import { useAppContext } from "../../contexts/AppContext";
 
 const EnhancedSocial: React.FC = () => {
   const { user } = useAppContext();
   const [posts, setPosts] = useState<SocialPost[]>([
     {
-      id: '1',
-      author: 'NeonSamurai',
-      authorId: 'user1',
-      content: 'Acabo de completar el protocolo de las 5AM por 30 días seguidos. Mi concentración es láser.',
-      timestamp: '2h ago',
+      id: "1",
+      author: "NeonSamurai",
+      authorId: "user1",
+      content:
+        "Acabo de completar el protocolo de las 6AM por 30 días seguidos. Mi concentración es láser.",
+      timestamp: "2h ago",
       likes: 42,
       isSystem: false,
       comments: [],
     },
     {
-      id: '2',
-      author: 'System',
-      authorId: 'system',
-      content: 'El usuario @GhostWalker ha ascendido al Rango: Adepto.',
-      timestamp: '4h ago',
+      id: "2",
+      author: "System",
+      authorId: "system",
+      content: "El usuario @GhostWalker ha ascendido al Rango: Adepto.",
+      timestamp: "4h ago",
       likes: 128,
       isSystem: true,
       comments: [],
     },
   ]);
   const [following, setFollowing] = useState<string[]>([]);
-  const [newPostContent, setNewPostContent] = useState('');
-  const [commentInputs, setCommentInputs] = useState<{ [key: string]: string }>({});
+  const [newPostContent, setNewPostContent] = useState("");
+  const [commentInputs, setCommentInputs] = useState<{ [key: string]: string }>(
+    {},
+  );
 
   const handleLike = (postId: string) => {
-    setPosts(prev => prev.map(post => 
-      post.id === postId 
-        ? { ...post, likes: post.likes + (post.likes === 0 ? 1 : 0) }
-        : post
-    ));
+    setPosts((prev) =>
+      prev.map((post) =>
+        post.id === postId
+          ? { ...post, likes: post.likes + (post.likes === 0 ? 1 : 0) }
+          : post,
+      ),
+    );
   };
 
   const handleFollow = (userId: string) => {
-    setFollowing(prev => 
+    setFollowing((prev) =>
       prev.includes(userId)
-        ? prev.filter(id => id !== userId)
-        : [...prev, userId]
+        ? prev.filter((id) => id !== userId)
+        : [...prev, userId],
     );
   };
 
@@ -55,14 +68,14 @@ const EnhancedSocial: React.FC = () => {
       author: user.username,
       authorId: user.id,
       content: newPostContent,
-      timestamp: 'Ahora',
+      timestamp: "Ahora",
       likes: 0,
       isSystem: false,
       comments: [],
     };
 
-    setPosts(prev => [newPost, ...prev]);
-    setNewPostContent('');
+    setPosts((prev) => [newPost, ...prev]);
+    setNewPostContent("");
   };
 
   const handleComment = (postId: string) => {
@@ -78,13 +91,15 @@ const EnhancedSocial: React.FC = () => {
       timestamp: new Date().toISOString(),
     };
 
-    setPosts(prev => prev.map(post =>
-      post.id === postId
-        ? { ...post, comments: [...(post.comments || []), newComment] }
-        : post
-    ));
+    setPosts((prev) =>
+      prev.map((post) =>
+        post.id === postId
+          ? { ...post, comments: [...(post.comments || []), newComment] }
+          : post,
+      ),
+    );
 
-    setCommentInputs(prev => ({ ...prev, [postId]: '' }));
+    setCommentInputs((prev) => ({ ...prev, [postId]: "" }));
   };
 
   const filteredPosts = posts; // Could filter by following
@@ -106,7 +121,7 @@ const EnhancedSocial: React.FC = () => {
       <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-4">
         <div className="flex gap-4">
           <div className="w-10 h-10 bg-zinc-800 rounded-full flex items-center justify-center text-zinc-400 flex-shrink-0">
-            {user?.username.charAt(0).toUpperCase() || 'U'}
+            {user?.username.charAt(0).toUpperCase() || "U"}
           </div>
           <div className="flex-1">
             <textarea
@@ -138,9 +153,11 @@ const EnhancedSocial: React.FC = () => {
           >
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-center gap-3">
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                  post.isSystem ? 'bg-ritual-accent/20' : 'bg-zinc-800'
-                }`}>
+                <div
+                  className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                    post.isSystem ? "bg-ritual-accent/20" : "bg-zinc-800"
+                  }`}
+                >
                   {post.isSystem ? (
                     <Trophy className="text-ritual-accent" size={20} />
                   ) : (
@@ -151,9 +168,11 @@ const EnhancedSocial: React.FC = () => {
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className={`font-bold ${
-                      post.isSystem ? 'text-ritual-accent' : 'text-white'
-                    }`}>
+                    <span
+                      className={`font-bold ${
+                        post.isSystem ? "text-ritual-accent" : "text-white"
+                      }`}
+                    >
                       @{post.author}
                     </span>
                     {!post.isSystem && post.authorId !== user?.id && (
@@ -161,8 +180,8 @@ const EnhancedSocial: React.FC = () => {
                         onClick={() => handleFollow(post.authorId!)}
                         className={`text-xs px-2 py-1 rounded border transition-colors ${
                           following.includes(post.authorId!)
-                            ? 'bg-ritual-accent/10 border-ritual-accent text-ritual-accent'
-                            : 'bg-zinc-900 border-zinc-700 text-zinc-400 hover:border-zinc-600'
+                            ? "bg-ritual-accent/10 border-ritual-accent text-ritual-accent"
+                            : "bg-zinc-900 border-zinc-700 text-zinc-400 hover:border-zinc-600"
                         }`}
                       >
                         {following.includes(post.authorId!) ? (
@@ -179,7 +198,9 @@ const EnhancedSocial: React.FC = () => {
                       </button>
                     )}
                   </div>
-                  <span className="text-zinc-600 text-xs">{post.timestamp}</span>
+                  <span className="text-zinc-600 text-xs">
+                    {post.timestamp}
+                  </span>
                 </div>
               </div>
             </div>
@@ -192,7 +213,10 @@ const EnhancedSocial: React.FC = () => {
                 onClick={() => handleLike(post.id)}
                 className="flex items-center gap-2 hover:text-ritual-accent transition-colors"
               >
-                <Heart size={18} className={post.likes > 0 ? 'fill-red-500 text-red-500' : ''} />
+                <Heart
+                  size={18}
+                  className={post.likes > 0 ? "fill-red-500 text-red-500" : ""}
+                />
                 <span className="text-sm">{post.likes}</span>
               </button>
               <button className="flex items-center gap-2 hover:text-ritual-accent transition-colors">
@@ -216,7 +240,9 @@ const EnhancedSocial: React.FC = () => {
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
-                        <span className="text-sm font-bold text-white">@{comment.author}</span>
+                        <span className="text-sm font-bold text-white">
+                          @{comment.author}
+                        </span>
                         <span className="text-xs text-zinc-600">
                           {new Date(comment.timestamp).toLocaleDateString()}
                         </span>
@@ -233,12 +259,17 @@ const EnhancedSocial: React.FC = () => {
               <div className="flex gap-2">
                 <input
                   type="text"
-                  value={commentInputs[post.id] || ''}
-                  onChange={(e) => setCommentInputs(prev => ({ ...prev, [post.id]: e.target.value }))}
+                  value={commentInputs[post.id] || ""}
+                  onChange={(e) =>
+                    setCommentInputs((prev) => ({
+                      ...prev,
+                      [post.id]: e.target.value,
+                    }))
+                  }
                   placeholder="Escribe un comentario..."
                   className="flex-1 bg-zinc-900 border border-zinc-700 rounded-lg px-4 py-2 text-white placeholder-zinc-600 focus:border-ritual-accent outline-none text-sm"
                   onKeyPress={(e) => {
-                    if (e.key === 'Enter') {
+                    if (e.key === "Enter") {
                       handleComment(post.id);
                     }
                   }}

@@ -7,13 +7,15 @@ import { useAppContext } from "../contexts/AppContext";
 
 const ShopPage = () => {
   const { user, setUser } = useAppContext();
-  
+
   if (!user) return null;
+
   const [selectedItem, setSelectedItem] = useState<ShopItem | null>(null);
 
+  // Controla la compra de un ítem, incluye animación y actualización de usuario
   const buyItem = (item: ShopItem) => {
     if (user.essence >= item.cost) {
-      // Animation for specific item card background in grid to show purchase
+      // Animación de compra exitosa sobre la tarjeta del ítem
       gsap.to(`#shop-item-${item.id}`, {
         scale: 0.95,
         duration: 0.1,
@@ -32,7 +34,7 @@ const ShopPage = () => {
                   duration: 0.5,
                 });
               },
-            }
+            },
           );
 
           setUser({
@@ -40,11 +42,11 @@ const ShopPage = () => {
             essence: user.essence - item.cost,
             inventory: [...user.inventory, item.id],
           });
-          setSelectedItem(null); // Close modal
+          setSelectedItem(null); // Cierra el modal
         },
       });
     } else {
-      // Shake animation for error on the Modal content if open, or Card if closed
+      // Animación de error (temblor) si no hay suficiente esencia
       const target = selectedItem ? "#modal-content" : `#shop-item-${item.id}`;
       gsap.to(target, {
         x: 10,
@@ -66,11 +68,13 @@ const ShopPage = () => {
     <div>
       <div className="flex justify-between items-center mb-8">
         <h2 className="text-3xl font-display font-bold">Mercado Negro</h2>
+        {/* Esencia disponible del usuario */}
         <div className="bg-zinc-900 px-4 py-2 rounded-lg border border-zinc-800 text-ritual-accent font-mono font-bold">
           {user.essence} Esencia
         </div>
       </div>
 
+      {/* Renderiza la grilla de ítems disponibles en el shop */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {MOCK_SHOP_ITEMS.map((item) => {
           const owned = user.inventory.includes(item.id);
@@ -120,7 +124,7 @@ const ShopPage = () => {
         })}
       </div>
 
-      {/* Shop Modal */}
+      {/* Modal de detalles y compra de ítem */}
       {selectedItem && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center px-4">
           <div
@@ -131,6 +135,7 @@ const ShopPage = () => {
             id="modal-content"
             className="relative bg-zinc-950 border border-zinc-800 p-8 rounded-2xl max-w-md w-full shadow-2xl animate-fade-in-up"
           >
+            {/* Botón para cerrar el modal */}
             <button
               onClick={() => setSelectedItem(null)}
               className="absolute top-4 right-4 text-zinc-500 hover:text-white"
@@ -150,11 +155,15 @@ const ShopPage = () => {
                   selectedItem.rarity === "legendary"
                     ? "border-yellow-500/30 text-yellow-500 bg-yellow-500/10"
                     : selectedItem.rarity === "rare"
-                    ? "border-purple-500/30 text-purple-500 bg-purple-500/10"
-                    : "border-zinc-500/30 text-zinc-500 bg-zinc-500/10"
+                      ? "border-purple-500/30 text-purple-500 bg-purple-500/10"
+                      : "border-zinc-500/30 text-zinc-500 bg-zinc-500/10"
                 }`}
               >
-                {selectedItem.rarity === 'common' ? 'Común' : selectedItem.rarity === 'rare' ? 'Raro' : 'Legendario'}
+                {selectedItem.rarity === "common"
+                  ? "Común"
+                  : selectedItem.rarity === "rare"
+                    ? "Raro"
+                    : "Legendario"}
               </div>
               <p className="text-zinc-400 leading-relaxed">
                 {selectedItem.description}
@@ -162,6 +171,7 @@ const ShopPage = () => {
             </div>
 
             <div className="flex gap-3">
+              {/* Botón para comprar el ítem (aplica animación y lógica de compra) */}
               <button
                 onClick={() => buyItem(selectedItem)}
                 className="flex-1 bg-ritual-accent text-black font-bold py-3 rounded-lg hover:bg-emerald-400 transition-colors flex items-center justify-center gap-2 uppercase tracking-wider text-sm"
