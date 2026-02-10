@@ -34,16 +34,19 @@ export const signInWithGitHub = async () => {
   }
 };
 
-export const signUpWithEmail = async (email: string, password: string) => {
+export const signUpWithEmail = async (email: string, password: string, username?: string) => {
   try {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         emailRedirectTo: `${window.location.origin}/app/dashboard`,
+        data: {
+          username: username || email.split('@')[0],
+        },
       },
     });
-    
+
     if (error) throw error;
     return { data, error: null };
   } catch (error: any) {

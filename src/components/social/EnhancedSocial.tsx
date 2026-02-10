@@ -9,10 +9,11 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { SocialPost, Comment } from "../../types";
-import { useAppContext } from "../../contexts/AppContext";
+import { useAuthStore } from "../../features/auth/stores/useAuthStore";
 
 const EnhancedSocial: React.FC = () => {
-  const { user } = useAppContext();
+  const user = useAuthStore((state) => state.user);
+
   const [posts, setPosts] = useState<SocialPost[]>([
     {
       id: "1",
@@ -24,6 +25,7 @@ const EnhancedSocial: React.FC = () => {
       likes: 42,
       isSystem: false,
       comments: [],
+      likedByMe: false,
     },
     {
       id: "2",
@@ -34,6 +36,7 @@ const EnhancedSocial: React.FC = () => {
       likes: 128,
       isSystem: true,
       comments: [],
+      likedByMe: true,
     },
   ]);
   const [following, setFollowing] = useState<string[]>([]);
@@ -46,7 +49,11 @@ const EnhancedSocial: React.FC = () => {
     setPosts((prev) =>
       prev.map((post) =>
         post.id === postId
-          ? { ...post, likes: post.likes + (post.likes === 0 ? 1 : 0) }
+          ? {
+              ...post,
+              likes: post.likedByMe ? post.likes - 1 : post.likes + 1,
+              likedByMe: !post.likedByMe,
+            }
           : post,
       ),
     );
@@ -72,6 +79,7 @@ const EnhancedSocial: React.FC = () => {
       likes: 0,
       isSystem: false,
       comments: [],
+      likedByMe: false,
     };
 
     setPosts((prev) => [newPost, ...prev]);
@@ -120,8 +128,16 @@ const EnhancedSocial: React.FC = () => {
       {/* Create Post */}
       <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-4">
         <div className="flex gap-4">
-          <div className="w-10 h-10 bg-zinc-800 rounded-full flex items-center justify-center text-zinc-400 flex-shrink-0">
-            {user?.username.charAt(0).toUpperCase() || "U"}
+          <div className="w-10 h-10 bg-zinc-800 rounded-full flex items-center justify-center text-zinc-400 flex-shrink-0 overflow-hidden">
+            {user?.avatar_url ? (
+              <img
+                src={user.avatar_url}
+                alt={user.username}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              user?.username.charAt(0).toUpperCase() || "U"
+            )}
           </div>
           <div className="flex-1">
             <textarea
@@ -154,13 +170,16 @@ const EnhancedSocial: React.FC = () => {
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-center gap-3">
                 <div
-                  className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                  className={`w-10 h-10 rounded-full flex items-center justify-center overflow-hidden ${
                     post.isSystem ? "bg-ritual-accent/20" : "bg-zinc-800"
                   }`}
                 >
                   {post.isSystem ? (
                     <Trophy className="text-ritual-accent" size={20} />
                   ) : (
+                    // Logic to show avatar if we have author info?
+                    // We don't have author avatar in SocialPost type in mocks yet.
+                    // For now, use initial. Ideally Post should have authorAvatar.
                     <span className="text-zinc-400 font-bold">
                       {post.author.charAt(0).toUpperCase()}
                     </span>
@@ -211,11 +230,15 @@ const EnhancedSocial: React.FC = () => {
             <div className="flex items-center gap-6 text-zinc-500">
               <button
                 onClick={() => handleLike(post.id)}
-                className="flex items-center gap-2 hover:text-ritual-accent transition-colors"
+                className={`flex items-center gap-2 transition-colors ${post.likedByMe ? "text-ritual-accent" : "hover:text-ritual-accent"}`}
               >
                 <Heart
                   size={18}
-                  className={post.likes > 0 ? "fill-red-500 text-red-500" : ""}
+                  className={
+                    post.likedByMe
+                      ? "fill-ritual-accent text-ritual-accent"
+                      : ""
+                  }
                 />
                 <span className="text-sm">{post.likes}</span>
               </button>

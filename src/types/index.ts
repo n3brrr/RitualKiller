@@ -11,6 +11,11 @@ export interface User {
     avatar_url?: string;
     created_at: string;
     isAdmin?: boolean;
+    active_buffs?: {
+        itemId: string;
+        expiresAt: number;
+        multiplier?: number;
+    }[];
 }
 
 export interface Ritual {
@@ -42,6 +47,9 @@ export interface ShopItem {
     cost: number;
     icon: React.ReactNode;
     rarity: Rarity;
+    effectType?: 'essence_boost' | 'restore_streak' | 'cosmetic' | 'unlock_master';
+    effectValue?: number;
+    duration?: number; // milliseconds, -1 for permanent, 0 for instant
 }
 
 export interface SocialPost {
@@ -53,6 +61,7 @@ export interface SocialPost {
     isSystem?: boolean;
     comments?: Comment[];
     authorId?: string;
+    likedByMe?: boolean;
 }
 
 export interface Comment {
@@ -100,7 +109,6 @@ export interface ProductivityMetrics {
     weeklyEfficiency: number;
     averageCompletionRate: number;
     bestDay: string;
-    totalTimeSpent: number;
     ritualsCompleted: number;
     streakDays: number;
 }

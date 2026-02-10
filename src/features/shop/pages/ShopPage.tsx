@@ -1,12 +1,52 @@
 import { useState } from "react";
 import { ShopItem } from "@/types";
-import { Zap, Check, X } from "lucide-react";
+import { Zap, Check, X, FlaskConical, Scroll, Skull } from "lucide-react";
 import { gsap } from "gsap";
-import { MOCK_SHOP_ITEMS } from "@/mocks";
-import { useAppContext } from "@/contexts/AppContext";
+import { useAuthStore } from "@/features/auth/stores/useAuthStore";
+
+// Items predefinidos del mercado (Pociones y objetos oscuros)
+const SHOP_ITEMS: ShopItem[] = [
+  {
+    id: "potion_discipline",
+    name: "Elixir de Disciplina",
+    description:
+      "Otorga +50% de Esencia ganada durante 24 horas. El sabor es metálico y frío.",
+    cost: 500,
+    rarity: "rare",
+    icon: <FlaskConical size={40} className="text-blue-500" />,
+  },
+  {
+    id: "potion_oblivion",
+    name: "Poción de Olvido",
+    description:
+      "Restaura una racha perdida si se consume antes del amanecer siguiente. Borra el fracaso.",
+    cost: 1000,
+    rarity: "legendary",
+    icon: <FlaskConical size={40} className="text-purple-500" />,
+  },
+  {
+    id: "shadow_amulet",
+    name: "Amuleto de Sombra",
+    description:
+      "Un objeto cosmético que oscurece tu perfil. Los demás verán tu compromiso con el vacío.",
+    cost: 2500,
+    rarity: "rare",
+    icon: <Skull size={40} className="text-zinc-400" />,
+  },
+  {
+    id: "binding_contract",
+    name: "Contrato Vinculante",
+    description:
+      "Desbloquea rituales de nivel maestro. Una vez firmado, no hay vuelta atrás.",
+    cost: 5000,
+    rarity: "legendary",
+    icon: <Scroll size={40} className="text-red-500" />,
+  },
+];
 
 const ShopPage = () => {
-  const { user, setUser } = useAppContext();
+  const user = useAuthStore((state) => state.user);
+  const setUser = useAuthStore((state) => state.setUser);
 
   if (!user) return null;
 
@@ -76,7 +116,7 @@ const ShopPage = () => {
 
       {/* Renderiza la grilla de ítems disponibles en el shop */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {MOCK_SHOP_ITEMS.map((item) => {
+        {SHOP_ITEMS.map((item) => {
           const owned = user.inventory.includes(item.id);
           return (
             <div

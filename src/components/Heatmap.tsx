@@ -16,10 +16,11 @@ export const Heatmap: React.FC<HeatmapProps> = ({ logs }) => {
     // Create a map of date -> intensity count
     const logMap: Record<string, number> = {};
     logs.forEach((log) => {
-      if (logMap[log.date]) {
-        logMap[log.date]++;
-      } else {
-        logMap[log.date] = 1;
+      if (log.date) {
+        const dateStr = log.date.split("T")[0] || "";
+        if (dateStr) {
+          logMap[dateStr] = (logMap[dateStr] || 0) + 1;
+        }
       }
     });
 
@@ -46,7 +47,14 @@ export const Heatmap: React.FC<HeatmapProps> = ({ logs }) => {
 
   return (
     <div className="w-full overflow-x-auto pb-2">
-      <div className="flex gap-1 min-w-max">
+      <div
+        ref={(el) => {
+          if (el) {
+            el.scrollLeft = el.scrollWidth;
+          }
+        }}
+        className="flex gap-1 min-w-max"
+      >
         {/* We arrange in columns of 7 days (weeks) */}
         {Array.from({ length: Math.ceil(heatmapData.length / 7) }).map(
           (_, weekIndex) => (

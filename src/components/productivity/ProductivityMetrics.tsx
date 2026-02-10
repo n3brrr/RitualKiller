@@ -34,19 +34,39 @@ const ProductivityMetrics: React.FC = () => {
 
     // Best day (most completions)
     const dayCounts: { [key: string]: number } = {};
+    if (logs.length === 0) {
+      return {
+        dailyEfficiency,
+        weeklyEfficiency,
+        averageCompletionRate,
+        bestDay: "N/A",
+        ritualsCompleted: 0,
+        streakDays: 0,
+      };
+    }
+
     logs.forEach((log) => {
       dayCounts[log.date] = (dayCounts[log.date] || 0) + 1;
     });
-    const bestDayEntry = Object.entries(dayCounts).reduce(
-      (a, b) => (dayCounts[a[0]] > dayCounts[b[0]] ? a : b),
-      ["", 0],
-    );
-    const bestDay = bestDayEntry[0]
-      ? new Date(bestDayEntry[0]).toLocaleDateString("es-ES")
-      : "N/A";
 
-    // Total time spent (estimated 15 min per ritual)
-    const totalTimeSpent = logs.length * 15; // minutes
+    // Find the entry with max count
+    let maxDate = "";
+    let maxCount = -1;
+
+    Object.entries(dayCounts).forEach(([date, count]) => {
+      if (count > maxCount) {
+        maxCount = count;
+        maxDate = date;
+      }
+    });
+
+    const bestDay = maxDate
+      ? new Date(maxDate).toLocaleDateString("es-ES", {
+          weekday: "long",
+          day: "numeric",
+          month: "short",
+        })
+      : "N/A";
 
     // Rituals completed
     const ritualsCompleted = logs.length;
@@ -59,7 +79,6 @@ const ProductivityMetrics: React.FC = () => {
       weeklyEfficiency,
       averageCompletionRate,
       bestDay,
-      totalTimeSpent,
       ritualsCompleted,
       streakDays: maxStreak,
     };
@@ -169,33 +188,31 @@ const ProductivityMetrics: React.FC = () => {
       </div>
 
       {/* Detailed Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-6">
-          <div className="text-zinc-500 text-sm mb-2">
-            Tiempo Total Invertido
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-6 relative overflow-hidden group hover:border-ritual-accent/50 transition-colors">
+          <div className="absolute inset-0 bg-gradient-to-br from-ritual-accent/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+          <div className="text-zinc-500 text-sm mb-2 relative z-10">
+            Rituales Completados
           </div>
-          <div className="text-2xl font-mono font-bold text-ritual-accent">
-            {formatTime(metrics.totalTimeSpent)}
-          </div>
-          <div className="text-xs text-zinc-500 mt-1">
-            Estimado: 15 min por ritual
-          </div>
-        </div>
-
-        <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-6">
-          <div className="text-zinc-500 text-sm mb-2">Rituales Completados</div>
-          <div className="text-2xl font-mono font-bold text-white">
+          <div className="text-2xl font-mono font-bold text-white relative z-10">
             {metrics.ritualsCompleted}
           </div>
-          <div className="text-xs text-zinc-500 mt-1">Total histórico</div>
+          <div className="text-xs text-zinc-500 mt-1 relative z-10">
+            Total histórico
+          </div>
         </div>
 
-        <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-6">
-          <div className="text-zinc-500 text-sm mb-2">Días de Racha</div>
-          <div className="text-2xl font-mono font-bold text-yellow-500">
+        <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-6 relative overflow-hidden group hover:border-yellow-500/50 transition-colors">
+          <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+          <div className="text-zinc-500 text-sm mb-2 relative z-10">
+            Días de Racha
+          </div>
+          <div className="text-2xl font-mono font-bold text-yellow-500 relative z-10">
             {metrics.streakDays}
           </div>
-          <div className="text-xs text-zinc-500 mt-1">Mejor racha actual</div>
+          <div className="text-xs text-zinc-500 mt-1 relative z-10">
+            Mejor racha actual
+          </div>
         </div>
       </div>
 

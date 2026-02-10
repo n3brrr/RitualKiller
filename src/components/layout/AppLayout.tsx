@@ -11,6 +11,7 @@ import {
   Crown,
   Zap,
   ShieldCheck,
+  Package,
 } from "lucide-react";
 import { useAuthStore } from "@/features/auth/stores/useAuthStore";
 import { isAdmin } from "@/utils/adminUtils";
@@ -81,16 +82,31 @@ export const AppLayout: React.FC = () => {
             <ShoppingBag size={20} />
             <span>Mercado Negro</span>
           </NavLink>
+          <NavLink to="/app/inventory" className={navItemClass}>
+            <Package size={20} />
+            <span>Inventario</span>
+          </NavLink>
+          <NavLink to="/app/analytics" className={navItemClass}>
+            <Zap size={20} />
+            <span>Analiticas</span>
+          </NavLink>
+          <NavLink to="/app/achievements" className={navItemClass}>
+            <Crown size={20} />
+            <span>Logros</span>
+          </NavLink>
         </nav>
 
         {/* User Profile Section */}
         <div className="p-6 border-t border-zinc-900 bg-zinc-950/30">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 bg-zinc-800 rounded-full flex items-center justify-center border border-zinc-700 text-ritual-accent font-display font-bold shadow-inner">
+          <NavLink
+            to={`/app/profile/${user.username}`}
+            className="flex items-center gap-3 mb-4 hover:bg-zinc-900/50 p-2 rounded-lg transition-colors cursor-pointer group"
+          >
+            <div className="w-10 h-10 bg-zinc-800 rounded-full flex items-center justify-center border border-zinc-700 text-ritual-accent font-display font-bold shadow-inner group-hover:border-ritual-accent transition-colors">
               {user.username.charAt(0).toUpperCase()}
             </div>
             <div>
-              <div className="font-bold text-sm text-zinc-100 flex items-center gap-2">
+              <div className="font-bold text-sm text-zinc-100 flex items-center gap-2 group-hover:text-ritual-accent transition-colors">
                 {user.username}
                 {isAdmin(user) && (
                   <span className="text-[10px] px-1.5 py-0.5 bg-yellow-500/20 text-yellow-500 rounded border border-yellow-500/30 flex items-center gap-1">
@@ -103,7 +119,7 @@ export const AppLayout: React.FC = () => {
                 {rank.icon} {rank.title}
               </div>
             </div>
-          </div>
+          </NavLink>
 
           <div className="mb-4">
             <div className="flex justify-between text-[10px] text-zinc-500 mb-1 uppercase tracking-wider">

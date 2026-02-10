@@ -9,6 +9,7 @@ const LoginPage: React.FC = () => {
   const navigate = useNavigate();
   const setUser = useAuthStore((state) => state.setUser);
   const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [isSignUp, setIsSignUp] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -22,7 +23,7 @@ const LoginPage: React.FC = () => {
 
     try {
       const result = isSignUp
-        ? await signUpWithEmail(email, password)
+        ? await signUpWithEmail(email, password, username)
         : await signInWithEmail(email, password);
 
       if (result.error) {
@@ -42,6 +43,7 @@ const LoginPage: React.FC = () => {
           id: result.data.user.id,
           username:
             result.data.user.user_metadata?.username ||
+            username ||
             result.data.user.email?.split("@")[0] ||
             "Usuario",
           essence: isAdminUser ? 10000 : 0, // Asigna más esencia a admin
@@ -49,6 +51,7 @@ const LoginPage: React.FC = () => {
           inventory: isAdminUser ? ["admin-badge"] : [],
           created_at: new Date().toISOString(),
           isAdmin: isAdminUser,
+          avatar_url: (result.data.user.user_metadata as any)?.avatar_url,
         };
 
         setUser(user);
@@ -109,10 +112,21 @@ const LoginPage: React.FC = () => {
             className="w-full flex flex-col gap-5"
             onSubmit={handleEmailAuth}
           >
+            {isSignUp && (
+              <div className="inputBx">
+                <input
+                  type="text"
+                  placeholder="Nombre de Usuario"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  required={isSignUp}
+                />
+              </div>
+            )}
             <div className="inputBx">
               <input
                 type="text"
-                placeholder="Email o Usuario (admin para pruebas)"
+                placeholder={isSignUp ? "Email" : "Email o Usuario (admin)"}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required

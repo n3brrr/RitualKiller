@@ -1,18 +1,11 @@
-import React, { lazy, Suspense } from "react";
+import React, { lazy, Suspense, useMemo } from "react";
 import { Heatmap } from "@/components/Heatmap";
-import { Zap, Flame, Clock, Check, AlertCircle, Trophy } from "lucide-react";
+import { Zap, Flame, Clock, Check, AlertCircle } from "lucide-react";
 import Loading from "@/components/animations/Loading";
 import { ritualService } from "@/services/api/ritualService";
 import { useLoaderData } from "react-router-dom";
 import { Ritual, RitualLog } from "@/types";
 
-// Carga diferida (lazy loading) de componentes grandes para mejorar el rendimiento de la página
-const AchievementsList = lazy(
-  () => import("@/components/achievements/AchievementsList"),
-);
-const AdvancedAnalytics = lazy(
-  () => import("@/components/analytics/AdvancedAnalytics"),
-);
 const RitualCalendar = lazy(
   () => import("@/components/calendar/RitualCalendar"),
 );
@@ -34,6 +27,19 @@ export const dashboardLoader = async () => {
   return { rituals, logs };
 };
 
+const DAILY_QUOTES = [
+  "La disciplina es el puente entre metas y logros.",
+  "No cuentes los días, haz que los días cuenten.",
+  "El dolor de la disciplina pesa onzas, el del arrepentimiento toneladas.",
+  "Tu futuro se crea por lo que haces hoy, no mañana.",
+  "Domina tus rituales, domina tu vida.",
+  "La excelencia no es un acto, es un hábito.",
+  "Sufre el dolor de la disciplina o sufre el dolor del arrepentimiento.",
+  "La única forma de hacer un gran trabajo es amar lo que haces.",
+  "Somos lo que hacemos repetidamente.",
+  "La motivación es lo que te pone en marcha. El hábito es lo que hace que sigas.",
+];
+
 const Dashboard = () => {
   const { rituals: loadedRituals, logs: loadedLogs } = useLoaderData() as {
     rituals: Ritual[];
@@ -45,6 +51,18 @@ const Dashboard = () => {
   const rituals = loadedRituals || [];
   const logs = loadedLogs || [];
 
+  const dailyQuote = useMemo(() => {
+    const dayOfYear = Math.floor(
+      (new Date().getTime() -
+        new Date(new Date().getFullYear(), 0, 0).getTime()) /
+        1000 /
+        60 /
+        60 /
+        24,
+    );
+    return DAILY_QUOTES[dayOfYear % DAILY_QUOTES.length];
+  }, []);
+
   if (!user) return null; // Si no hay usuario autenticado, no se muestra el dashboard
 
   // Calcula la fecha actual en formato YYYY-MM-DD
@@ -55,35 +73,43 @@ const Dashboard = () => {
   const completedIds = new Set(todaysLogs.map((l) => l.ritualId));
 
   const activeRituals = rituals.length;
-  const completedCount = completedIds.size;
-  // Porcentaje de alineación diaria (rituales completados respecto al total activos)
-  const completionRate =
-    activeRituals > 0 ? Math.round((completedCount / activeRituals) * 100) : 0;
-
   // Rituals pendientes para hoy
   const pendingRituals = rituals.filter((r) => !completedIds.has(r.id));
 
-  // Mejor racha conseguida por el usuario (streak máximo)
+  // Mejor racha conseguida por el usuario (streak máximo entre sus rituales)
+  // O podríamos calcular racha global de login, pero usaremos el max streak de rituales
   const bestStreak = rituals.reduce((max, r) => Math.max(max, r.streak), 0);
+
+  // Racha actual (días consecutivos con al menos 1 log)
+  // Simplificación: Usaremos bestStreak como "Racha Actual" para mostrar en el header por ahora,
+  // ya que la racha global requiere lógica de backend o cálculo complejo de logs.
+  const currentStreakDisplay = bestStreak;
 
   return (
     <div className="space-y-8 animate-fade-in">
-      <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+      <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 border-b border-zinc-900 pb-6">
         <div>
-          <h2 className="text-3xl font-display font-bold text-white mb-1">
+          <h2 className="text-3xl font-display font-bold text-white mb-2">
             Tu Altar
           </h2>
-          <p className="text-zinc-500">
-            Bienvenido de vuelta,{" "}
-            <span className="text-ritual-accent">{user.username}</span>.
+          <p className="text-ritual-accent text-sm font-medium italic opacity-80">
+            "{dailyQuote}"
           </p>
         </div>
         <div className="text-left md:text-right">
-          <div className="text-4xl font-display font-bold text-zinc-200">
-            {completionRate}%
+          <div className="text-4xl font-display font-bold text-zinc-200 flex items-center gap-2 justify-end">
+            {currentStreakDisplay}{" "}
+            <Flame
+              size={32}
+              className={
+                currentStreakDisplay > 0
+                  ? "text-orange-500 fill-orange-500/20"
+                  : "text-zinc-700"
+              }
+            />
           </div>
           <div className="text-xs text-zinc-500 uppercase tracking-widest">
-            Alineación Diaria
+            Racha Diaria
           </div>
         </div>
       </header>
@@ -210,20 +236,6 @@ const Dashboard = () => {
       <div className="mt-8">
         <Suspense fallback={<Loading />}>
           <ProductivityMetrics />
-        </Suspense>
-      </div>
-
-      {/* Sección: Analíticas avanzadas */}
-      <div className="mt-8">
-        <Suspense fallback={<Loading />}>
-          <AdvancedAnalytics />
-        </Suspense>
-      </div>
-
-      {/* Sección: Logros */}
-      <div className="mt-8">
-        <Suspense fallback={<Loading />}>
-          <AchievementsList />
         </Suspense>
       </div>
     </div>

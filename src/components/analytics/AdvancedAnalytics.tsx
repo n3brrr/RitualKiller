@@ -59,18 +59,23 @@ const AdvancedAnalytics: React.FC = () => {
     rituals.forEach((ritual) => {
       // Suma las veces que este ritual ha sido completado, agrupando por dificultad
       const completed = logs.filter((l) => l.ritualId === ritual.id).length;
-      distribution[ritual.difficulty] += completed;
+      const current = distribution[ritual.difficulty];
+      if (current !== undefined) {
+        distribution[ritual.difficulty] = current + completed;
+      }
     });
 
-    return Object.entries(distribution).map(([name, value]) => ({
-      name:
-        name === "novice"
-          ? "Novato"
-          : name === "adept"
-            ? "Intermedio"
-            : "Maestro",
-      Completados: value,
-    }));
+    return Object.entries(distribution)
+      .filter(([_, value]) => value > 0)
+      .map(([name, value]) => ({
+        name:
+          name === "novice"
+            ? "Novato"
+            : name === "adept"
+              ? "Intermedio"
+              : "Maestro",
+        Completados: value,
+      }));
   }, [rituals, logs]);
 
   // Agrupa los logs de finalización por mes de los últimos 6 meses

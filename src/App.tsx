@@ -77,6 +77,38 @@ const router = createHashRouter([
             },
           },
           {
+            path: "analytics",
+            async lazy() {
+              const { default: AnalyticsPage } =
+                await import("./features/analytics/pages/AnalyticsPage");
+              return { Component: AnalyticsPage };
+            },
+          },
+          {
+            path: "achievements",
+            async lazy() {
+              const { default: AchievementsPage } =
+                await import("./features/gamification/pages/AchievementsPage");
+              return { Component: AchievementsPage };
+            },
+          },
+          {
+            path: "inventory",
+            async lazy() {
+              const { default: InventoryPage } =
+                await import("./features/inventory/pages/InventoryPage");
+              return { Component: InventoryPage };
+            },
+          },
+          {
+            path: "profile/:username",
+            async lazy() {
+              const { default: ProfilePage } =
+                await import("./features/users/pages/ProfilePage");
+              return { Component: ProfilePage };
+            },
+          },
+          {
             path: "",
             element: <Navigate to="dashboard" replace />,
           },

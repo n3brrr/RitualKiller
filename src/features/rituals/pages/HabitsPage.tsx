@@ -1,6 +1,6 @@
 import React, { useState, lazy, Suspense } from "react";
 import { Frequency, Ritual, RitualLog } from "@/types";
-import { Plus, PenTool, Sparkles, BookOpen } from "lucide-react";
+import { Plus, PenTool, Sparkles, BookOpen, Check } from "lucide-react";
 import { generateRitualSuggestions } from "@/utils/aiRitualGenerator";
 import RitualItem from "@/components/rituals/RitualCard";
 import Loading from "@/components/animations/Loading";
@@ -58,6 +58,24 @@ const HabitsPage = () => {
 
   // Cadena con la fecha de hoy en formato AAAA-MM-DD
   const todayStr = new Date().toISOString().split("T")[0] || "";
+
+  // Auto-calculate essence based on difficulty and frequency
+  React.useEffect(() => {
+    // Only update if not manually edited? Or always? Assuming always for auto-fill helper.
+    // If we want to allow manual override, we might need a flag, but for now enforcing rules is safer.
+    // Or we can check if it matches previous calculation.
+    // Let's just always update it when deps change.
+    if (showCreator && createMode === "manual") {
+      const base =
+        manualForm.difficulty === "master"
+          ? 50
+          : manualForm.difficulty === "adept"
+            ? 25
+            : 10;
+      const multiplier = manualForm.frequency === "weekly" ? 3 : 1;
+      setManualForm((prev) => ({ ...prev, essenceReward: base * multiplier }));
+    }
+  }, [manualForm.difficulty, manualForm.frequency, showCreator, createMode]);
 
   /**
    * Marca o desmarca la finalización de un ritual para el día actual.
@@ -227,7 +245,12 @@ const HabitsPage = () => {
       {showLibrary && (
         <div className="mb-8">
           <Suspense fallback={<Loading />}>
-            <RitualLibrary />
+            <RitualLibrary
+              onImport={(ritual) => {
+                setRituals([...rituals, ritual]);
+                setShowLibrary(false);
+              }}
+            />
           </Suspense>
         </div>
       )}
@@ -340,20 +363,12 @@ const HabitsPage = () => {
                     <label className="text-xs text-zinc-500 uppercase font-bold block mb-1">
                       Frecuencia
                     </label>
-                    <select
-                      value={manualForm.frequency}
-                      onChange={(e) =>
-                        setManualForm({
-                          ...manualForm,
-                          frequency: e.target.value as any,
-                        })
-                      }
-                      className="w-full bg-black border border-zinc-700 rounded-lg px-4 py-2 text-white focus:border-ritual-accent outline-none appearance-none"
-                    >
+                    <select className="w-full bg-black border border-zinc-700 rounded-lg px-4 py-2 text-white focus:border-ritual-accent outline-none appearance-none">
                       <option value="daily">Diario</option>
                       <option value="weekly">Semanal</option>
                     </select>
                   </div>
+                  {/* Essence input removed or read-only if auto-calculated? keeping it editable but auto-updates */}
                   <div>
                     <label className="text-xs text-zinc-500 uppercase font-bold block mb-1">
                       Recompensa de Esencia
@@ -371,6 +386,8 @@ const HabitsPage = () => {
                     />
                   </div>
                 </div>
+                {/* Auto-calculate essence effect */}
+
                 <div className="flex justify-end pt-2">
                   <button
                     type="submit"
@@ -386,27 +403,66 @@ const HabitsPage = () => {
       )}
 
       {/* Renderiza los rituales creados por el usuario, o muestra mensaje si no existen */}
-      <div className="space-y-3">
-        {rituals.length === 0 ? (
-          <div className="text-center py-20 text-zinc-600 italic">
-            No hay rituales establecidos. El vacío espera tu orden.
+      {/* Ritual Lists */}
+      <div className="space-y-8">
+        {/* Pending Rituals */}
+        <div>
+          <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+            <Sparkles size={20} className="text-ritual-accent" />
+            Pendientes
+          </h3>
+          <div className="space-y-3">
+            {rituals.filter(
+              (r) =>
+                !logs.some((l) => l.ritualId === r.id && l.date === todayStr),
+            ).length === 0 && (
+              <div className="text-zinc-600 italic p-4 border border-dashed border-zinc-800 rounded-lg">
+                No hay sacrificios pendientes.
+              </div>
+            )}
+            {rituals
+              .filter(
+                (r) =>
+                  !logs.some((l) => l.ritualId === r.id && l.date === todayStr),
+              )
+              .map((ritual) => (
+                <RitualItem
+                  key={ritual.id}
+                  ritual={ritual}
+                  isDone={false}
+                  onToggle={toggleCompletion}
+                  onDelete={deleteRitual}
+                />
+              ))}
           </div>
-        ) : (
-          rituals.map((ritual) => {
-            // Verifica si el ritual está completado hoy
-            const isDone = logs.some(
-              (l) => l.ritualId === ritual.id && l.date === todayStr,
-            );
-            return (
-              <RitualItem
-                key={ritual.id}
-                ritual={ritual}
-                isDone={isDone}
-                onToggle={toggleCompletion}
-                onDelete={deleteRitual}
-              />
-            );
-          })
+        </div>
+
+        {/* Completed Rituals */}
+        {rituals.some((r) =>
+          logs.some((l) => l.ritualId === r.id && l.date === todayStr),
+        ) && (
+          <div className="opacity-60 grayscale-[50%] hover:grayscale-0 transition-all duration-500">
+            <h3 className="text-xl font-bold text-zinc-400 mb-4 flex items-center gap-2">
+              <Check size={20} />
+              Completados
+            </h3>
+            <div className="space-y-3">
+              {rituals
+                .filter((r) =>
+                  logs.some((l) => l.ritualId === r.id && l.date === todayStr),
+                )
+                .map((ritual) => (
+                  <RitualItem
+                    key={ritual.id}
+                    ritual={ritual}
+                    isDone={true}
+                    onToggle={toggleCompletion}
+                    onDelete={deleteRitual}
+                    disabled={true} // Add this prop to RitualItem
+                  />
+                ))}
+            </div>
+          </div>
         )}
       </div>
     </div>
