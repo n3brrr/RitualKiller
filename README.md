@@ -2,27 +2,27 @@
 
 # 🔪 RitualKiller
 
-**Advanced Ritual Tracking & Management System**
+**Sistema Avanzado de Seguimiento y Gestión de Rituales**
 
-[🚀 Demo](#) - [🐛 Issues](https://github.com/n3brrr/RitualKiller/issues) - [📖 Docs](#documentation)
+[🚀 Demo](#) - [🐛 Incidencias](https://github.com/n3brrr/RitualKiller/issues) - [📖 Documentación](#documentation)
 
 </div>
 
 ---
 
-## ⚡ Overview
+## ⚡ Descripción General
 
-RitualKiller is a modern web application designed to manage and track complex sequences and rituals. Built with a robust React & TypeScript architecture, it features real-time status updates, category filtering, and a sleek, dark-themed interface powered by TailwindCSS.
+RitualKiller es una aplicación web moderna diseñada para gestionar y realizar el seguimiento de secuencias y rituales complejos. Construida con una arquitectura robusta de React y TypeScript, cuenta con actualizaciones de estado en tiempo real, filtrado por categorías y una interfaz elegante de tema oscuro impulsada por TailwindCSS.
 
-### ✨ Key Features
+### ✨ Características Principales
 
-- 🔍 **Smart Ritual Search** - Instant access to a comprehensive database of tracked rituals
-- 🎭 **Category Filtering** - Intuitive filtering system to organize tasks by type or priority
-- ⚡ **High Performance** - Powered by Vite for lightning-fast builds and HMR
-- 🎨 **Modern Design** - Fully responsive UI with TailwindCSS v4
-- 🛡️ **Type Safety** - Comprehensive TypeScript integration for mission-critical reliability
+- 🔍 **Búsqueda Inteligente de Rituales** - Acceso instantáneo a una base de datos exhaustiva de rituales registrados
+- 🎭 **Filtrado por Categorías** - Sistema de filtrado intuitivo para organizar tareas por tipo o prioridad
+- ⚡ **Alto Rendimiento** - Impulsado por Vite para compilaciones ultrarrápidas y HMR
+- 🎨 **Diseño Moderno** - Interfaz totalmente responsiva con TailwindCSS v4
+- 🛡️ **Seguridad de Tipos** - Integración completa de TypeScript para una fiabilidad de misión crítica
 
-### 🛠️ Tech Stack
+### 🛠️ Stack Tecnológico
 
 <p align="left">
 <img src="https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB" alt="React" />
@@ -33,83 +33,82 @@ RitualKiller is a modern web application designed to manage and track complex se
 
 ---
 
-## 📦 Installation
+## 📦 Instalación
 
-### Prerequisites
+### Requisitos Previos
 
-- Node.js 18+ (Recommended)
-- npm or pnpm
+- Node.js 18+ (Recomendado)
+- npm o pnpm
 
-### Quick Setup
+### Configuración Rápida
 
 ```bash
-# Clone repository
+# Clonar el repositorio
 git clone https://github.com/n3brrr/RitualKiller.git
 
-# Navigate to directory
+# Navegar al directorio
 cd RitualKiller
 
-# Install dependencies
+# Instalar dependencias
 pnpm install
 
-# Start Development Server
+# Iniciar el Servidor de Desarrollo
 pnpm run dev
 
-# Build for Production
+# Compilar para Producción
 pnpm run build
 ```
 
-## 📁 Project Structure
+## 📁 Estructura del Proyecto
 
 ```bash
 RitualKiller/
 ├── src/
-│   ├── components/      # UI Components (RitualCard, SearchBar, CategoryFilters)
-│   ├── hooks/          # Custom hooks (useRituals)
-│   ├── assets/         # Static assets
-│   ├── App.tsx         # Main application component
-│   └── main.tsx        # Entry point
-├── public/             # Public assets
-├── index.html          # Entry HTML
-├── vite.config.ts      # Vite configuration
-└── package.json        # Dependencies and scripts
+│   ├── components/      # Componentes de UI (RitualCard, SearchBar, CategoryFilters)
+│   ├── hooks/          # Hooks personalizados (useRituals)
+│   ├── assets/         # Recursos estáticos
+│   ├── App.tsx         # Componente principal de la aplicación
+│   └── main.tsx        # Punto de entrada
+├── public/             # Recursos públicos
+├── index.html          # HTML de entrada
+├── vite.config.ts      # Configuración de Vite
+└── package.json        # Dependencias y scripts
 ```
 
-## 🔄 Architecture
+## 🔄 Arquitectura
 
 ```
 graph TD
-    User[User Interaction] --> Search[SearchBar]
-    User --> Filter[CategoryFilters]
-    Search --> Hook[useRituals Hook]
+    User[Interacción del Usuario] --> Search[Barra de Búsqueda]
+    User --> Filter[Filtros de Categoría]
+    Search --> Hook[Hook useRituals]
     Filter --> Hook
-    Hook --> API[Ritual API/Store]
-    API --> State[Global State]
-    State --> Card[RitualCard Component]
+    Hook --> API[API/Almacén de Rituales]
+    API --> State[Estado Global]
+    State --> Card[Componente RitualCard]
 ```
 
 ## 🧪 Scripts
 
-```
-bash
-# Start development server
+```bash
+# Iniciar servidor de desarrollo
 pnpm run dev
 
-# Build for production
+# Compilar para producción
 pnpm run build
 
-# Lint code
+# Analizar código (Lint)
 pnpm run lint
 
-# Preview production build
+# Previsualizar compilación de producción
 pnpm run preview
 ```
 
-## 👤 Author
+## 👤 Autor
 
 **Rubén Torres** - [@n3brrr](https://github.com/n3brrr)
-**Jesús Dominguez** - [@JesusDom](https://github.com/JesusDom)
+**Jesús Dominguez** - [@JesusDI04](https://github.com/JesusDI04)
 
 <div align="center">
-⭐ Star this repo if you find it useful
+⭐ Dale una estrella a este repositorio si te resulta útil
 </div>
