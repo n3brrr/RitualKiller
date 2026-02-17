@@ -1,4 +1,3 @@
-````markdown
 <div align="center">
 
 # 🔪 RitualKiller
@@ -51,15 +50,14 @@ git clone https://github.com/n3brrr/RitualKiller.git
 cd RitualKiller
 
 # Install dependencies
-npm install
+pnpm install
 
 # Start Development Server
-npm run dev
+pnpm run dev
 
 # Build for Production
-npm run build
+pnpm run build
 ```
-````
 
 ## 📁 Project Structure
 
@@ -79,7 +77,7 @@ RitualKiller/
 
 ## 🔄 Architecture
 
-```mermaid
+```
 graph TD
     User[User Interaction] --> Search[SearchBar]
     User --> Filter[CategoryFilters]
@@ -90,36 +88,10 @@ graph TD
     State --> Card[RitualCard Component]
 ```
 
-## 💻 Usage
-
-```typescript
-// Example: Using the custom hook for ritual management
-import useRituals from './hooks/useRituals';
-
-const MyComponent = () => {
-  const { rituals, loading, executeRitual, getRitualsByCategory } = useRituals();
-
-  return (
-    <div className="p-4">
-      <button onClick={() => executeRitual('Midnight Protocol')}>
-        Execute "Midnight Protocol"
-      </button>
-
-      <div className="grid gap-4">
-        {rituals.map(ritual => (
-          <div key={ritual.id} className="p-2 border rounded">
-            {ritual.name} - <span className="text-red-500">{ritual.status}</span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-};
-```
-
 ## 🧪 Scripts
 
-```bash
+```
+bash
 # Start development server
 pnpm run dev
 
@@ -138,9 +110,6 @@ pnpm run preview
 **Rubén Torres** - [@n3brrr](https://github.com/n3brrr)
 **Jesús Dominguez** - [@JesusDom](https://github.com/JesusDom)
 
-Frontend Developer | TypeScript
-
 <div align="center">
 ⭐ Star this repo if you find it useful
 </div>
-```
