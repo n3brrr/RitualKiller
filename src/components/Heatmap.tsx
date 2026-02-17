@@ -1,3 +1,11 @@
+/**
+ * Heatmap.tsx
+ *
+ * Este archivo define el componente React Heatmap.
+ * Muestra un heatmap semanal de la actividad de "rituales" durante el último año,
+ * visualizando la intensidad diaria en formato de cuadrícula.
+ */
+
 import React, { useMemo } from "react";
 import { RitualLog } from "../types";
 
@@ -6,14 +14,15 @@ interface HeatmapProps {
 }
 
 export const Heatmap: React.FC<HeatmapProps> = ({ logs }) => {
-  // Calculate the last 365 days (or approx 52 weeks)
-  const daysToRender = 364; // 52 weeks * 7 days
+  // Cantidad de días a renderizar: 52 semanas * 7 días = 364 días (aprox. 1 año)
+  const daysToRender = 364;
 
+  // Calcula los datos a mostrar en el heatmap usando un memo para optimización
   const heatmapData = useMemo(() => {
     const today = new Date();
     const data = [];
 
-    // Create a map of date -> intensity count
+    // Mapeo: fecha (YYYY-MM-DD) -> cantidad de rituales en ese día
     const logMap: Record<string, number> = {};
     logs.forEach((log) => {
       if (log.date) {
@@ -24,6 +33,7 @@ export const Heatmap: React.FC<HeatmapProps> = ({ logs }) => {
       }
     });
 
+    // Genera arreglo de días desde hace 364 hasta hoy, con su respectivo conteo
     for (let i = daysToRender; i >= 0; i--) {
       const d = new Date(today);
       d.setDate(d.getDate() - i);
@@ -36,7 +46,7 @@ export const Heatmap: React.FC<HeatmapProps> = ({ logs }) => {
     return data;
   }, [logs]);
 
-  // Determine intensity color
+  // Determina la clase de color de intensidad visual según cantidad de rituales en ese día
   const getColor = (count: number) => {
     if (count === 0) return "bg-ritual-gray/30";
     if (count === 1) return "bg-ritual-accent/40";
@@ -49,13 +59,14 @@ export const Heatmap: React.FC<HeatmapProps> = ({ logs }) => {
     <div className="w-full overflow-x-auto pb-2">
       <div
         ref={(el) => {
+          // Auto-scroll horizontal al final, para mostrar la semana más reciente
           if (el) {
             el.scrollLeft = el.scrollWidth;
           }
         }}
         className="flex gap-1 min-w-max"
       >
-        {/* We arrange in columns of 7 days (weeks) */}
+        {/* Dispone las columnas por semana (7 días por columna) */}
         {Array.from({ length: Math.ceil(heatmapData.length / 7) }).map(
           (_, weekIndex) => (
             <div key={weekIndex} className="flex flex-col gap-1">
@@ -72,6 +83,7 @@ export const Heatmap: React.FC<HeatmapProps> = ({ logs }) => {
           ),
         )}
       </div>
+      {/* Leyenda de intensidad */}
       <div className="mt-2 flex items-center justify-end text-xs text-zinc-500 gap-1">
         <span>Inactivo</span>
         <div className="w-3 h-3 bg-ritual-gray/30 rounded-sm"></div>

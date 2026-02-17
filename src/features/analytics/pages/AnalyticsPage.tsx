@@ -1,6 +1,15 @@
+/**
+ * AnalyticsPage.tsx
+ *
+ * Página principal para mostrar análisis avanzados.
+ * Renderiza el componente de analíticas avanzadas bajo carga diferida (lazy loading),
+ * mostrando un indicador mientras se obtiene el módulo.
+ */
+
 import React, { lazy, Suspense } from "react";
 import Loading from "@/components/animations/Loading";
 
+// Carga diferida del componente avanzado de analíticas
 const AdvancedAnalytics = lazy(
   () => import("@/components/analytics/AdvancedAnalytics"),
 );
@@ -17,6 +26,7 @@ const AnalyticsPage = () => {
         </p>
       </header>
 
+      {/* Renderiza el componente avanzado con fallback de carga */}
       <Suspense fallback={<Loading />}>
         <AdvancedAnalytics />
       </Suspense>

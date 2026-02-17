@@ -1,3 +1,12 @@
+/*
+ * ProductivityMetrics.tsx
+ * 
+ * Este archivo define el componente que muestra métricas clave de productividad relacionadas con los rituales.
+ * Calcula y presenta estadísticas como eficiencia diaria, semanal, tasa promedio de completitud, mejor día,
+ * total de rituales completados y la mejor racha consecutiva usando los datos del usuario y los logs.
+ * Incluye también insights personalizados para motivar o alertar al usuario según su desempeño.
+ */
+
 import React, { useMemo } from "react";
 import { Clock, Target, TrendingUp, Zap, BarChart3 } from "lucide-react";
 import { ProductivityMetrics as ProductivityMetricsType } from "../../types";
@@ -8,16 +17,17 @@ const ProductivityMetrics: React.FC = () => {
   const user = useAuthStore((state) => state.user);
   const { rituals, logs } = useRitualStore();
 
+  // Calcula todas las métricas relevantes de productividad (solo se recalcula si rituals/logs cambia)
   const metrics: ProductivityMetricsType = useMemo(() => {
     const today = new Date();
     const todayStr = today.toISOString().split("T")[0];
 
-    // Calculate daily efficiency
+    // Eficiencia diaria: porcentaje de rituales completados hoy
     const todayLogs = logs.filter((l) => l.date === todayStr);
     const dailyEfficiency =
       rituals.length > 0 ? (todayLogs.length / rituals.length) * 100 : 0;
 
-    // Calculate weekly efficiency
+    // Eficiencia semanal: porcentaje sobre los últimos 7 días
     const weekAgo = new Date(today);
     weekAgo.setDate(weekAgo.getDate() - 7);
     const weekLogs = logs.filter((l) => {
@@ -27,12 +37,12 @@ const ProductivityMetrics: React.FC = () => {
     const weeklyEfficiency =
       rituals.length > 0 ? (weekLogs.length / (rituals.length * 7)) * 100 : 0;
 
-    // Average completion rate
-    const totalPossible = rituals.length * 30; // Last 30 days
+    // Tasa promedio de completitud (últimos 30 días)
+    const totalPossible = rituals.length * 30;
     const averageCompletionRate =
       totalPossible > 0 ? (logs.length / totalPossible) * 100 : 0;
 
-    // Best day (most completions)
+    // Si no hay logs se regresa un objeto por defecto
     const dayCounts: { [key: string]: number } = {};
     if (logs.length === 0) {
       return {
@@ -45,14 +55,14 @@ const ProductivityMetrics: React.FC = () => {
       };
     }
 
+    // Cuenta logs por fecha para encontrar el día de mayor completitud
     logs.forEach((log) => {
       dayCounts[log.date] = (dayCounts[log.date] || 0) + 1;
     });
 
-    // Find the entry with max count
+    // Encuentra fecha con más completados
     let maxDate = "";
     let maxCount = -1;
-
     Object.entries(dayCounts).forEach(([date, count]) => {
       if (count > maxCount) {
         maxCount = count;
@@ -60,6 +70,7 @@ const ProductivityMetrics: React.FC = () => {
       }
     });
 
+    // Formatea mejor día en español o "N/A" si no hay datos
     const bestDay = maxDate
       ? new Date(maxDate).toLocaleDateString("es-ES", {
           weekday: "long",
@@ -68,10 +79,9 @@ const ProductivityMetrics: React.FC = () => {
         })
       : "N/A";
 
-    // Rituals completed
     const ritualsCompleted = logs.length;
 
-    // Streak days
+    // La mejor racha (streak) actual entre todos los rituales
     const maxStreak = Math.max(...rituals.map((r) => r.streak || 0), 0);
 
     return {
@@ -84,6 +94,7 @@ const ProductivityMetrics: React.FC = () => {
     };
   }, [rituals, logs]);
 
+  // Utilidad para formatear minutos a "xh ym"
   const formatTime = (minutes: number): string => {
     const hours = Math.floor(minutes / 60);
     const mins = minutes % 60;
@@ -103,6 +114,7 @@ const ProductivityMetrics: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Eficiencia diaria */}
         <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-5">
           <div className="flex items-center gap-3 mb-3">
             <div className="p-2 bg-ritual-accent/10 rounded-lg">
@@ -123,6 +135,7 @@ const ProductivityMetrics: React.FC = () => {
           </div>
         </div>
 
+        {/* Eficiencia semanal */}
         <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-5">
           <div className="flex items-center gap-3 mb-3">
             <div className="p-2 bg-yellow-500/10 rounded-lg">
@@ -143,6 +156,7 @@ const ProductivityMetrics: React.FC = () => {
           </div>
         </div>
 
+        {/* Tasa promedio (últimos 30 días) */}
         <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-5">
           <div className="flex items-center gap-3 mb-3">
             <div className="p-2 bg-purple-500/10 rounded-lg">
@@ -156,6 +170,7 @@ const ProductivityMetrics: React.FC = () => {
           <div className="text-xs text-zinc-500">Últimos 30 días</div>
         </div>
 
+        {/* Mejor día */}
         <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-5">
           <div className="flex items-center gap-3 mb-3">
             <div className="p-2 bg-blue-500/10 rounded-lg">
@@ -166,6 +181,7 @@ const ProductivityMetrics: React.FC = () => {
           <div className="text-lg font-bold text-white">{metrics.bestDay}</div>
           <div className="text-xs text-zinc-500 mt-1">
             {
+              // Cantidad de rituales completados en el mejor día
               logs.filter(
                 (l) =>
                   l.date ===
@@ -187,8 +203,9 @@ const ProductivityMetrics: React.FC = () => {
         </div>
       </div>
 
-      {/* Detailed Stats */}
+      {/* Estadísticas detalladas */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Total histórico de rituales completados */}
         <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-6 relative overflow-hidden group hover:border-ritual-accent/50 transition-colors">
           <div className="absolute inset-0 bg-gradient-to-br from-ritual-accent/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
           <div className="text-zinc-500 text-sm mb-2 relative z-10">
@@ -202,6 +219,7 @@ const ProductivityMetrics: React.FC = () => {
           </div>
         </div>
 
+        {/* Mejor racha de días cumplidos */}
         <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-6 relative overflow-hidden group hover:border-yellow-500/50 transition-colors">
           <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
           <div className="text-zinc-500 text-sm mb-2 relative z-10">
@@ -216,13 +234,14 @@ const ProductivityMetrics: React.FC = () => {
         </div>
       </div>
 
-      {/* Insights */}
+      {/* Mensajes de insights personalizados */}
       <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-6">
         <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
           <Target className="text-ritual-accent" size={20} />
           Insights Personalizados
         </h3>
         <div className="space-y-3">
+          {/* Mensaje si la eficiencia diaria es muy alta */}
           {metrics.dailyEfficiency >= 80 && (
             <div className="p-3 bg-ritual-accent/10 border border-ritual-accent/30 rounded-lg">
               <p className="text-sm text-ritual-accent">
@@ -231,6 +250,7 @@ const ProductivityMetrics: React.FC = () => {
               </p>
             </div>
           )}
+          {/* Alerta por baja eficiencia semanal */}
           {metrics.weeklyEfficiency < 50 && (
             <div className="p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
               <p className="text-sm text-yellow-500">
@@ -239,6 +259,7 @@ const ProductivityMetrics: React.FC = () => {
               </p>
             </div>
           )}
+          {/* Reconocimiento por racha prolongada */}
           {metrics.streakDays >= 7 && (
             <div className="p-3 bg-purple-500/10 border border-purple-500/30 rounded-lg">
               <p className="text-sm text-purple-500">
@@ -246,6 +267,7 @@ const ProductivityMetrics: React.FC = () => {
               </p>
             </div>
           )}
+          {/* Sugerencia si no hay rituales creados */}
           {rituals.length === 0 && (
             <div className="p-3 bg-zinc-800/50 border border-zinc-700 rounded-lg">
               <p className="text-sm text-zinc-400">

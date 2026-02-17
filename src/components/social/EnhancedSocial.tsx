@@ -1,3 +1,10 @@
+/*
+ * EnhancedSocial.tsx
+ *
+ * Componente de red social interna de la aplicación.
+ * Permite a los usuarios publicar logros, dar like, seguir a otros, comentar publicaciones y visualizar interacciones recientes del "Coven".
+ */
+
 import React, { useState } from "react";
 import {
   Users,
@@ -14,6 +21,7 @@ import { useAuthStore } from "../../features/auth/stores/useAuthStore";
 const EnhancedSocial: React.FC = () => {
   const user = useAuthStore((state) => state.user);
 
+  // Estado para publicaciones, personas seguidas, nuevo post y entradas de comentarios
   const [posts, setPosts] = useState<SocialPost[]>([
     {
       id: "1",
@@ -41,10 +49,11 @@ const EnhancedSocial: React.FC = () => {
   ]);
   const [following, setFollowing] = useState<string[]>([]);
   const [newPostContent, setNewPostContent] = useState("");
-  const [commentInputs, setCommentInputs] = useState<{ [key: string]: string }>(
-    {},
-  );
+  const [commentInputs, setCommentInputs] = useState<{ [key: string]: string }>({});
 
+  /*
+   * Maneja el "like" y "unlike" en un post, actualizando contador y estado.
+   */
   const handleLike = (postId: string) => {
     setPosts((prev) =>
       prev.map((post) =>
@@ -59,6 +68,9 @@ const EnhancedSocial: React.FC = () => {
     );
   };
 
+  /*
+   * Permite seguir o dejar de seguir a un usuario.
+   */
   const handleFollow = (userId: string) => {
     setFollowing((prev) =>
       prev.includes(userId)
@@ -67,6 +79,9 @@ const EnhancedSocial: React.FC = () => {
     );
   };
 
+  /*
+   * Publica una nueva entrada si el texto no está vacío y hay usuario autenticado.
+   */
   const handlePost = () => {
     if (!newPostContent.trim() || !user) return;
 
@@ -86,6 +101,9 @@ const EnhancedSocial: React.FC = () => {
     setNewPostContent("");
   };
 
+  /*
+   * Permite a un usuario comentar un post existente.
+   */
   const handleComment = (postId: string) => {
     const commentText = commentInputs[postId];
     if (!commentText?.trim() || !user) return;
@@ -110,10 +128,12 @@ const EnhancedSocial: React.FC = () => {
     setCommentInputs((prev) => ({ ...prev, [postId]: "" }));
   };
 
-  const filteredPosts = posts; // Could filter by following
+  // En el futuro se podría filtrar por seguidos
+  const filteredPosts = posts;
 
   return (
     <div className="space-y-6">
+      {/* Cabecera con título y leyenda de ranking */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Users className="text-ritual-accent" size={24} />
@@ -125,7 +145,7 @@ const EnhancedSocial: React.FC = () => {
         </div>
       </div>
 
-      {/* Create Post */}
+      {/* Formulario para crear publicación */}
       <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-4">
         <div className="flex gap-4">
           <div className="w-10 h-10 bg-zinc-800 rounded-full flex items-center justify-center text-zinc-400 flex-shrink-0 overflow-hidden">
@@ -160,7 +180,7 @@ const EnhancedSocial: React.FC = () => {
         </div>
       </div>
 
-      {/* Posts Feed */}
+      {/* Listado de publicaciones del feed */}
       <div className="space-y-4">
         {filteredPosts.map((post) => (
           <div
@@ -177,9 +197,7 @@ const EnhancedSocial: React.FC = () => {
                   {post.isSystem ? (
                     <Trophy className="text-ritual-accent" size={20} />
                   ) : (
-                    // Logic to show avatar if we have author info?
-                    // We don't have author avatar in SocialPost type in mocks yet.
-                    // For now, use initial. Ideally Post should have authorAvatar.
+                    // Por ahora sólo se muestra la inicial del autor; se puede extender si hay imagen de avatar.
                     <span className="text-zinc-400 font-bold">
                       {post.author.charAt(0).toUpperCase()}
                     </span>
@@ -194,6 +212,7 @@ const EnhancedSocial: React.FC = () => {
                     >
                       @{post.author}
                     </span>
+                    {/* Solo mostrar botón seguir si no es sistema ni el usuario actual */}
                     {!post.isSystem && post.authorId !== user?.id && (
                       <button
                         onClick={() => handleFollow(post.authorId!)}
@@ -226,7 +245,7 @@ const EnhancedSocial: React.FC = () => {
 
             <p className="text-zinc-300 mb-4">{post.content}</p>
 
-            {/* Actions */}
+            {/* Acciones de post: like, comentar, compartir */}
             <div className="flex items-center gap-6 text-zinc-500">
               <button
                 onClick={() => handleLike(post.id)}
@@ -251,7 +270,7 @@ const EnhancedSocial: React.FC = () => {
               </button>
             </div>
 
-            {/* Comments */}
+            {/* Sección de comentarios si existen */}
             {post.comments && post.comments.length > 0 && (
               <div className="mt-4 pt-4 border-t border-zinc-800 space-y-3">
                 {post.comments.map((comment) => (
@@ -277,7 +296,7 @@ const EnhancedSocial: React.FC = () => {
               </div>
             )}
 
-            {/* Comment Input */}
+            {/* Entrada para agregar nuevo comentario */}
             <div className="mt-4 pt-4 border-t border-zinc-800">
               <div className="flex gap-2">
                 <input

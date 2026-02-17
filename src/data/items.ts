@@ -1,7 +1,15 @@
+/*
+ * items.ts
+ * 
+ * Define los objetos disponibles en la tienda de la aplicación y sus propiedades.
+ * Cada objeto tiene efecto, costo, rareza y un icono visual representativo.
+ */
+
 import { ShopItem } from "@/types";
 import { FlaskConical, Scroll, Skull } from "lucide-react";
 import React from "react";
 
+// Lista de ítems de la tienda con sus efectos y características
 export const SHOP_ITEMS: ShopItem[] = [
   {
     id: "potion_discipline",
@@ -12,7 +20,7 @@ export const SHOP_ITEMS: ShopItem[] = [
     icon: React.createElement(FlaskConical, { size: 40, className: "text-blue-500" }),
     effectType: "essence_boost",
     effectValue: 1.5,
-    duration: 24 * 60 * 60 * 1000, // 24 hours
+    duration: 24 * 60 * 60 * 1000, // 24 horas
   },
   {
     id: "potion_oblivion",
@@ -22,7 +30,7 @@ export const SHOP_ITEMS: ShopItem[] = [
     rarity: "legendary",
     icon: React.createElement(FlaskConical, { size: 40, className: "text-purple-500" }),
     effectType: "restore_streak",
-    duration: 0, // Instant
+    duration: 0, // Uso instantáneo
   },
   {
     id: "shadow_amulet",
@@ -32,7 +40,7 @@ export const SHOP_ITEMS: ShopItem[] = [
     rarity: "rare",
     icon: React.createElement(Skull, { size: 40, className: "text-zinc-400" }),
     effectType: "cosmetic",
-    duration: -1, // Permanent
+    duration: -1, // Permanente
   },
   {
     id: "binding_contract",
@@ -42,6 +50,6 @@ export const SHOP_ITEMS: ShopItem[] = [
     rarity: "legendary",
     icon: React.createElement(Scroll, { size: 40, className: "text-red-500" }),
     effectType: "unlock_master",
-    duration: -1,
+    duration: -1, // Permanente
   },
 ];

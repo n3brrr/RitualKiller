@@ -1,3 +1,11 @@
+/**
+ * RitualCalendar.tsx
+ * 
+ * Muestra un calendario mensual visualizando el progreso diario de los rituales completados.
+ * Presenta cada día con un indicador de avance y permite navegar entre meses.
+ * Utiliza colores para señalar días completos, parciales o sin actividad.
+ */
+
 import React, { useState } from "react";
 import { ChevronLeft, ChevronRight, Check } from "lucide-react";
 import { useRitualStore } from "../../features/rituals/stores/useRitualStore";
@@ -8,41 +16,30 @@ const RitualCalendar: React.FC = () => {
 
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
-
   const firstDayOfMonth = new Date(year, month, 1);
   const lastDayOfMonth = new Date(year, month + 1, 0);
   const daysInMonth = lastDayOfMonth.getDate();
   const startingDayOfWeek = firstDayOfMonth.getDay();
 
   const monthNames = [
-    "Enero",
-    "Febrero",
-    "Marzo",
-    "Abril",
-    "Mayo",
-    "Junio",
-    "Julio",
-    "Agosto",
-    "Septiembre",
-    "Octubre",
-    "Noviembre",
-    "Diciembre",
+    "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+    "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
   ];
 
   const weekDays = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
 
-  // Cambia a mes anterior
+  // Navega al mes anterior
   const goToPreviousMonth = () => {
     setCurrentDate(new Date(year, month - 1, 1));
   };
 
-  // Cambia a mes siguiente
+  // Navega al mes siguiente
   const goToNextMonth = () => {
     setCurrentDate(new Date(year, month + 1, 1));
   };
 
   /**
-   * Obtiene el estado de finalización de rituales para un día específico.
+   * Retorna cuántos rituales fueron completados en un día concreto.
    */
   const getDayCompletionStatus = (
     day: number,
@@ -55,7 +52,9 @@ const RitualCalendar: React.FC = () => {
     };
   };
 
-  // Devuelve el color de fondo según el porcentaje de rituales completados
+  /*
+   * Devuelve la clase de color según porcentaje completado ese día.
+   */
   const getCompletionColor = (completed: number, total: number): string => {
     if (total === 0) return "bg-zinc-900";
     const ratio = completed / total;
@@ -65,14 +64,13 @@ const RitualCalendar: React.FC = () => {
     return "bg-zinc-900";
   };
 
-  const days = [];
+  const days: (number | null)[] = [];
 
-  // Agrega celdas vacías para los días antes del primer día del mes
+  // Celdas vacías iniciales según el día de inicio del mes
   for (let i = 0; i < startingDayOfWeek; i++) {
     days.push(null);
   }
-
-  // Agrega los días del mes
+  // Días numerados del mes
   for (let day = 1; day <= daysInMonth; day++) {
     days.push(day);
   }
@@ -111,7 +109,7 @@ const RitualCalendar: React.FC = () => {
         ))}
       </div>
 
-      {/* Grilla de calendario */}
+      {/* Celdas del calendario */}
       <div className="grid grid-cols-7 gap-2">
         {days.map((day, index) => {
           if (day === null) {
@@ -119,6 +117,7 @@ const RitualCalendar: React.FC = () => {
           }
 
           const { completed, total } = getDayCompletionStatus(day);
+          // Identifica si es el día actual
           const isToday =
             day === new Date().getDate() &&
             month === new Date().getMonth() &&
@@ -139,6 +138,7 @@ const RitualCalendar: React.FC = () => {
               >
                 {day}
               </span>
+              {/* Muestra el valor de completados solo si hay al menos uno */}
               {completed > 0 && (
                 <div className="flex items-center gap-1 mt-1">
                   <Check size={10} className="text-white" />
@@ -150,7 +150,7 @@ const RitualCalendar: React.FC = () => {
         })}
       </div>
 
-      {/* Leyenda visual de colores y significado */}
+      {/* Leyenda visual para interpretar los colores */}
       <div className="mt-6 flex items-center justify-center gap-4 text-xs text-zinc-500">
         <div className="flex items-center gap-2">
           <div className="w-4 h-4 rounded bg-zinc-900 border border-zinc-800"></div>

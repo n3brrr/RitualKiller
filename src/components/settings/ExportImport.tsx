@@ -1,3 +1,10 @@
+/**
+ * ExportImport.tsx
+ *
+ * Componente encargado de la exportación e importación de datos del usuario en la app.
+ * Permite al usuario descargar su backup en JSON o CSV, e importar datos desde un archivo JSON para restaurar su información.
+ */
+
 import React, { useState } from 'react';
 import { Download, Upload, FileJson, FileSpreadsheet, AlertCircle, Check } from 'lucide-react';
 import { useAppContext } from '../../contexts/AppContext';
@@ -8,17 +15,20 @@ const ExportImport: React.FC = () => {
   const [importError, setImportError] = useState<string | null>(null);
   const [importSuccess, setImportSuccess] = useState(false);
 
+  // Exporta los datos completos del usuario en formato JSON
   const handleExportJSON = () => {
     if (!user) return;
     const data = exportData(user, rituals, logs);
     downloadFile(data, `ritualkiller-backup-${new Date().toISOString().split('T')[0]}.json`, 'application/json');
   };
 
+  // Exporta los rituales y logs en CSV
   const handleExportCSV = () => {
     const csv = exportToCSV(rituals, logs);
     downloadFile(csv, `ritualkiller-data-${new Date().toISOString().split('T')[0]}.csv`, 'text/csv');
   };
 
+  // Importa los datos desde un archivo JSON seleccionado por el usuario
   const handleImport = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -41,7 +51,7 @@ const ExportImport: React.FC = () => {
         return;
       }
 
-      // Confirm before importing
+      // Confirma antes de importar, ya que se reemplazarán todos los datos actuales
       if (window.confirm(
         `¿Estás seguro de que quieres importar estos datos?\n` +
         `Esto reemplazará tus datos actuales.\n\n` +
@@ -53,7 +63,8 @@ const ExportImport: React.FC = () => {
         setLogs(importedData.logs);
         setImportSuccess(true);
         setImportError(null);
-        
+
+        // Mensaje de éxito se oculta después de 3 segundos
         setTimeout(() => {
           setImportSuccess(false);
         }, 3000);
@@ -61,14 +72,14 @@ const ExportImport: React.FC = () => {
     };
 
     reader.readAsText(file);
-    event.target.value = ''; // Reset input
+    event.target.value = ''; // Resetea el input para permitir nueva carga si es necesario
   };
 
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-display font-bold">Exportar / Importar Datos</h2>
 
-      {/* Export Section */}
+      {/* Sección de exportación */}
       <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-6">
         <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
           <Download className="text-ritual-accent" size={20} />
@@ -95,7 +106,7 @@ const ExportImport: React.FC = () => {
         </div>
       </div>
 
-      {/* Import Section */}
+      {/* Sección de importación */}
       <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-6">
         <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
           <Upload className="text-ritual-accent" size={20} />
@@ -104,7 +115,8 @@ const ExportImport: React.FC = () => {
         <p className="text-zinc-400 text-sm mb-4">
           Restaura tus datos desde un archivo JSON de respaldo. Esto reemplazará tus datos actuales.
         </p>
-        
+
+        {/* Mensaje de error en la importación */}
         {importError && (
           <div className="mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg flex items-start gap-2">
             <AlertCircle className="text-red-500 flex-shrink-0 mt-0.5" size={18} />
@@ -112,6 +124,7 @@ const ExportImport: React.FC = () => {
           </div>
         )}
 
+        {/* Mensaje de éxito en la importación */}
         {importSuccess && (
           <div className="mb-4 p-3 bg-ritual-accent/10 border border-ritual-accent/30 rounded-lg flex items-start gap-2">
             <Check className="text-ritual-accent flex-shrink-0 mt-0.5" size={18} />
@@ -131,7 +144,7 @@ const ExportImport: React.FC = () => {
         </label>
       </div>
 
-      {/* Info */}
+      {/* Información y consejo al usuario */}
       <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-4">
         <p className="text-xs text-zinc-500">
           💡 <strong>Consejo:</strong> Exporta tus datos regularmente para mantener una copia de seguridad. 

@@ -1,10 +1,17 @@
+/*
+ * RitualLibrary.tsx
+ *
+ * Este componente muestra la biblioteca de rituales prediseñados.
+ * Permite a los usuarios buscar, filtrar e importar rituales de una colección estática,
+ * mostrando información relevante de cada ritual como dificultad, esencia y tags.
+ */
+
 import React, { useState, useMemo } from "react";
-import { Search, Filter, BookOpen, Star, Plus } from "lucide-react";
+import { Search, BookOpen, Star, Plus } from "lucide-react";
 import {
   RitualTemplate,
   RitualCategory,
   RITUAL_LIBRARY,
-  getRitualsByCategory,
   getPopularRituals,
   searchRituals,
   convertTemplateToRitual,
@@ -17,9 +24,14 @@ import {
 } from "../../utils/translations";
 
 interface RitualLibraryProps {
+  /*
+  Callback que se ejecuta al importar un ritual.
+  El ritual importado se genera a partir del template y el id del usuario.
+  */
   onImport?: (ritual: Ritual) => void;
 }
 
+// Categorías disponibles para filtrar los rituales
 const CATEGORIES: { value: RitualCategory; label: string }[] = [
   { value: "health", label: "Salud" },
   { value: "productivity", label: "Productividad" },
@@ -32,22 +44,17 @@ const CATEGORIES: { value: RitualCategory; label: string }[] = [
 
 const RitualLibrary: React.FC<RitualLibraryProps> = ({ onImport }) => {
   const user = useAuthStore((state) => state.user);
-  // We don't access rituals state here directly anymore, we allow parent to handle import check
-  // or we need to pass existing rituals to check for duplicates.
-  // For now, let's assume we can pass a list of existing IDs or just check via parent logic if needed.
-  // But isRitualAlreadyAdded relies on it.
-  // Let's rely on parent passing existingRituals if we want to check duplicates, or just lenient check.
-  // For now, I will remove the duplicate check or use a passed prop for it.
 
+  // Estado para filtro de búsqueda, categoría, dificultad y populares
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<
-    RitualCategory | "all"
-  >("all");
-  const [selectedDifficulty, setSelectedDifficulty] = useState<
-    Difficulty | "all"
-  >("all");
+  const [selectedCategory, setSelectedCategory] = useState<RitualCategory | "all">("all");
+  const [selectedDifficulty, setSelectedDifficulty] = useState<Difficulty | "all">("all");
   const [showPopularOnly, setShowPopularOnly] = useState(false);
 
+  /**
+   * Filtra la lista de rituales basada en populares, búsqueda, categoría y dificultad.
+   * Usar useMemo para evitar filtrados innecesarios en cada render.
+   */
   const filteredRituals = useMemo(() => {
     let filtered: RitualTemplate[] = showPopularOnly
       ? getPopularRituals()
@@ -74,17 +81,21 @@ const RitualLibrary: React.FC<RitualLibraryProps> = ({ onImport }) => {
     return filtered;
   }, [searchQuery, selectedCategory, selectedDifficulty, showPopularOnly]);
 
+  /*
+   * Importa un ritual template como ritual de usuario usando el id del usuario actual.
+   */
   const handleImportRitual = (template: RitualTemplate) => {
     if (!user || !onImport) return;
-
     const ritual = convertTemplateToRitual(template, user.id);
     onImport(ritual);
   };
 
+  // Por defecto no previene rituales duplicados (la lógica depende del padre, si fuera necesario)
   const isRitualAlreadyAdded = (templateId: string) => {
     return false;
   };
 
+  // Retorna clases según la dificultad del ritual
   const getDifficultyColor = (difficulty: Difficulty) => {
     switch (difficulty) {
       case "master":
@@ -98,6 +109,7 @@ const RitualLibrary: React.FC<RitualLibraryProps> = ({ onImport }) => {
 
   return (
     <div className="space-y-6">
+      {/* Encabezado */}
       <div className="flex items-center gap-2 mb-6">
         <BookOpen className="text-ritual-accent" size={24} />
         <h2 className="text-2xl font-display font-bold">
@@ -105,8 +117,9 @@ const RitualLibrary: React.FC<RitualLibraryProps> = ({ onImport }) => {
         </h2>
       </div>
 
-      {/* Search and Filters */}
+      {/* Búsqueda y filtros */}
       <div className="space-y-4">
+        {/* Barra de búsqueda */}
         <div className="relative">
           <Search
             className="absolute left-3 top-1/2 transform -translate-y-1/2 text-zinc-500"
@@ -121,6 +134,7 @@ const RitualLibrary: React.FC<RitualLibraryProps> = ({ onImport }) => {
           />
         </div>
 
+        {/* Filtros por populares, categoría y dificultad */}
         <div className="flex flex-wrap gap-3">
           <button
             onClick={() => setShowPopularOnly(!showPopularOnly)}
@@ -164,7 +178,7 @@ const RitualLibrary: React.FC<RitualLibraryProps> = ({ onImport }) => {
         </div>
       </div>
 
-      {/* Rituals Grid */}
+      {/* Grid de rituales filtrados */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {filteredRituals.map((template) => {
           const alreadyAdded = isRitualAlreadyAdded(template.id);
@@ -174,6 +188,7 @@ const RitualLibrary: React.FC<RitualLibraryProps> = ({ onImport }) => {
               key={template.id}
               className="bg-zinc-950 border border-zinc-800 rounded-xl p-5 hover:border-zinc-700 transition-all"
             >
+              {/* Encabezado de la tarjeta de ritual */}
               <div className="flex justify-between items-start mb-3">
                 <div className="flex-1">
                   <h3 className="font-bold text-lg text-white mb-1">
@@ -191,6 +206,7 @@ const RitualLibrary: React.FC<RitualLibraryProps> = ({ onImport }) => {
                 )}
               </div>
 
+              {/* Meta-información: dificultad, frecuencia y esencia */}
               <div className="flex flex-wrap gap-2 mb-4">
                 <span
                   className={`text-xs px-2 py-1 rounded border ${getDifficultyColor(template.difficulty)}`}
@@ -205,6 +221,7 @@ const RitualLibrary: React.FC<RitualLibraryProps> = ({ onImport }) => {
                 </span>
               </div>
 
+              {/* Tags de la tarjeta */}
               <div className="flex flex-wrap gap-1 mb-4">
                 {template.tags.slice(0, 3).map((tag) => (
                   <span
@@ -216,6 +233,7 @@ const RitualLibrary: React.FC<RitualLibraryProps> = ({ onImport }) => {
                 ))}
               </div>
 
+              {/* Botón para importar ritual, lo desactiva si ya fue importado */}
               <button
                 onClick={() => handleImportRitual(template)}
                 disabled={alreadyAdded}
@@ -241,6 +259,7 @@ const RitualLibrary: React.FC<RitualLibraryProps> = ({ onImport }) => {
         })}
       </div>
 
+      {/* Mensaje cuando no hay rituales con los filtros aplicados */}
       {filteredRituals.length === 0 && (
         <div className="text-center py-12 text-zinc-500">
           No se encontraron rituales con los filtros seleccionados.

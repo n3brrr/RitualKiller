@@ -1,12 +1,26 @@
+/*
+ * GoalsManager.tsx
+ * 
+ * Componente principal para la gestión de objetivos del usuario.
+ * Permite crear, visualizar y eliminar objetivos, así como asociar rituales a objetivos
+ * y mostrar el progreso de cada uno. 
+ * Incluye interfaz para la creación rápida y listado de objetivos con barra de avance.
+ */
+
 import React, { useState, useMemo } from 'react';
 import { Target, Plus, Calendar, TrendingUp, X } from 'lucide-react';
 import { useAppContext } from '../../contexts/AppContext';
 import { Goal } from '../../types';
 
 const GoalsManager: React.FC = () => {
-  const { user, rituals, setRituals } = useAppContext();
+  // Contexto de usuario y rituales
+  const { user, rituals } = useAppContext();
+
+  // Estado local de objetivos
   const [goals, setGoals] = useState<Goal[]>([]);
   const [showCreator, setShowCreator] = useState(false);
+
+  // Estado para el formulario de nuevo objetivo
   const [newGoal, setNewGoal] = useState({
     title: '',
     description: '',
@@ -15,13 +29,17 @@ const GoalsManager: React.FC = () => {
     ritual_ids: [] as string[],
   });
 
+  /*
+   * Calcula y memoriza el progreso de cada objetivo según los rituales asociados completados.
+   */
   const goalsWithProgress = useMemo(() => {
     return goals.map(goal => {
-      const completedRituals = goal.ritual_ids.filter(id => 
+      // Cuenta cuántos rituales asociados existen actualmente
+      const completedRituals = goal.ritual_ids.filter(id =>
         rituals.some(r => r.id === id)
       ).length;
       const progress = (completedRituals / goal.ritual_ids.length) * 100;
-      
+
       return {
         ...goal,
         progress: Math.min(progress, 100),
@@ -30,6 +48,9 @@ const GoalsManager: React.FC = () => {
     });
   }, [goals, rituals]);
 
+  /*
+   * Crea un nuevo objetivo y lo agrega a la lista local
+   */
   const handleCreateGoal = () => {
     if (!user || !newGoal.title || !newGoal.target_date) return;
 
@@ -45,7 +66,8 @@ const GoalsManager: React.FC = () => {
       created_at: new Date().toISOString(),
     };
 
-    setGoals(prev => [...prev, goal]);
+    setGoals(prev => [...prev, goal]); // agrega objetivo
+    // Resetea formulario
     setNewGoal({
       title: '',
       description: '',
@@ -56,10 +78,16 @@ const GoalsManager: React.FC = () => {
     setShowCreator(false);
   };
 
+  /*
+   * Elimina objetivo por id
+   */
   const handleDeleteGoal = (id: string) => {
     setGoals(prev => prev.filter(g => g.id !== id));
   };
 
+  /*
+   * Activa/desactiva la selección de un ritual en el formulario de objetivos
+   */
   const toggleRitualSelection = (ritualId: string) => {
     setNewGoal(prev => ({
       ...prev,
@@ -76,6 +104,7 @@ const GoalsManager: React.FC = () => {
           <Target className="text-ritual-accent" size={24} />
           <h2 className="text-2xl font-display font-bold">Objetivos y Metas</h2>
         </div>
+        {/* Botón para mostrar/ocultar el formulario creador */}
         <button
           onClick={() => setShowCreator(!showCreator)}
           className="flex items-center gap-2 px-4 py-2 bg-ritual-accent text-black font-bold rounded-lg hover:bg-emerald-400 transition-colors"
@@ -85,7 +114,7 @@ const GoalsManager: React.FC = () => {
         </button>
       </div>
 
-      {/* Goal Creator */}
+      {/* Formulario para crear objetivo */}
       {showCreator && (
         <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-6">
           <h3 className="text-lg font-bold mb-4">Crear Nuevo Objetivo</h3>
@@ -133,6 +162,7 @@ const GoalsManager: React.FC = () => {
             <div>
               <label className="block text-sm font-bold text-zinc-400 mb-2">Rituales Vinculados</label>
               <div className="space-y-2 max-h-40 overflow-y-auto">
+                {/* Listado de rituales disponibles para vincular */}
                 {rituals.map(ritual => (
                   <label
                     key={ritual.id}
@@ -152,6 +182,7 @@ const GoalsManager: React.FC = () => {
                 )}
               </div>
             </div>
+            {/* Botones para crear/cancelar objetivo */}
             <div className="flex gap-3">
               <button
                 onClick={handleCreateGoal}
@@ -170,7 +201,7 @@ const GoalsManager: React.FC = () => {
         </div>
       )}
 
-      {/* Goals List */}
+      {/* Listado de objetivos existentes */}
       <div className="space-y-4">
         {goalsWithProgress.length === 0 ? (
           <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-12 text-center">
@@ -180,6 +211,7 @@ const GoalsManager: React.FC = () => {
           </div>
         ) : (
           goalsWithProgress.map((goal) => {
+            // Calcula los días restantes hasta la fecha objetivo
             const daysRemaining = Math.ceil(
               (new Date(goal.target_date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)
             );
@@ -206,6 +238,7 @@ const GoalsManager: React.FC = () => {
                       </div>
                     </div>
                   </div>
+                  {/* Botón para eliminar objetivo */}
                   <button
                     onClick={() => handleDeleteGoal(goal.id)}
                     className="text-zinc-500 hover:text-red-500 transition-colors"
@@ -213,7 +246,7 @@ const GoalsManager: React.FC = () => {
                     <X size={20} />
                   </button>
                 </div>
-
+                {/* Progreso visual del objetivo */}
                 <div className="space-y-2">
                   <div className="flex justify-between text-xs text-zinc-500">
                     <span>Progreso</span>

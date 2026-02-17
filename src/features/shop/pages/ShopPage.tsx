@@ -4,49 +4,11 @@ import { Zap, Check, X, FlaskConical, Scroll, Skull } from "lucide-react";
 import { gsap } from "gsap";
 import { useAuthStore } from "@/features/auth/stores/useAuthStore";
 
-// Items predefinidos del mercado (Pociones y objetos oscuros)
-const SHOP_ITEMS: ShopItem[] = [
-  {
-    id: "potion_discipline",
-    name: "Elixir de Disciplina",
-    description:
-      "Otorga +50% de Esencia ganada durante 24 horas. El sabor es metálico y frío.",
-    cost: 500,
-    rarity: "rare",
-    icon: <FlaskConical size={40} className="text-blue-500" />,
-  },
-  {
-    id: "potion_oblivion",
-    name: "Poción de Olvido",
-    description:
-      "Restaura una racha perdida si se consume antes del amanecer siguiente. Borra el fracaso.",
-    cost: 1000,
-    rarity: "legendary",
-    icon: <FlaskConical size={40} className="text-purple-500" />,
-  },
-  {
-    id: "shadow_amulet",
-    name: "Amuleto de Sombra",
-    description:
-      "Un objeto cosmético que oscurece tu perfil. Los demás verán tu compromiso con el vacío.",
-    cost: 2500,
-    rarity: "rare",
-    icon: <Skull size={40} className="text-zinc-400" />,
-  },
-  {
-    id: "binding_contract",
-    name: "Contrato Vinculante",
-    description:
-      "Desbloquea rituales de nivel maestro. Una vez firmado, no hay vuelta atrás.",
-    cost: 5000,
-    rarity: "legendary",
-    icon: <Scroll size={40} className="text-red-500" />,
-  },
-];
+import { SHOP_ITEMS } from "@/data/items";
 
 const ShopPage = () => {
   const user = useAuthStore((state) => state.user);
-  const setUser = useAuthStore((state) => state.setUser);
+  const buyItemFromStore = useAuthStore((state) => state.buyItem);
 
   if (!user) return null;
 
@@ -55,36 +17,35 @@ const ShopPage = () => {
   // Controla la compra de un ítem, incluye animación y actualización de usuario
   const buyItem = (item: ShopItem) => {
     if (user.essence >= item.cost) {
-      // Animación de compra exitosa sobre la tarjeta del ítem
-      gsap.to(`#shop-item-${item.id}`, {
-        scale: 0.95,
-        duration: 0.1,
-        yoyo: true,
-        repeat: 1,
-        onComplete: () => {
-          gsap.fromTo(
-            `#shop-item-${item.id}`,
-            { borderColor: "#27272a" },
-            {
-              borderColor: "#22c55e",
-              duration: 0.5,
-              onComplete: () => {
-                gsap.to(`#shop-item-${item.id}`, {
-                  borderColor: "#27272a",
-                  duration: 0.5,
-                });
-              },
-            },
-          );
+      // Execute purchase
+      const success = buyItemFromStore(item);
 
-          setUser({
-            ...user,
-            essence: user.essence - item.cost,
-            inventory: [...user.inventory, item.id],
-          });
-          setSelectedItem(null); // Cierra el modal
-        },
-      });
+      if (success) {
+        // Animación de compra exitosa sobre la tarjeta del ítem
+        gsap.to(`#shop-item-${item.id}`, {
+          scale: 0.95,
+          duration: 0.1,
+          yoyo: true,
+          repeat: 1,
+          onComplete: () => {
+            gsap.fromTo(
+              `#shop-item-${item.id}`,
+              { borderColor: "#27272a" },
+              {
+                borderColor: "#22c55e",
+                duration: 0.5,
+                onComplete: () => {
+                  gsap.to(`#shop-item-${item.id}`, {
+                    borderColor: "#27272a",
+                    duration: 0.5,
+                  });
+                },
+              },
+            );
+            setSelectedItem(null); // Close modal on success
+          },
+        });
+      }
     } else {
       // Animación de error (temblor) si no hay suficiente esencia
       const target = selectedItem ? "#modal-content" : `#shop-item-${item.id}`;

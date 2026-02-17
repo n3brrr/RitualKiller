@@ -1,5 +1,14 @@
+/*
+ * ritualLibrary.ts
+ * 
+ * Define la biblioteca de rituales sugeridos (plantillas) y utilidades asociadas.
+ * Permite acceder rápidamente a rituales predefinidos, filtrarlos por categoría, popularidad o buscar, 
+ * y convertir una plantilla en un ritual concreto de usuario.
+ */
+
 import { Ritual } from '../types';
 
+// Categorías posibles de rituales sugeridos
 export type RitualCategory = 
   | 'health' 
   | 'productivity' 
@@ -10,6 +19,7 @@ export type RitualCategory =
   | 'creativity' 
   | 'spiritual';
 
+// Plantilla base para sugerir un ritual
 export interface RitualTemplate {
   id: string;
   title: string;
@@ -22,6 +32,7 @@ export interface RitualTemplate {
   popular?: boolean;
 }
 
+// Lista estática de rituales sugeridos
 export const RITUAL_LIBRARY: RitualTemplate[] = [
   // Salud
   {
@@ -56,7 +67,6 @@ export const RITUAL_LIBRARY: RitualTemplate[] = [
     essenceReward: 25,
     tags: ['salud', 'ejercicio', 'caminar'],
   },
-  
   // Productividad
   {
     id: 'lib-prod-1',
@@ -90,7 +100,6 @@ export const RITUAL_LIBRARY: RitualTemplate[] = [
     essenceReward: 25,
     tags: ['productividad', 'disciplina', 'digital'],
   },
-  
   // Mental
   {
     id: 'lib-mental-1',
@@ -123,7 +132,6 @@ export const RITUAL_LIBRARY: RitualTemplate[] = [
     essenceReward: 20,
     tags: ['mental', 'sueño', 'digital'],
   },
-  
   // Físico
   {
     id: 'lib-physical-1',
@@ -145,7 +153,6 @@ export const RITUAL_LIBRARY: RitualTemplate[] = [
     essenceReward: 40,
     tags: ['físico', 'ejercicio', 'core'],
   },
-  
   // Aprendizaje
   {
     id: 'lib-learning-1',
@@ -168,7 +175,6 @@ export const RITUAL_LIBRARY: RitualTemplate[] = [
     essenceReward: 30,
     tags: ['aprendizaje', 'programación', 'habilidades'],
   },
-  
   // Creatividad
   {
     id: 'lib-creativity-1',
@@ -180,7 +186,6 @@ export const RITUAL_LIBRARY: RitualTemplate[] = [
     essenceReward: 20,
     tags: ['creatividad', 'arte', 'expresión'],
   },
-  
   // Espiritual
   {
     id: 'lib-spiritual-1',
@@ -194,14 +199,17 @@ export const RITUAL_LIBRARY: RitualTemplate[] = [
   },
 ];
 
+// Obtiene rituales según una categoría dada
 export const getRitualsByCategory = (category: RitualCategory): RitualTemplate[] => {
   return RITUAL_LIBRARY.filter(r => r.category === category);
 };
 
+// Obtiene rituales marcados como populares
 export const getPopularRituals = (): RitualTemplate[] => {
   return RITUAL_LIBRARY.filter(r => r.popular);
 };
 
+// Busca rituales por palabra clave en título, descripción o tags
 export const searchRituals = (query: string): RitualTemplate[] => {
   const lowerQuery = query.toLowerCase();
   return RITUAL_LIBRARY.filter(r => 
@@ -211,6 +219,7 @@ export const searchRituals = (query: string): RitualTemplate[] => {
   );
 };
 
+// Convierte una plantilla predefinida en un ritual de usuario real
 export const convertTemplateToRitual = (template: RitualTemplate, userId: string): Ritual => {
   return {
     id: `${template.id}-${Date.now()}`,

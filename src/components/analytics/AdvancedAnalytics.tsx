@@ -1,3 +1,12 @@
+/**
+ * AdvancedAnalytics.tsx
+ * 
+ * Este componente presenta un panel avanzado de analíticas para el usuario,
+ * visualizando diferentes métricas y tendencias relacionadas con rituales y sus registros,
+ * utilizando distintos tipos de gráficas para mostrar el progreso semanal, mensual,
+ * distribución por dificultad y días más productivos.
+ */
+
 import React, { useMemo } from "react";
 import {
   LineChart,
@@ -14,7 +23,7 @@ import {
   Pie,
   Cell,
 } from "recharts";
-import { Calendar, TrendingUp, Target, Zap } from "lucide-react";
+import { Calendar, TrendingUp, Target } from "lucide-react";
 import { useAuthStore } from "../../features/auth/stores/useAuthStore";
 import { useRitualStore } from "../../features/rituals/stores/useRitualStore";
 
@@ -22,7 +31,7 @@ const AdvancedAnalytics: React.FC = () => {
   const { rituals, logs } = useRitualStore();
   const user = useAuthStore((state) => state.user);
 
-  // Genera la información de progreso semanal, agrupando logs de los últimos 7 días por semana
+  // Agrupa los logs de los últimos 7 días por semana para mostrar progreso semanal
   const weeklyData = useMemo(() => {
     const weeks: { [key: string]: number } = {};
     const today = new Date();
@@ -48,7 +57,7 @@ const AdvancedAnalytics: React.FC = () => {
     }));
   }, [logs]);
 
-  // Calcula la distribución de finalizaciones por dificultad de ritual
+  // Distribución de finalizaciones agrupadas por dificultad del ritual
   const difficultyData = useMemo(() => {
     const distribution: { [key: string]: number } = {
       novice: 0,
@@ -57,7 +66,7 @@ const AdvancedAnalytics: React.FC = () => {
     };
 
     rituals.forEach((ritual) => {
-      // Suma las veces que este ritual ha sido completado, agrupando por dificultad
+      // Cuenta cuántas veces se completó cada ritual según la dificultad
       const completed = logs.filter((l) => l.ritualId === ritual.id).length;
       const current = distribution[ritual.difficulty];
       if (current !== undefined) {
@@ -78,7 +87,7 @@ const AdvancedAnalytics: React.FC = () => {
       }));
   }, [rituals, logs]);
 
-  // Agrupa los logs de finalización por mes de los últimos 6 meses
+  // Tendencia de rituales completados por mes en los últimos 6 meses
   const monthlyData = useMemo(() => {
     const months: { [key: string]: number } = {};
     const today = new Date();
@@ -104,7 +113,7 @@ const AdvancedAnalytics: React.FC = () => {
     }));
   }, [logs]);
 
-  // Agrupa por día de la semana en que se hacen más rituales
+  // Total de rituales realizados agrupados por día de la semana (p.ej., "Lun", "Mar", ...)
   const dayOfWeekData = useMemo(() => {
     const days: { [key: string]: number } = {
       Lun: 0,
@@ -132,7 +141,7 @@ const AdvancedAnalytics: React.FC = () => {
 
   const COLORS = ["#22c55e", "#eab308", "#ef4444"];
 
-  // Cálculo simple del ratio de completitud (número de logs respecto a la cantidad de rituales activos por 30 días)
+  // Porcentaje de completitud de rituales según los logs de los últimos 30 días
   const completionRate =
     rituals.length > 0 ? (logs.length / (rituals.length * 30)) * 100 : 0;
 
@@ -175,7 +184,7 @@ const AdvancedAnalytics: React.FC = () => {
         </div>
       </div>
 
-      {/* Gráfico de línea de progreso semanal */}
+      {/* Gráfico de línea: progreso semanal */}
       <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-6">
         <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
           <Calendar size={20} className="text-ritual-accent" />
@@ -206,7 +215,7 @@ const AdvancedAnalytics: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Gráfico de barras por tendencia mensual */}
+        {/* Gráfico de barras: tendencia por mes */}
         <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-6">
           <h3 className="text-lg font-bold mb-4">Tendencias Mensuales</h3>
           <ResponsiveContainer width="100%" height={300}>
@@ -226,7 +235,7 @@ const AdvancedAnalytics: React.FC = () => {
           </ResponsiveContainer>
         </div>
 
-        {/* Gráfico circular de distribución por dificultad */}
+        {/* Gráfico circular: distribución por dificultad */}
         <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-6">
           <h3 className="text-lg font-bold mb-4">
             Distribución por Dificultad
@@ -264,7 +273,7 @@ const AdvancedAnalytics: React.FC = () => {
         </div>
       </div>
 
-      {/* Gráfico de barras para identificar el día más productivo de la semana */}
+      {/* Gráfico de barras: días más productivos */}
       <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-6">
         <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
           <Target size={20} className="text-ritual-accent" />
@@ -290,7 +299,8 @@ const AdvancedAnalytics: React.FC = () => {
   );
 };
 
-// Agrega método auxiliar al prototipo de Date para extraer el número de la semana en el año
+// Añade al prototipo de Date un método para obtener el número de semana del año (ISO-8601)
+/* eslint-disable no-extend-native */
 declare global {
   interface Date {
     getWeek(): number;

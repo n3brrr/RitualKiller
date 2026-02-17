@@ -1,7 +1,13 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { User, Ritual, RitualLog } from '../types';
-import { useAuth } from '../hooks/useAuth';
+/*
+ * Contexto global de la aplicación: gestiona usuario, rituales y logs, 
+ * maneja persistencia en localStorage y sincronización con autenticación.
+ */
 
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { User, Ritual, RitualLog } from '@/types';
+import { useAuth } from '@/hooks/useAuth';
+
+// Tipado del contexto, expone funciones y datos principales de la app globalmente
 interface AppContextType {
   user: User | null;
   setUser: (user: User | null) => void;
@@ -15,6 +21,7 @@ interface AppContextType {
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
+// Hook para consumir el contexto en cualquier componente
 export const useAppContext = () => {
   const context = useContext(AppContext);
   if (!context) {
@@ -27,6 +34,7 @@ interface AppProviderProps {
   children: ReactNode;
 }
 
+// Proveedor de contexto: maneja estado global y sincronización con localStorage/autenticación
 export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   const { user: authUser, loading: authLoading } = useAuth();
   const [user, setUser] = useState<User | null>(null);
@@ -34,16 +42,17 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   const [logs, setLogs] = useState<RitualLog[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Sync authUser with local user state
+  // Sincroniza el usuario autenticado con el estado local.
   useEffect(() => {
     if (authUser && !user) {
       const storedUser = localStorage.getItem("rk_user");
       if (storedUser) {
+        // Intenta parsear el usuario almacenado en localStorage
         try {
           setUser(JSON.parse(storedUser));
         } catch (error) {
           console.error("Error parsing stored user:", error);
-          // Create default user from auth
+          // Si hay datos corruptos, crea usuario por defecto
           setUser({
             id: authUser.id,
             username: authUser.email?.split("@")[0] || "Desconocido",
@@ -54,7 +63,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
           });
         }
       } else {
-        // Create default user structure if not in local storage
+        // Genera usuario por defecto o admin si corresponde
         const isAdminUser = authUser.id === 'admin-user-id-12345' || 
                            authUser.user_metadata?.isAdmin === true;
         
@@ -76,7 +85,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     }
   }, [authUser, authLoading, user]);
 
-  // Initialize Data from LocalStorage
+  // Lee rituals y logs almacenados la primera vez que se monta el componente
   useEffect(() => {
     try {
       const storedRituals = localStorage.getItem("rk_rituals");
@@ -99,7 +108,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     }
   }, []);
 
-  // Save to LocalStorage on changes
+  // Guarda el usuario al cambiar, si existe
   useEffect(() => {
     if (user) {
       try {
@@ -110,6 +119,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     }
   }, [user]);
 
+  // Guarda rituales en localStorage al modificarse
   useEffect(() => {
     try {
       localStorage.setItem("rk_rituals", JSON.stringify(rituals));
@@ -118,6 +128,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     }
   }, [rituals]);
 
+  // Guarda logs en localStorage al modificarse
   useEffect(() => {
     try {
       localStorage.setItem("rk_logs", JSON.stringify(logs));
@@ -126,6 +137,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     }
   }, [logs]);
 
+  // Elimina todo del contexto y localStorage, y hace logout real usando Supabase
   const logout = async () => {
     setUser(null);
     setRituals([]);
@@ -133,7 +145,6 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     localStorage.removeItem("rk_user");
     localStorage.removeItem("rk_rituals");
     localStorage.removeItem("rk_logs");
-    // Sign out from Supabase
     try {
       const { supabase } = await import("../lib/supabase");
       await supabase.auth.signOut();

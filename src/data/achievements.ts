@@ -1,7 +1,15 @@
+/*
+ * achievements.ts
+ *
+ * Define la lista base de logros (achievements) y utilidades relacionadas para el sistema de logros de la aplicación.
+ * - Contiene los logros configurados (sin progreso) y funciones para calcular el avance de cada logro y obtener los desbloqueados.
+ */
+
 import { Achievement, Rarity } from '../types';
 
+// Lista de logros base, omitimos campos que dependen del usuario como progreso/fecha de desbloqueo
 export const ACHIEVEMENTS: Omit<Achievement, 'progress' | 'unlockedAt'>[] = [
-  // Streak Achievements
+  // Logros de racha de días completando rituales
   {
     id: 'ach-streak-7',
     name: 'Primera Semana',
@@ -29,8 +37,7 @@ export const ACHIEVEMENTS: Omit<Achievement, 'progress' | 'unlockedAt'>[] = [
     target: 100,
     category: 'streak',
   },
-  
-  // Essence Achievements
+  // Logros por acumular esencia
   {
     id: 'ach-essence-1000',
     name: 'Acumulador',
@@ -58,8 +65,7 @@ export const ACHIEVEMENTS: Omit<Achievement, 'progress' | 'unlockedAt'>[] = [
     target: 50000,
     category: 'essence',
   },
-  
-  // Rituals Achievements
+  // Logros por crear o completar rituales
   {
     id: 'ach-rituals-10',
     name: 'Iniciado',
@@ -87,8 +93,7 @@ export const ACHIEVEMENTS: Omit<Achievement, 'progress' | 'unlockedAt'>[] = [
     target: 100,
     category: 'rituals',
   },
-  
-  // Social Achievements
+  // Logros sociales (interacción en comunidad)
   {
     id: 'ach-social-first',
     name: 'Primera Voz',
@@ -107,8 +112,7 @@ export const ACHIEVEMENTS: Omit<Achievement, 'progress' | 'unlockedAt'>[] = [
     target: 10,
     category: 'social',
   },
-  
-  // Special Achievements
+  // Logros especiales
   {
     id: 'ach-perfect-week',
     name: 'Semana Perfecta',
@@ -129,6 +133,12 @@ export const ACHIEVEMENTS: Omit<Achievement, 'progress' | 'unlockedAt'>[] = [
   },
 ];
 
+/*
+ * Calcula el progreso actual de un logro según los datos del usuario.
+ * @param achievement Objeto de logro a evaluar.
+ * @param userData Información relevante del usuario: rituales, logs, esencia, posts.
+ * @returns Progreso numérico para el logro.
+ */
 export const calculateAchievementProgress = (
   achievement: Omit<Achievement, 'progress' | 'unlockedAt'>,
   userData: {
@@ -140,37 +150,47 @@ export const calculateAchievementProgress = (
 ): number => {
   switch (achievement.category) {
     case 'streak':
+      // Máxima racha registrada entre los rituales del usuario
       const maxStreak = Math.max(...userData.rituals.map(r => r.streak || 0), 0);
       return Math.min(maxStreak, achievement.target);
-      
+
     case 'essence':
+      // Esencia acumulada por el usuario
       return Math.min(userData.essence, achievement.target);
-      
+
     case 'rituals':
+      // Si el logro es de completar, cuenta logs. Si es de creación, cuenta rituales distintos
       if (achievement.id.includes('complete')) {
         return Math.min(userData.logs.length, achievement.target);
       }
       return Math.min(userData.rituals.length, achievement.target);
-      
+
     case 'social':
+      // Cantidad de publicaciones en la comunidad
       return Math.min((userData.posts?.length || 0), achievement.target);
-      
+
     case 'special':
       if (achievement.id === 'ach-perfect-week') {
-        // Check for perfect week logic
-        return 0; // Simplified for now
+        // Lógica especial pendiente para 'Semana Perfecta'
+        return 0;
       }
       if (achievement.id === 'ach-all-difficulties') {
+        // Cuántas dificultades distintas de rituales ha completado el usuario
         const difficulties = new Set(userData.rituals.map(r => r.difficulty));
         return Math.min(difficulties.size, achievement.target);
       }
       return 0;
-      
+
     default:
       return 0;
   }
 };
 
+/*
+ * Retorna los logros desbloqueados (aquellos con progreso completo y fecha de desbloqueo).
+ * @param achievements Lista de logros con progreso y fecha.
+ * @returns Sólo los logros desbloqueados por el usuario.
+ */
 export const getUnlockedAchievements = (
   achievements: Achievement[]
 ): Achievement[] => {

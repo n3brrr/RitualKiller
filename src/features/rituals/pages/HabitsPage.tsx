@@ -26,7 +26,8 @@ const HabitsPage = () => {
   // Obtiene el estado global de los stores
   const user = useAuthStore((state) => state.user);
   const setUser = useAuthStore((state) => state.setUser);
-  const { rituals, setRituals, logs, setLogs } = useRitualStore();
+  const { rituals, setRituals, logs, addRitual, removeRitual, toggleRitual } =
+    useRitualStore();
 
   if (!user) return null;
 
@@ -82,73 +83,13 @@ const HabitsPage = () => {
    * Gestiona tanto la lógica de completar, como deshacer la acción, actualizando los estados necesarios.
    */
   const toggleCompletion = (ritual: Ritual) => {
-    const isCompleted = logs.some(
-      (l) => l.ritualId === ritual.id && l.date === todayStr,
-    );
+    const { essenceChange, success } = toggleRitual(ritual.id, todayStr);
 
-    if (isCompleted) {
-      // Lógica para deshacer la finalización
-      const newLogs = logs.filter(
-        (l) => !(l.ritualId === ritual.id && l.date === todayStr),
-      );
-      setLogs(newLogs);
-
-      const yesterday = new Date();
-      yesterday.setDate(yesterday.getDate() - 1);
-      const yesterdayStr = yesterday.toISOString().split("T")[0];
-      const hadStreakYesterday = newLogs.some(
-        (l) => l.ritualId === ritual.id && l.date === yesterdayStr,
-      );
-      const recoveredStreak = hadStreakYesterday
-        ? Math.max(0, ritual.streak - 1)
-        : 0;
-
-      const wasBonusApplied = ritual.streak > 1;
-      const bonusToRemove = wasBonusApplied ? 10 : 0;
-
+    if (success) {
       setUser({
         ...currentUser,
-        essence: Math.max(
-          0,
-          currentUser.essence - ritual.essenceReward - bonusToRemove,
-        ),
+        essence: Math.max(0, currentUser.essence + essenceChange),
       });
-      setRituals(
-        rituals.map((r) =>
-          r.id === ritual.id ? { ...r, streak: recoveredStreak } : r,
-        ),
-      );
-    } else {
-      // Lógica para marcar como completado y otorgar recompensa/esencia
-      const yesterday = new Date();
-      yesterday.setDate(yesterday.getDate() - 1);
-      const yesterdayStr = yesterday.toISOString().split("T")[0];
-      const hasYesterday = logs.some(
-        (l) => l.ritualId === ritual.id && l.date === yesterdayStr,
-      );
-
-      const newStreak = hasYesterday ? ritual.streak + 1 : 1;
-      const streakBonus = hasYesterday ? 10 : 0;
-
-      const newLog: RitualLog = {
-        id: Date.now().toString(),
-        ritualId: ritual.id,
-        user_id: currentUser.id,
-        date: todayStr,
-        timestamp: Date.now(),
-        essence_gained: ritual.essenceReward + streakBonus,
-      };
-      setLogs([...logs, newLog]);
-
-      setUser({
-        ...currentUser,
-        essence: currentUser.essence + ritual.essenceReward + streakBonus,
-      });
-      setRituals(
-        rituals.map((r) =>
-          r.id === ritual.id ? { ...r, streak: newStreak } : r,
-        ),
-      );
     }
   };
 
@@ -178,7 +119,10 @@ const HabitsPage = () => {
           streak: 0,
           created_at: new Date().toISOString(),
         }));
-        setRituals([...rituals, ...newRituals]);
+
+        // Add all suggested rituals
+        newRituals.forEach((r) => addRitual(r));
+
         setGoalInput("");
         setShowCreator(false);
       }
@@ -197,7 +141,7 @@ const HabitsPage = () => {
         streak: 0,
         created_at: new Date().toISOString(),
       };
-      setRituals([...rituals, newRitual]);
+      addRitual(newRitual);
       setManualForm({
         title: "",
         description: "",
@@ -211,7 +155,7 @@ const HabitsPage = () => {
 
   // Elimina un ritual por su ID
   const deleteRitual = (id: string) => {
-    setRituals(rituals.filter((r) => r.id !== id));
+    removeRitual(id);
   };
 
   return (
@@ -247,7 +191,7 @@ const HabitsPage = () => {
           <Suspense fallback={<Loading />}>
             <RitualLibrary
               onImport={(ritual) => {
-                setRituals([...rituals, ritual]);
+                addRitual(ritual);
                 setShowLibrary(false);
               }}
             />

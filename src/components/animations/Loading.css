@@ -1,4 +1,10 @@
-/* Loader circular animado con efecto 3D */
+/**
+ * Loading.css
+ * Estilos para el componente de animación de carga circular 3D.
+ * Define la presentación y animaciones de los "anillos" que giran,
+ * creando un efecto visual de loader moderno.
+ */
+
 .loader {
   position: absolute;
   top: calc(50% - 32px);
@@ -6,10 +12,9 @@
   width: 64px;
   height: 64px;
   border-radius: 50%;
-  perspective: 800px; /* Da profundidad 3D para la animación de los "rings" */
+  perspective: 800px;
 }
 
-/* Elementos internos que representan cada uno de los tres "rings" animados */
 .inner {
   position: absolute;
   box-sizing: border-box;
@@ -18,7 +23,7 @@
   border-radius: 50%;  
 }
 
-/* Anillo 1: borde inferior + animación rotacional */
+/* Primer anillo: animación y borde inferior visible */
 .inner.one {
   left: 0%;
   top: 0%;
@@ -26,7 +31,7 @@
   border-bottom: 3px solid #EFEFFA;
 }
 
-/* Anillo 2: borde derecho + animación rotacional diferente */
+/* Segundo anillo: animación diferente y borde derecho visible */
 .inner.two {
   right: 0%;
   top: 0%;
@@ -34,7 +39,7 @@
   border-right: 3px solid #EFEFFA;
 }
 
-/* Anillo 3: borde superior + tercera animación rotacional */
+/* Tercer anillo: otra animación y borde superior visible */
 .inner.three {
   right: 0%;
   bottom: 0%;
@@ -42,7 +47,7 @@
   border-top: 3px solid #EFEFFA;
 }
 
-/* Animaciones de rotación para cada anillo, con distintos ángulos en 3D */
+/* Keyframes para las rotaciones 3D de cada anillo */
 @keyframes rotate-one {
   0% {
     transform: rotateX(35deg) rotateY(-45deg) rotateZ(0deg);

@@ -4,60 +4,18 @@ import { Package, Zap } from "lucide-react";
 import { SHOP_ITEMS } from "@/data/items";
 
 const InventoryPage = () => {
+  const useItem = useAuthStore((state) => state.useItem);
   const user = useAuthStore((state) => state.user);
-  const setUser = useAuthStore((state) => state.setUser);
 
   if (!user) return null;
 
   const handleUseItem = (itemId: string) => {
-    const item = SHOP_ITEMS.find((i) => i.id === itemId);
-    if (!item) return;
-
-    // Logic to "use" the item
-    let newBuffs = user.active_buffs || [];
-
-    if (item.effectType === "essence_boost") {
-      // Add or extend buff
-      // Check if already active
-      const existingBuffIndex = newBuffs.findIndex((b) => b.itemId === itemId);
-      const now = Date.now();
-      const duration = item.duration || 24 * 60 * 60 * 1000;
-
-      if (existingBuffIndex >= 0) {
-        // Extend
-        newBuffs[existingBuffIndex].expiresAt += duration;
-      } else {
-        // Add new
-        newBuffs.push({
-          itemId: item.id,
-          expiresAt: now + duration,
-          multiplier: item.effectValue,
-        });
-      }
-    } else if (item.effectType === "restore_streak") {
-      // Logic for restoring streak would go here (complex, needs interaction with habits store)
-      alert(
-        "La Poción de Olvido ha sido consumida. (Lógica de restauración pendiente de integración)",
-      );
-    }
-
-    // Remove 1 instance of item from inventory
-    const newInventory = [...user.inventory];
-    const itemIndex = newInventory.indexOf(itemId);
-    if (itemIndex > -1) {
-      newInventory.splice(itemIndex, 1);
-    }
-
-    setUser({
-      ...user,
-      inventory: newInventory,
-      active_buffs: newBuffs,
-    });
+    useItem(itemId);
   };
 
   // Group items by ID to show counts
   const inventoryCounts = user.inventory.reduce(
-    (acc, itemId) => {
+    (acc: Record<string, number>, itemId: string) => {
       acc[itemId] = (acc[itemId] || 0) + 1;
       return acc;
     },

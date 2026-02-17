@@ -1,9 +1,19 @@
+/*
+ * RitualCard.tsx
+ * 
+ * Componente que representa la tarjeta visual de un Ritual individual.
+ * Muestra información clave del ritual, incluyendo título, descripción, dificultad, recompensa y racha.
+ * Permite marcar el ritual como completado y eliminarlo.
+ * Incluye animaciones visuales en la interacción del usuario para mejorar el feedback.
+ */
+
 import { useEffect, useRef } from "react";
 import { Ritual } from "../../types/index.ts";
 import { Check, Trash2, Zap } from "lucide-react";
 import gsap from "gsap";
 import { translateDifficulty } from "../../utils/translations";
 
+// Componente de tarjeta para mostrar información de un ritual individual
 const RitualItem = ({
   ritual,
   isDone,
@@ -17,12 +27,14 @@ const RitualItem = ({
   onDelete: (id: string) => void;
   disabled?: boolean;
 }) => {
+  // Referencias para animaciones
   const cardRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
 
+  // Animaciones al marcar como hecho
   useEffect(() => {
     if (isDone && cardRef.current && buttonRef.current) {
-      // Flash Effect on Card
+      // Efecto de "flasheo" verde en la tarjeta al completar
       gsap.fromTo(
         cardRef.current,
         { boxShadow: "0 0 0px rgba(34, 197, 94, 0)", borderColor: "#27272a" },
@@ -36,7 +48,7 @@ const RitualItem = ({
         },
       );
 
-      // Pop effect on Button
+      // Efecto "pop" en el botón
       gsap.fromTo(
         buttonRef.current,
         { scale: 1 },
@@ -58,6 +70,7 @@ const RitualItem = ({
         isDone ? "border-ritual-accent/30" : "border-zinc-800"
       } p-5 rounded-xl transition-all duration-300 hover:border-zinc-600 flex justify-between items-center overflow-hidden`}
     >
+      {/* Capa visual para indicar ritual completado */}
       {isDone && (
         <div className="absolute inset-0 bg-ritual-accent/5 pointer-events-none transition-opacity duration-500"></div>
       )}
@@ -73,6 +86,7 @@ const RitualItem = ({
           >
             {ritual.title}
           </h4>
+          {/* Muestra racha si es mayor a 1 */}
           {ritual.streak > 1 && (
             <div className="flex items-center gap-1 text-xs text-yellow-500 font-mono bg-yellow-500/10 px-2 py-0.5 rounded border border-yellow-500/20">
               <Zap size={10} fill="currentColor" /> Racha de {ritual.streak}{" "}
@@ -82,6 +96,7 @@ const RitualItem = ({
         </div>
         <p className="text-zinc-500 text-sm">{ritual.description}</p>
         <div className="flex gap-2 mt-2">
+          {/* Dificultad del ritual */}
           <span
             className={`text-[10px] uppercase tracking-wider px-2 py-0.5 rounded border ${
               ritual.difficulty === "master"
@@ -93,12 +108,14 @@ const RitualItem = ({
           >
             {translateDifficulty(ritual.difficulty)}
           </span>
+          {/* Recompensa en esencia */}
           <span className="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded border border-zinc-800 text-zinc-400">
             +{ritual.essenceReward} Esencia
           </span>
         </div>
       </div>
 
+      {/* Botones de acción: completar y eliminar */}
       <div className="flex items-center gap-4 relative z-10">
         <button
           ref={buttonRef}
