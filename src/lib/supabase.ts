@@ -13,8 +13,8 @@ if (!supabaseUrl || !supabaseKey) {
 
 // Inicializa el cliente de Supabase con persistencia de sesión
 export const supabase = createClient(
-  supabaseUrl || "https://placeholder.supabase.co",
-  supabaseKey || "placeholder-key",
+  supabaseUrl || "supabase.com",
+  supabaseKey || "VITE_SUPABASE_ANON_KEY",
   {
     auth: {
       persistSession: true,

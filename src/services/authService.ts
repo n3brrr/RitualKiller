@@ -1,39 +1,5 @@
 import { supabase } from '../lib/supabase';
 
-export const signInWithGoogle = async () => {
-  try {
-    const { data, error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${window.location.origin}/app/dashboard`,
-      },
-    });
-    
-    if (error) throw error;
-    return { data, error: null };
-  } catch (error: any) {
-    console.error('Error signing in with Google:', error);
-    return { data: null, error };
-  }
-};
-
-export const signInWithGitHub = async () => {
-  try {
-    const { data, error } = await supabase.auth.signInWithOAuth({
-      provider: 'github',
-      options: {
-        redirectTo: `${window.location.origin}/app/dashboard`,
-      },
-    });
-    
-    if (error) throw error;
-    return { data, error: null };
-  } catch (error: any) {
-    console.error('Error signing in with GitHub:', error);
-    return { data: null, error };
-  }
-};
-
 export const signUpWithEmail = async (email: string, password: string, username?: string) => {
   try {
     const { data, error } = await supabase.auth.signUp({
@@ -50,33 +16,26 @@ export const signUpWithEmail = async (email: string, password: string, username?
     if (error) throw error;
     return { data, error: null };
   } catch (error: any) {
-    console.error('Error signing up:', error);
+    console.error('Error al registrar:', error);
     return { data: null, error };
   }
 };
 
-// Credenciales de administrador para pruebas
-const ADMIN_CREDENTIALS = {
-  email: 'admin@gmail.com',
-  password: '123456',
-  username: 'admin',
-  id: 'admin-user-id-12345',
-};
+
 
 export const signInWithEmail = async (email: string, password: string) => {
   // Verificar si es el usuario admin (soporta tanto email@gmail.com como el usuario simple 'admin')
-  const isTestAdmin = (email.toLowerCase() === ADMIN_CREDENTIALS.email && password === ADMIN_CREDENTIALS.password) || 
-                     (email.toLowerCase() === 'admin' && password === 'admin');
+  const isTestAdmin = (email.toLowerCase() === 'admin' && password === 'admin');
 
   if (isTestAdmin) {
     // Retornar datos mock del admin sin usar Supabase
     return {
       data: {
         user: {
-          id: ADMIN_CREDENTIALS.id,
-          email: ADMIN_CREDENTIALS.email,
+          id: 'admin-user-id-12345',
+          email: 'admin@gmail.com',
           user_metadata: {
-            username: ADMIN_CREDENTIALS.username,
+            username: 'admin',
             isAdmin: true,
           },
         },
@@ -96,7 +55,7 @@ export const signInWithEmail = async (email: string, password: string) => {
     if (error) throw error;
     return { data, error: null };
   } catch (error: any) {
-    console.error('Error signing in:', error);
+    console.error('Error al iniciar sesión:', error);
     return { data: null, error };
   }
 };
@@ -110,7 +69,7 @@ export const resetPassword = async (email: string) => {
     if (error) throw error;
     return { error: null };
   } catch (error: any) {
-    console.error('Error resetting password:', error);
+    console.error('Error al restablecer contraseña:', error);
     return { error };
   }
 };
@@ -124,7 +83,7 @@ export const updatePassword = async (newPassword: string) => {
     if (error) throw error;
     return { error: null };
   } catch (error: any) {
-    console.error('Error updating password:', error);
+    console.error('Error al restablecer contraseña:', error);
     return { error };
   }
 };

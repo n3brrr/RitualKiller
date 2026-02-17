@@ -27,6 +27,20 @@ export default defineConfig(({ mode }) => {
         alias: {
           '@': path.resolve(__dirname, './src'),
         }
+      },
+      build: {
+        sourcemap: false,
+        rollupOptions: {
+            output: {
+                manualChunks: {
+                    'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+                    'vendor-ui': ['lucide-react', 'framer-motion', 'gsap'],
+                    'vendor-utils': ['@tanstack/react-query', 'zustand'],
+                    'vendor-supabase': ['@supabase/supabase-js'],
+                }
+            }
+        },
+        chunkSizeWarningLimit: 1000,
       }
     };
 });
