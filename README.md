@@ -104,9 +104,9 @@ pnpm run lint
 pnpm run preview
 ```
 
-## 👤 Autor
+## 👤 Autores
 
-**Rubén Torres** - [@n3brrr](https://github.com/n3brrr)
+**Rubén Torres** - [@n3brrr](https://github.com/n3brrr) <br>
 **Jesús Dominguez** - [@JesusDI04](https://github.com/JesusDI04)
 
 <div align="center">
