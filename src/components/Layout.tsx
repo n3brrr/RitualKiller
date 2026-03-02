@@ -37,16 +37,16 @@ interface LayoutProps {
  */
 const getRank = (essence: number) => {
   if (essence < 100)
-    return { title: "Iniciado", next: 100, icon: <Shield size={12} /> };
+    return { title: "Initiate", next: 100, icon: <Shield size={12} /> };
   if (essence < 500)
-    return { title: "Neófito", next: 500, icon: <Shield size={12} /> };
+    return { title: "Neophyte", next: 500, icon: <Shield size={12} /> };
   if (essence < 1000)
-    return { title: "Adepto", next: 1000, icon: <Skull size={12} /> };
+    return { title: "Adept", next: 1000, icon: <Skull size={12} /> };
   if (essence < 2500)
-    return { title: "Brujo", next: 2500, icon: <Skull size={12} /> };
+    return { title: "Warlock", next: 2500, icon: <Skull size={12} /> };
   if (essence < 5000)
-    return { title: "Liche", next: 5000, icon: <Crown size={12} /> };
-  return { title: "Semidiós", next: 10000, icon: <Zap size={12} /> };
+    return { title: "Lich", next: 5000, icon: <Crown size={12} /> };
+  return { title: "Demi-God", next: 10000, icon: <Zap size={12} /> };
 };
 
 /**
@@ -87,11 +87,11 @@ export const Layout: React.FC<LayoutProps> = ({ children, user, onLogout }) => {
         <nav className="flex-1 px-4 space-y-2 mt-4">
           <NavLink to="/app/dashboard" className={navItemClass}>
             <LayoutDashboard size={20} />
-            <span>Altar</span>
+            <span>Dashboard</span>
           </NavLink>
           <NavLink to="/app/habits" className={navItemClass}>
             <CheckSquare size={20} />
-            <span>Rituales</span>
+            <span>Rituals</span>
           </NavLink>
           <NavLink to="/app/social" className={navItemClass}>
             <Users size={20} />
@@ -99,7 +99,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, user, onLogout }) => {
           </NavLink>
           <NavLink to="/app/shop" className={navItemClass}>
             <ShoppingBag size={20} />
-            <span>Mercado Negro</span>
+            <span>Black Market</span>
           </NavLink>
         </nav>
 
@@ -130,7 +130,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, user, onLogout }) => {
           {/* Barra de progreso de rango */}
           <div className="mb-4">
             <div className="flex justify-between text-[10px] text-zinc-500 mb-1 uppercase tracking-wider">
-              <span>Progreso</span>
+              <span>Progress</span>
               <span>
                 {user.essence} / {rank.next}
               </span>
@@ -149,7 +149,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, user, onLogout }) => {
             className="flex items-center gap-2 text-zinc-500 hover:text-red-500 transition-colors text-xs uppercase tracking-widest w-full pt-3 border-t border-zinc-800/50"
           >
             <LogOut size={14} />
-            <span>Cortar vínculo</span>
+            <span>Logout</span>
           </button>
         </div>
       </aside>

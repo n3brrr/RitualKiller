@@ -1,6 +1,6 @@
 /*
  * AppLayout.tsx
- * 
+ *
  * Este archivo define el layout principal de la aplicación después de iniciar sesión.
  * Proporciona la estructura de navegación lateral (sidebar en desktop, footer en móvil),
  * integración con el usuario autenticado, control de acceso y layout responsivo para las vistas de la app.
@@ -27,16 +27,16 @@ import { isAdmin } from "@/utils/adminUtils";
 // Obtiene el rango del usuario según su essence
 const getRank = (essence: number) => {
   if (essence < 100)
-    return { title: "Iniciado", next: 100, icon: <Shield size={12} /> };
+    return { title: "Initiate", next: 100, icon: <Shield size={12} /> };
   if (essence < 500)
-    return { title: "Neófito", next: 500, icon: <Shield size={12} /> };
+    return { title: "Neophyte", next: 500, icon: <Shield size={12} /> };
   if (essence < 1000)
-    return { title: "Adepto", next: 1000, icon: <Skull size={12} /> };
+    return { title: "Adept", next: 1000, icon: <Skull size={12} /> };
   if (essence < 2500)
-    return { title: "Brujo", next: 2500, icon: <Skull size={12} /> };
+    return { title: "Warlock", next: 2500, icon: <Skull size={12} /> };
   if (essence < 5000)
-    return { title: "Liche", next: 5000, icon: <Crown size={12} /> };
-  return { title: "Semidiós", next: 10000, icon: <Zap size={12} /> };
+    return { title: "Lich", next: 5000, icon: <Crown size={12} /> };
+  return { title: "Demi-God", next: 10000, icon: <Zap size={12} /> };
 };
 
 export const AppLayout: React.FC = () => {
@@ -86,7 +86,7 @@ export const AppLayout: React.FC = () => {
           </NavLink>
           <NavLink to="/app/habits" className={navItemClass}>
             <CheckSquare size={20} />
-            <span>Rituales</span>
+            <span>Rituals</span>
           </NavLink>
           <NavLink to="/app/social" className={navItemClass}>
             <Users size={20} />
@@ -94,19 +94,19 @@ export const AppLayout: React.FC = () => {
           </NavLink>
           <NavLink to="/app/shop" className={navItemClass}>
             <ShoppingBag size={20} />
-            <span>Mercado Negro</span>
+            <span>Black Market</span>
           </NavLink>
           <NavLink to="/app/inventory" className={navItemClass}>
             <Package size={20} />
-            <span>Inventario</span>
+            <span>Inventory</span>
           </NavLink>
           <NavLink to="/app/analytics" className={navItemClass}>
             <Zap size={20} />
-            <span>Analiticas</span>
+            <span>Analytics</span>
           </NavLink>
           <NavLink to="/app/achievements" className={navItemClass}>
             <Crown size={20} />
-            <span>Logros</span>
+            <span>Achievements</span>
           </NavLink>
         </nav>
 
@@ -139,7 +139,7 @@ export const AppLayout: React.FC = () => {
           {/* Barra de progreso del rango */}
           <div className="mb-4">
             <div className="flex justify-between text-[10px] text-zinc-500 mb-1 uppercase tracking-wider">
-              <span>Progreso</span>
+              <span>Progress</span>
               <span>
                 {user.essence} / {rank.next}
               </span>
@@ -157,7 +157,7 @@ export const AppLayout: React.FC = () => {
             className="flex items-center gap-2 text-zinc-500 hover:text-red-500 transition-colors text-xs uppercase tracking-widest w-full pt-3 border-t border-zinc-800/50"
           >
             <LogOut size={14} />
-            <span>Cortar vínculo</span>
+            <span>Sever Bond</span>
           </button>
         </div>
       </aside>

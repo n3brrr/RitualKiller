@@ -28,7 +28,7 @@ const EnhancedSocial: React.FC = () => {
       author: "NeonSamurai",
       authorId: "user1",
       content:
-        "Acabo de completar el protocolo de las 6AM por 30 días seguidos. Mi concentración es láser.",
+        "Just completed the 6AM protocol for 30 consecutive days. My focus is laser sharp.",
       timestamp: "2h ago",
       likes: 42,
       isSystem: false,
@@ -39,7 +39,7 @@ const EnhancedSocial: React.FC = () => {
       id: "2",
       author: "System",
       authorId: "system",
-      content: "El usuario @GhostWalker ha ascendido al Rango: Adepto.",
+      content: "User @GhostWalker has ascended to Rank: Adept.",
       timestamp: "4h ago",
       likes: 128,
       isSystem: true,
@@ -49,7 +49,9 @@ const EnhancedSocial: React.FC = () => {
   ]);
   const [following, setFollowing] = useState<string[]>([]);
   const [newPostContent, setNewPostContent] = useState("");
-  const [commentInputs, setCommentInputs] = useState<{ [key: string]: string }>({});
+  const [commentInputs, setCommentInputs] = useState<{ [key: string]: string }>(
+    {},
+  );
 
   /*
    * Maneja el "like" y "unlike" en un post, actualizando contador y estado.
@@ -90,7 +92,7 @@ const EnhancedSocial: React.FC = () => {
       author: user.username,
       authorId: user.id,
       content: newPostContent,
-      timestamp: "Ahora",
+      timestamp: "Now",
       likes: 0,
       isSystem: false,
       comments: [],
@@ -137,11 +139,11 @@ const EnhancedSocial: React.FC = () => {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Users className="text-ritual-accent" size={24} />
-          <h2 className="text-2xl font-display font-bold">El Coven</h2>
+          <h2 className="text-2xl font-display font-bold">The Coven</h2>
         </div>
         <div className="flex items-center gap-2 text-sm text-zinc-500">
           <TrendingUp size={16} />
-          <span>Ranking disponible pronto</span>
+          <span>Ranking available soon</span>
         </div>
       </div>
 
@@ -163,7 +165,7 @@ const EnhancedSocial: React.FC = () => {
             <textarea
               value={newPostContent}
               onChange={(e) => setNewPostContent(e.target.value)}
-              placeholder="Comparte tus logros con la comunidad..."
+              placeholder="Share your achievements with the community..."
               rows={3}
               className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-4 py-2 text-white placeholder-zinc-600 focus:border-ritual-accent outline-none resize-none"
             />
@@ -173,7 +175,7 @@ const EnhancedSocial: React.FC = () => {
                 disabled={!newPostContent.trim()}
                 className="px-4 py-2 bg-ritual-accent text-black font-bold rounded-lg hover:bg-emerald-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Publicar
+                Post
               </button>
             </div>
           </div>
@@ -225,12 +227,12 @@ const EnhancedSocial: React.FC = () => {
                         {following.includes(post.authorId!) ? (
                           <>
                             <UserPlus size={12} className="inline mr-1" />
-                            Siguiendo
+                            Following
                           </>
                         ) : (
                           <>
                             <UserPlus size={12} className="inline mr-1" />
-                            Seguir
+                            Follow
                           </>
                         )}
                       </button>
@@ -308,7 +310,7 @@ const EnhancedSocial: React.FC = () => {
                       [post.id]: e.target.value,
                     }))
                   }
-                  placeholder="Escribe un comentario..."
+                  placeholder="Write a comment..."
                   className="flex-1 bg-zinc-900 border border-zinc-700 rounded-lg px-4 py-2 text-white placeholder-zinc-600 focus:border-ritual-accent outline-none text-sm"
                   onKeyPress={(e) => {
                     if (e.key === "Enter") {
@@ -320,7 +322,7 @@ const EnhancedSocial: React.FC = () => {
                   onClick={() => handleComment(post.id)}
                   className="px-4 py-2 bg-zinc-800 text-white rounded-lg hover:bg-zinc-700 transition-colors text-sm"
                 >
-                  Comentar
+                  Comment
                 </button>
               </div>
             </div>

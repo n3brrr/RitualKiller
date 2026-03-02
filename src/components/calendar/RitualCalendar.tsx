@@ -1,6 +1,6 @@
 /**
  * RitualCalendar.tsx
- * 
+ *
  * Muestra un calendario mensual visualizando el progreso diario de los rituales completados.
  * Presenta cada día con un indicador de avance y permite navegar entre meses.
  * Utiliza colores para señalar días completos, parciales o sin actividad.
@@ -22,11 +22,21 @@ const RitualCalendar: React.FC = () => {
   const startingDayOfWeek = firstDayOfMonth.getDay();
 
   const monthNames = [
-    "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
-    "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
   ];
 
-  const weekDays = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
+  const weekDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
   // Navega al mes anterior
   const goToPreviousMonth = () => {
@@ -38,7 +48,7 @@ const RitualCalendar: React.FC = () => {
     setCurrentDate(new Date(year, month + 1, 1));
   };
 
-  /**
+  /*
    * Retorna cuántos rituales fueron completados en un día concreto.
    */
   const getDayCompletionStatus = (
@@ -129,7 +139,7 @@ const RitualCalendar: React.FC = () => {
               className={`aspect-square rounded-lg border-2 p-2 flex flex-col items-center justify-center transition-all hover:scale-105 ${
                 isToday ? "border-ritual-accent" : "border-zinc-800"
               } ${getCompletionColor(completed, total)}`}
-              title={`${day}: ${completed}/${total} rituales completados`}
+              title={`${day}: ${completed}/${total} rituals completed`}
             >
               <span
                 className={`text-sm font-bold ${
@@ -154,15 +164,15 @@ const RitualCalendar: React.FC = () => {
       <div className="mt-6 flex items-center justify-center gap-4 text-xs text-zinc-500">
         <div className="flex items-center gap-2">
           <div className="w-4 h-4 rounded bg-zinc-900 border border-zinc-800"></div>
-          <span>Sin completar</span>
+          <span>Uncompleted</span>
         </div>
         <div className="flex items-center gap-2">
           <div className="w-4 h-4 rounded bg-ritual-accent/40"></div>
-          <span>Parcial</span>
+          <span>Partial</span>
         </div>
         <div className="flex items-center gap-2">
           <div className="w-4 h-4 rounded bg-ritual-accent"></div>
-          <span>Completo</span>
+          <span>Complete</span>
         </div>
       </div>
     </div>

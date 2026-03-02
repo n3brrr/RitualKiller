@@ -45,9 +45,9 @@ const LoginPage: React.FC = () => {
             result.data.user.user_metadata?.username ||
             username ||
             result.data.user.email?.split("@")[0] ||
-            "Usuario",
+            "User",
           essence: isAdminUser ? 10000 : 0, // Asigna más esencia a admin
-          rank: isAdminUser ? "Semidiós" : "Iniciado",
+          rank: isAdminUser ? "Demi-God" : "Initiate",
           inventory: isAdminUser ? ["admin-badge"] : [],
           created_at: new Date().toISOString(),
           isAdmin: isAdminUser,
@@ -89,7 +89,7 @@ const LoginPage: React.FC = () => {
         <i style={{ "--clr": "#fffd44" } as React.CSSProperties}></i>
 
         <div className="login">
-          <h2>{isSignUp ? "Registro" : "Iniciar Sesión"}</h2>
+          <h2>{isSignUp ? "Sign Up" : "Login"}</h2>
 
           {/* Muestra error si existe */}
           {error && (
@@ -101,10 +101,10 @@ const LoginPage: React.FC = () => {
           {/* Hint de credenciales admin solo para desarrollo */}
           {import.meta.env.DEV && (
             <div className="mb-4 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg text-yellow-500 text-xs">
-              <strong>Modo Desarrollo:</strong> Usa{" "}
+              <strong>Dev Mode:</strong> Use{" "}
               <code className="bg-black/30 px-1 rounded">admin</code> /{" "}
-              <code className="bg-black/30 px-1 rounded">admin</code> para
-              pruebas rápidas
+              <code className="bg-black/30 px-1 rounded">admin</code> for quick
+              tests
             </div>
           )}
 
@@ -116,7 +116,7 @@ const LoginPage: React.FC = () => {
               <div className="inputBx">
                 <input
                   type="text"
-                  placeholder="Nombre de Usuario"
+                  placeholder="Username"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   required={isSignUp}
@@ -126,7 +126,7 @@ const LoginPage: React.FC = () => {
             <div className="inputBx">
               <input
                 type="text"
-                placeholder={isSignUp ? "Email" : "Email o Usuario (admin)"}
+                placeholder={isSignUp ? "Email" : "Email or Username (admin)"}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -135,7 +135,7 @@ const LoginPage: React.FC = () => {
             <div className="inputBx">
               <input
                 type="password"
-                placeholder="Contraseña"
+                placeholder="Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -145,13 +145,7 @@ const LoginPage: React.FC = () => {
             <div className="inputBx">
               <input
                 type="submit"
-                value={
-                  loading
-                    ? "Cargando..."
-                    : isSignUp
-                      ? "Registrarse"
-                      : "Iniciar Sesión"
-                }
+                value={loading ? "Loading..." : isSignUp ? "Sign Up" : "Login"}
                 disabled={loading}
               />
             </div>
@@ -163,7 +157,7 @@ const LoginPage: React.FC = () => {
                 e.preventDefault(); /* TODO: Reset password */
               }}
             >
-              Olvidé mi contraseña
+              Forgot my password
             </a>
             <a
               href="#"
@@ -172,7 +166,7 @@ const LoginPage: React.FC = () => {
                 setIsSignUp(!isSignUp);
               }}
             >
-              {isSignUp ? "Ya tengo cuenta" : "Crear cuenta"}
+              {isSignUp ? "Already have an account" : "Create account"}
             </a>
           </div>
         </div>

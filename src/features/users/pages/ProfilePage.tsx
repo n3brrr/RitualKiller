@@ -22,9 +22,7 @@ const ProfilePage = () => {
 
   if (!displayUser) {
     return (
-      <div className="text-white">
-        Cargando perfil o usuario no encontrado...
-      </div>
+      <div className="text-white">Loading profile or user not found...</div>
     );
   }
 
@@ -82,7 +80,8 @@ const ProfilePage = () => {
               </span>
               <span>•</span>
               <span>
-                Unido en {new Date(displayUser.created_at).toLocaleDateString()}
+                Joined on{" "}
+                {new Date(displayUser.created_at).toLocaleDateString()}
               </span>
             </p>
           </div>
@@ -92,7 +91,7 @@ const ProfilePage = () => {
               onClick={startEditing}
               className="bg-zinc-800 hover:bg-zinc-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
             >
-              <Edit2 size={16} /> Editar Perfil
+              <Edit2 size={16} /> Edit Profile
             </button>
           )}
         </div>
@@ -100,11 +99,11 @@ const ProfilePage = () => {
 
       {isEditing && (
         <div className="bg-zinc-950 border border-zinc-800 p-6 rounded-xl animate-fade-in-up">
-          <h3 className="text-lg font-bold text-white mb-4">Editar Perfil</h3>
+          <h3 className="text-lg font-bold text-white mb-4">Edit Profile</h3>
           <div className="space-y-4">
             <div>
               <label className="block text-zinc-400 text-sm mb-2">
-                URL del Avatar
+                Avatar URL
               </label>
               <input
                 type="text"
@@ -121,13 +120,13 @@ const ProfilePage = () => {
                 onClick={() => setIsEditing(false)}
                 className="px-4 py-2 text-zinc-400 hover:text-white"
               >
-                Cancelar
+                Cancel
               </button>
               <button
                 onClick={saveProfile}
                 className="bg-ritual-accent text-black font-bold px-6 py-2 rounded-lg hover:bg-emerald-400"
               >
-                Guardar Cambios
+                Save Changes
               </button>
             </div>
           </div>
@@ -138,7 +137,7 @@ const ProfilePage = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-zinc-900/50 border border-zinc-800 p-6 rounded-xl">
           <h3 className="text-zinc-500 uppercase text-xs font-bold tracking-wider mb-2">
-            Esencia Total
+            Total Essence
           </h3>
           <p className="text-3xl font-mono text-white">{displayUser.essence}</p>
         </div>

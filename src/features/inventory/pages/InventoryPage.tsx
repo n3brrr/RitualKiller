@@ -27,12 +27,12 @@ const InventoryPage = () => {
       <header className="flex justify-between items-end border-b border-zinc-900 pb-6">
         <div>
           <h2 className="text-3xl font-display font-bold text-white mb-1">
-            Inventario
+            Inventory
           </h2>
-          <p className="text-zinc-500">Tus posesiones y artefactos oscuros.</p>
+          <p className="text-zinc-500">Your possessions and dark artifacts.</p>
         </div>
         <div className="text-zinc-400 text-sm">
-          {user.inventory.length} Ítems
+          {user.inventory.length} Items
         </div>
       </header>
 
@@ -40,7 +40,7 @@ const InventoryPage = () => {
       {user.active_buffs && user.active_buffs.length > 0 && (
         <div className="mb-6">
           <h3 className="text-sm uppercase tracking-wider text-zinc-500 font-bold mb-3">
-            Efectos Activos
+            Active Effects
           </h3>
           <div className="flex gap-4 flex-wrap">
             {user.active_buffs.map((buff, idx) => {
@@ -57,7 +57,7 @@ const InventoryPage = () => {
                       {item?.name || buff.itemId}
                     </div>
                     <div className="text-xs opacity-70">
-                      Expira: {new Date(buff.expiresAt).toLocaleTimeString()}
+                      Expires: {new Date(buff.expiresAt).toLocaleTimeString()}
                     </div>
                   </div>
                 </div>
@@ -70,9 +70,9 @@ const InventoryPage = () => {
       {user.inventory.length === 0 ? (
         <div className="flex flex-col items-center justify-center p-12 border border-dashed border-zinc-800 rounded-xl bg-zinc-900/20 text-zinc-500">
           <Package size={48} className="mb-4 opacity-50" />
-          <p>Tu inventario está vacío.</p>
+          <p>Your inventory is empty.</p>
           <p className="text-sm mt-2">
-            Visita el Mercado Negro para adquirir artefactos.
+            Visit the Black Market to acquire artifacts.
           </p>
         </div>
       ) : (
@@ -105,7 +105,7 @@ const InventoryPage = () => {
                       onClick={() => handleUseItem(itemId)}
                       className="mt-3 text-xs bg-white/10 hover:bg-white/20 text-white px-3 py-1.5 rounded transition-colors w-full"
                     >
-                      Usar Objeto
+                      Use Item
                     </button>
                   )}
                 </div>

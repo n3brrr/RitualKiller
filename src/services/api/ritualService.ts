@@ -12,7 +12,7 @@ export const ritualService = {
       if (error) throw error;
       return (data as Ritual[]) || [];
     } catch (error) {
-      console.error('Error fetching rituals:', error);
+      console.error('Error con los rituales:', error);
       // Fallback to empty array for mock users or if table doesn't exist yet
       return [];
     }
@@ -71,7 +71,7 @@ export const ritualService = {
       if (error) throw error;
       return (data as RitualLog[]) || [];
     } catch (error) {
-      console.error('Error fetching logs:', error);
+      console.error('Error con los logs:', error);
       return [];
     }
   }

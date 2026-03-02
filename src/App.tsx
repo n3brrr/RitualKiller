@@ -16,7 +16,7 @@ const authLoader = async () => {
 const protectedLoader = async () => {
   const user = useAuthStore.getState().user;
   if (!user) {
-    throw new Error("Unauthorized");
+    throw new Error("No estas autorizado");
   }
   return user;
 };
@@ -26,7 +26,7 @@ const router = createHashRouter([
     path: "/",
     errorElement: (
       <ErrorBoundary>
-        <div>Error loading app</div>
+        <div>Error cargando la app</div>
       </ErrorBoundary>
     ),
     children: [

@@ -33,13 +33,13 @@ interface RitualLibraryProps {
 
 // Categorías disponibles para filtrar los rituales
 const CATEGORIES: { value: RitualCategory; label: string }[] = [
-  { value: "health", label: "Salud" },
-  { value: "productivity", label: "Productividad" },
+  { value: "health", label: "Health" },
+  { value: "productivity", label: "Productivity" },
   { value: "mental", label: "Mental" },
-  { value: "physical", label: "Físico" },
-  { value: "learning", label: "Aprendizaje" },
-  { value: "creativity", label: "Creatividad" },
-  { value: "spiritual", label: "Espiritual" },
+  { value: "physical", label: "Physical" },
+  { value: "learning", label: "Learning" },
+  { value: "creativity", label: "Creativity" },
+  { value: "spiritual", label: "Spiritual" },
 ];
 
 const RitualLibrary: React.FC<RitualLibraryProps> = ({ onImport }) => {
@@ -47,11 +47,15 @@ const RitualLibrary: React.FC<RitualLibraryProps> = ({ onImport }) => {
 
   // Estado para filtro de búsqueda, categoría, dificultad y populares
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<RitualCategory | "all">("all");
-  const [selectedDifficulty, setSelectedDifficulty] = useState<Difficulty | "all">("all");
+  const [selectedCategory, setSelectedCategory] = useState<
+    RitualCategory | "all"
+  >("all");
+  const [selectedDifficulty, setSelectedDifficulty] = useState<
+    Difficulty | "all"
+  >("all");
   const [showPopularOnly, setShowPopularOnly] = useState(false);
 
-  /**
+  /*
    * Filtra la lista de rituales basada en populares, búsqueda, categoría y dificultad.
    * Usar useMemo para evitar filtrados innecesarios en cada render.
    */
@@ -112,9 +116,7 @@ const RitualLibrary: React.FC<RitualLibraryProps> = ({ onImport }) => {
       {/* Encabezado */}
       <div className="flex items-center gap-2 mb-6">
         <BookOpen className="text-ritual-accent" size={24} />
-        <h2 className="text-2xl font-display font-bold">
-          Biblioteca de Rituales
-        </h2>
+        <h2 className="text-2xl font-display font-bold">Ritual Library</h2>
       </div>
 
       {/* Búsqueda y filtros */}
@@ -127,7 +129,7 @@ const RitualLibrary: React.FC<RitualLibraryProps> = ({ onImport }) => {
           />
           <input
             type="text"
-            placeholder="Buscar rituales..."
+            placeholder="Search rituals..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full bg-zinc-950 border border-zinc-800 rounded-lg pl-10 pr-4 py-3 text-white placeholder-zinc-500 focus:border-ritual-accent outline-none"
@@ -145,7 +147,7 @@ const RitualLibrary: React.FC<RitualLibraryProps> = ({ onImport }) => {
             }`}
           >
             <Star size={16} />
-            Populares
+            Popular
           </button>
 
           <select
@@ -155,7 +157,7 @@ const RitualLibrary: React.FC<RitualLibraryProps> = ({ onImport }) => {
             }
             className="bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-2 text-white focus:border-ritual-accent outline-none"
           >
-            <option value="all">Todas las categorías</option>
+            <option value="all">All categories</option>
             {CATEGORIES.map((cat) => (
               <option key={cat.value} value={cat.value}>
                 {cat.label}
@@ -170,10 +172,10 @@ const RitualLibrary: React.FC<RitualLibraryProps> = ({ onImport }) => {
             }
             className="bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-2 text-white focus:border-ritual-accent outline-none"
           >
-            <option value="all">Todas las dificultades</option>
-            <option value="novice">Novato</option>
-            <option value="adept">Intermedio</option>
-            <option value="master">Maestro</option>
+            <option value="all">All difficulties</option>
+            <option value="novice">Novice</option>
+            <option value="adept">Intermediate</option>
+            <option value="master">Master</option>
           </select>
         </div>
       </div>
@@ -217,7 +219,7 @@ const RitualLibrary: React.FC<RitualLibraryProps> = ({ onImport }) => {
                   {translateFrequency(template.frequency)}
                 </span>
                 <span className="text-xs px-2 py-1 rounded border border-ritual-accent/30 text-ritual-accent">
-                  +{template.essenceReward} Esencia
+                  +{template.essenceReward} Essence
                 </span>
               </div>
 
@@ -245,12 +247,12 @@ const RitualLibrary: React.FC<RitualLibraryProps> = ({ onImport }) => {
               >
                 {alreadyAdded ? (
                   <>
-                    <span>Ya agregado</span>
+                    <span>Already added</span>
                   </>
                 ) : (
                   <>
                     <Plus size={16} />
-                    Importar Ritual
+                    Import Ritual
                   </>
                 )}
               </button>
@@ -262,7 +264,7 @@ const RitualLibrary: React.FC<RitualLibraryProps> = ({ onImport }) => {
       {/* Mensaje cuando no hay rituales con los filtros aplicados */}
       {filteredRituals.length === 0 && (
         <div className="text-center py-12 text-zinc-500">
-          No se encontraron rituales con los filtros seleccionados.
+          No rituals found with the selected filters.
         </div>
       )}
     </div>

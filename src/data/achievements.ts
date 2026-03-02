@@ -5,131 +5,131 @@
  * - Contiene los logros configurados (sin progreso) y funciones para calcular el avance de cada logro y obtener los desbloqueados.
  */
 
-import { Achievement, Rarity } from '../types';
+import { Achievement, Rarity } from "../types";
 
 // Lista de logros base, omitimos campos que dependen del usuario como progreso/fecha de desbloqueo
-export const ACHIEVEMENTS: Omit<Achievement, 'progress' | 'unlockedAt'>[] = [
+export const ACHIEVEMENTS: Omit<Achievement, "progress" | "unlockedAt">[] = [
   // Logros de racha de días completando rituales
   {
-    id: 'ach-streak-7',
-    name: 'Primera Semana',
-    description: 'Completa todos tus rituales por 7 días consecutivos',
-    icon: '🔥',
-    rarity: 'common',
+    id: "ach-streak-7",
+    name: "First Week",
+    description: "Complete all your rituals for 7 consecutive days",
+    icon: "🔥",
+    rarity: "common",
     target: 7,
-    category: 'streak',
+    category: "streak",
   },
   {
-    id: 'ach-streak-30',
-    name: 'Maestro del Mes',
-    description: 'Mantén una racha de 30 días sin romperla',
-    icon: '👑',
-    rarity: 'rare',
+    id: "ach-streak-30",
+    name: "Master of the Month",
+    description: "Maintain a 30-day streak without breaking it",
+    icon: "👑",
+    rarity: "rare",
     target: 30,
-    category: 'streak',
+    category: "streak",
   },
   {
-    id: 'ach-streak-100',
-    name: 'Invencible',
-    description: 'Alcanza una racha de 100 días',
-    icon: '💀',
-    rarity: 'legendary',
+    id: "ach-streak-100",
+    name: "Invincible",
+    description: "Reach a 100-day streak",
+    icon: "💀",
+    rarity: "legendary",
     target: 100,
-    category: 'streak',
+    category: "streak",
   },
   // Logros por acumular esencia
   {
-    id: 'ach-essence-1000',
-    name: 'Acumulador',
-    description: 'Acumula 1,000 esencia',
-    icon: '💎',
-    rarity: 'common',
+    id: "ach-essence-1000",
+    name: "Hoarder",
+    description: "Accumulate 1,000 essence",
+    icon: "💎",
+    rarity: "common",
     target: 1000,
-    category: 'essence',
+    category: "essence",
   },
   {
-    id: 'ach-essence-10000',
-    name: 'Ascendido',
-    description: 'Alcanza 10,000 esencia acumulada',
-    icon: '⚡',
-    rarity: 'rare',
+    id: "ach-essence-10000",
+    name: "Ascended",
+    description: "Reach 10,000 accumulated essence",
+    icon: "⚡",
+    rarity: "rare",
     target: 10000,
-    category: 'essence',
+    category: "essence",
   },
   {
-    id: 'ach-essence-50000',
-    name: 'Semidiós',
-    description: 'Acumula 50,000 esencia',
-    icon: '🌟',
-    rarity: 'legendary',
+    id: "ach-essence-50000",
+    name: "Demi-God",
+    description: "Accumulate 50,000 essence",
+    icon: "🌟",
+    rarity: "legendary",
     target: 50000,
-    category: 'essence',
+    category: "essence",
   },
   // Logros por crear o completar rituales
   {
-    id: 'ach-rituals-10',
-    name: 'Iniciado',
-    description: 'Crea 10 rituales',
-    icon: '📜',
-    rarity: 'common',
+    id: "ach-rituals-10",
+    name: "Initiate",
+    description: "Create 10 rituals",
+    icon: "📜",
+    rarity: "common",
     target: 10,
-    category: 'rituals',
+    category: "rituals",
   },
   {
-    id: 'ach-rituals-50',
-    name: 'Coleccionista',
-    description: 'Crea 50 rituales diferentes',
-    icon: '📚',
-    rarity: 'rare',
+    id: "ach-rituals-50",
+    name: "Collector",
+    description: "Create 50 different rituals",
+    icon: "📚",
+    rarity: "rare",
     target: 50,
-    category: 'rituals',
+    category: "rituals",
   },
   {
-    id: 'ach-complete-100',
-    name: 'Centurión',
-    description: 'Completa 100 rituales en total',
-    icon: '🏆',
-    rarity: 'rare',
+    id: "ach-complete-100",
+    name: "Centurion",
+    description: "Complete 100 rituals in total",
+    icon: "🏆",
+    rarity: "rare",
     target: 100,
-    category: 'rituals',
+    category: "rituals",
   },
   // Logros sociales (interacción en comunidad)
   {
-    id: 'ach-social-first',
-    name: 'Primera Voz',
-    description: 'Publica tu primer post en la comunidad',
-    icon: '📢',
-    rarity: 'common',
+    id: "ach-social-first",
+    name: "First Voice",
+    description: "Publish your first post in the community",
+    icon: "📢",
+    rarity: "common",
     target: 1,
-    category: 'social',
+    category: "social",
   },
   {
-    id: 'ach-social-10',
-    name: 'Influencer',
-    description: 'Publica 10 posts',
-    icon: '📱',
-    rarity: 'common',
+    id: "ach-social-10",
+    name: "Influencer",
+    description: "Publish 10 posts",
+    icon: "📱",
+    rarity: "common",
     target: 10,
-    category: 'social',
+    category: "social",
   },
   // Logros especiales
   {
-    id: 'ach-perfect-week',
-    name: 'Semana Perfecta',
-    description: 'Completa todos los rituales todos los días de la semana',
-    icon: '✨',
-    rarity: 'rare',
+    id: "ach-perfect-week",
+    name: "Perfect Week",
+    description: "Complete all rituals every day of the week",
+    icon: "✨",
+    rarity: "rare",
     target: 7,
-    category: 'special',
+    category: "special",
   },
   {
-    id: 'ach-all-difficulties',
-    name: 'Maestro Completo',
-    description: 'Completa rituales de todas las dificultades',
-    icon: '🎯',
-    rarity: 'rare',
+    id: "ach-all-difficulties",
+    name: "Complete Master",
+    description: "Complete rituals of all difficulties",
+    icon: "🎯",
+    rarity: "rare",
     target: 3,
-    category: 'special',
+    category: "special",
   },
 ];
 
@@ -140,43 +140,46 @@ export const ACHIEVEMENTS: Omit<Achievement, 'progress' | 'unlockedAt'>[] = [
  * @returns Progreso numérico para el logro.
  */
 export const calculateAchievementProgress = (
-  achievement: Omit<Achievement, 'progress' | 'unlockedAt'>,
+  achievement: Omit<Achievement, "progress" | "unlockedAt">,
   userData: {
     rituals: any[];
     logs: any[];
     essence: number;
     posts?: any[];
-  }
+  },
 ): number => {
   switch (achievement.category) {
-    case 'streak':
+    case "streak":
       // Máxima racha registrada entre los rituales del usuario
-      const maxStreak = Math.max(...userData.rituals.map(r => r.streak || 0), 0);
+      const maxStreak = Math.max(
+        ...userData.rituals.map((r) => r.streak || 0),
+        0,
+      );
       return Math.min(maxStreak, achievement.target);
 
-    case 'essence':
+    case "essence":
       // Esencia acumulada por el usuario
       return Math.min(userData.essence, achievement.target);
 
-    case 'rituals':
+    case "rituals":
       // Si el logro es de completar, cuenta logs. Si es de creación, cuenta rituales distintos
-      if (achievement.id.includes('complete')) {
+      if (achievement.id.includes("complete")) {
         return Math.min(userData.logs.length, achievement.target);
       }
       return Math.min(userData.rituals.length, achievement.target);
 
-    case 'social':
+    case "social":
       // Cantidad de publicaciones en la comunidad
-      return Math.min((userData.posts?.length || 0), achievement.target);
+      return Math.min(userData.posts?.length || 0, achievement.target);
 
-    case 'special':
-      if (achievement.id === 'ach-perfect-week') {
+    case "special":
+      if (achievement.id === "ach-perfect-week") {
         // Lógica especial pendiente para 'Semana Perfecta'
         return 0;
       }
-      if (achievement.id === 'ach-all-difficulties') {
+      if (achievement.id === "ach-all-difficulties") {
         // Cuántas dificultades distintas de rituales ha completado el usuario
-        const difficulties = new Set(userData.rituals.map(r => r.difficulty));
+        const difficulties = new Set(userData.rituals.map((r) => r.difficulty));
         return Math.min(difficulties.size, achievement.target);
       }
       return 0;
@@ -192,7 +195,7 @@ export const calculateAchievementProgress = (
  * @returns Sólo los logros desbloqueados por el usuario.
  */
 export const getUnlockedAchievements = (
-  achievements: Achievement[]
+  achievements: Achievement[],
 ): Achievement[] => {
-  return achievements.filter(a => a.progress >= a.target && a.unlockedAt);
+  return achievements.filter((a) => a.progress >= a.target && a.unlockedAt);
 };

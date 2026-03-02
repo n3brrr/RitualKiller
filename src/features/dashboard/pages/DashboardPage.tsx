@@ -78,7 +78,7 @@ const Dashboard = () => {
       <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 border-b border-zinc-900 pb-6">
         <div>
           <h2 className="text-3xl font-display font-bold text-white mb-2">
-            Tu Altar
+            Your Altar
           </h2>
           <p className="text-ritual-accent text-sm font-medium italic opacity-80">
             "{dailyQuote}"
@@ -97,7 +97,7 @@ const Dashboard = () => {
             />
           </div>
           <div className="text-xs text-zinc-500 uppercase tracking-widest">
-            Racha Diaria
+            Daily Streak
           </div>
         </div>
       </header>
@@ -106,7 +106,7 @@ const Dashboard = () => {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="bg-zinc-900/40 p-5 rounded-xl border border-zinc-800/50">
           <div className="text-zinc-500 text-xs uppercase mb-1">
-            Esencia Total
+            Total Essence
           </div>
           <div className="text-2xl font-mono text-ritual-accent">
             {user.essence}
@@ -114,13 +114,13 @@ const Dashboard = () => {
         </div>
         <div className="bg-zinc-900/40 p-5 rounded-xl border border-zinc-800/50">
           <div className="text-zinc-500 text-xs uppercase mb-1">
-            Rituales Activos
+            Active Rituals
           </div>
           <div className="text-2xl font-mono text-white">{activeRituals}</div>
         </div>
         <div className="bg-zinc-900/40 p-5 rounded-xl border border-zinc-800/50">
           <div className="text-zinc-500 text-xs uppercase mb-1">
-            Mejor Racha
+            Best Streak
           </div>
           <div className="text-2xl font-mono text-white flex items-center gap-2">
             {bestStreak}{" "}
@@ -128,7 +128,7 @@ const Dashboard = () => {
           </div>
         </div>
         <div className="bg-zinc-900/40 p-5 rounded-xl border border-zinc-800/50">
-          <div className="text-zinc-500 text-xs uppercase mb-1">Inventario</div>
+          <div className="text-zinc-500 text-xs uppercase mb-1">Inventory</div>
           <div className="text-2xl font-mono text-white">
             {user.inventory.length}
           </div>
@@ -141,7 +141,7 @@ const Dashboard = () => {
           <div className="flex justify-between items-center mb-6">
             <h3 className="text-sm font-bold text-zinc-400 uppercase tracking-wider flex items-center gap-2">
               <Flame size={16} className="text-ritual-blood" />
-              Gráfico de Consistencia
+              Consistency Chart
             </h3>
           </div>
           <Heatmap logs={logs} />
@@ -158,7 +158,7 @@ const Dashboard = () => {
         <div className="bg-zinc-950/50 border border-zinc-900 p-6 rounded-2xl h-full flex flex-col">
           <h3 className="text-sm font-bold text-zinc-400 uppercase tracking-wider flex items-center gap-2 mb-6">
             <Clock size={16} className="text-ritual-accent" />
-            Sacrificios Pendientes
+            Pending Sacrifices
           </h3>
 
           <div className="space-y-3 flex-1">
@@ -167,9 +167,9 @@ const Dashboard = () => {
               <div className="h-32 flex flex-col items-center justify-center text-center text-zinc-500 border border-dashed border-zinc-800 rounded-lg p-4">
                 <Check size={24} className="text-ritual-accent mb-2" />
                 <span className="text-sm">
-                  Todos los sacrificios completados.
+                  All sacrifices completed.
                   <br />
-                  Descansa ahora, iniciado.
+                  Rest now, initiate.
                 </span>
               </div>
             )}
@@ -178,9 +178,9 @@ const Dashboard = () => {
               <div className="h-32 flex flex-col items-center justify-center text-center text-zinc-500 border border-dashed border-zinc-800 rounded-lg p-4">
                 <AlertCircle size={24} className="mb-2" />
                 <span className="text-sm">
-                  No hay rituales establecidos.
+                  No rituals established.
                   <br />
-                  Visita el Grimorio.
+                  Visit the Grimoire.
                 </span>
               </div>
             )}
@@ -196,7 +196,7 @@ const Dashboard = () => {
                     {r.title}
                   </div>
                   <div className="text-zinc-600 text-xs">
-                    +{r.essenceReward} Esencia
+                    +{r.essenceReward} Essence
                   </div>
                 </div>
                 <span
@@ -209,10 +209,10 @@ const Dashboard = () => {
                   }`}
                 >
                   {r.difficulty === "novice"
-                    ? "Novato"
+                    ? "Novice"
                     : r.difficulty === "adept"
-                      ? "Intermedio"
-                      : "Maestro"}
+                      ? "Intermediate"
+                      : "Master"}
                 </span>
               </div>
             ))}

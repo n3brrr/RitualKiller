@@ -1,6 +1,6 @@
 /*
  * RitualCard.tsx
- * 
+ *
  * Componente que representa la tarjeta visual de un Ritual individual.
  * Muestra información clave del ritual, incluyendo título, descripción, dificultad, recompensa y racha.
  * Permite marcar el ritual como completado y eliminarlo.
@@ -89,8 +89,7 @@ const RitualItem = ({
           {/* Muestra racha si es mayor a 1 */}
           {ritual.streak > 1 && (
             <div className="flex items-center gap-1 text-xs text-yellow-500 font-mono bg-yellow-500/10 px-2 py-0.5 rounded border border-yellow-500/20">
-              <Zap size={10} fill="currentColor" /> Racha de {ritual.streak}{" "}
-              días
+              <Zap size={10} fill="currentColor" /> {ritual.streak} day streak
             </div>
           )}
         </div>
@@ -110,7 +109,7 @@ const RitualItem = ({
           </span>
           {/* Recompensa en esencia */}
           <span className="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded border border-zinc-800 text-zinc-400">
-            +{ritual.essenceReward} Esencia
+            +{ritual.essenceReward} Essence
           </span>
         </div>
       </div>

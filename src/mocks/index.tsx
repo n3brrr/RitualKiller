@@ -29,4 +29,13 @@ export const MOCK_POSTS: SocialPost[] = [
     likes: 15,
     isSystem: false,
   },
+  {
+    id: "4",
+    author: "RunnigBoy",
+    content:
+      "Me encanta poder registrar todos los dias que cumplo con salir a correr😁",
+    timestamp: "hace 22h",
+    likes: 156,
+    isSystem: false,
+  },
 ];

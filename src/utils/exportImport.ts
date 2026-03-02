@@ -67,7 +67,7 @@ export const importData = (jsonString: string): ExportData | null => {
 
     return data;
   } catch (error) {
-    console.error('Error importing data:', error);
+    console.error('Error importando los datos:', error);
     return null;
   }
 };

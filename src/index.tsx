@@ -1,7 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import App from "./App";
 import "@fontsource/cinzel/400.css";
 import "@fontsource/cinzel/700.css";
@@ -23,7 +22,7 @@ const queryClient = new QueryClient({
 
 const rootElement = document.getElementById("root");
 if (!rootElement) {
-  throw new Error("Could not find root element to mount to");
+  throw new Error("No se puede encontrar el elemento");
 }
 
 const root = ReactDOM.createRoot(rootElement);

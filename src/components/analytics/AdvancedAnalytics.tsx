@@ -1,6 +1,6 @@
 /**
  * AdvancedAnalytics.tsx
- * 
+ *
  * Este componente presenta un panel avanzado de analíticas para el usuario,
  * visualizando diferentes métricas y tendencias relacionadas con rituales y sus registros,
  * utilizando distintos tipos de gráficas para mostrar el progreso semanal, mensual,
@@ -39,13 +39,13 @@ const AdvancedAnalytics: React.FC = () => {
     for (let i = 6; i >= 0; i--) {
       const date = new Date(today);
       date.setDate(date.getDate() - i);
-      const weekKey = `Semana ${date.getWeek()}`;
+      const weekKey = `Week ${date.getWeek()}`;
       weeks[weekKey] = 0;
     }
 
     logs.forEach((log) => {
       const logDate = new Date(log.date);
-      const weekKey = `Semana ${logDate.getWeek()}`;
+      const weekKey = `Week ${logDate.getWeek()}`;
       if (weeks[weekKey] !== undefined) {
         weeks[weekKey]++;
       }
@@ -53,7 +53,7 @@ const AdvancedAnalytics: React.FC = () => {
 
     return Object.entries(weeks).map(([name, completions]) => ({
       name,
-      Completados: completions,
+      Completions: completions,
     }));
   }, [logs]);
 
@@ -79,11 +79,11 @@ const AdvancedAnalytics: React.FC = () => {
       .map(([name, value]) => ({
         name:
           name === "novice"
-            ? "Novato"
+            ? "Novice"
             : name === "adept"
-              ? "Intermedio"
-              : "Maestro",
-        Completados: value,
+              ? "Intermediate"
+              : "Master",
+        Completions: value,
       }));
   }, [rituals, logs]);
 
@@ -95,13 +95,13 @@ const AdvancedAnalytics: React.FC = () => {
     for (let i = 5; i >= 0; i--) {
       const date = new Date(today);
       date.setMonth(date.getMonth() - i);
-      const monthKey = date.toLocaleDateString("es-ES", { month: "short" });
+      const monthKey = date.toLocaleDateString("en-US", { month: "short" });
       months[monthKey] = 0;
     }
 
     logs.forEach((log) => {
       const logDate = new Date(log.date);
-      const monthKey = logDate.toLocaleDateString("es-ES", { month: "short" });
+      const monthKey = logDate.toLocaleDateString("en-US", { month: "short" });
       if (months[monthKey] !== undefined) {
         months[monthKey]++;
       }
@@ -109,25 +109,25 @@ const AdvancedAnalytics: React.FC = () => {
 
     return Object.entries(months).map(([name, completions]) => ({
       name,
-      Completados: completions,
+      Completions: completions,
     }));
   }, [logs]);
 
   // Total de rituales realizados agrupados por día de la semana (p.ej., "Lun", "Mar", ...)
   const dayOfWeekData = useMemo(() => {
     const days: { [key: string]: number } = {
-      Lun: 0,
-      Mar: 0,
-      Mié: 0,
-      Jue: 0,
-      Vie: 0,
-      Sáb: 0,
-      Dom: 0,
+      Mon: 0,
+      Tue: 0,
+      Wed: 0,
+      Thu: 0,
+      Fri: 0,
+      Sat: 0,
+      Sun: 0,
     };
 
     logs.forEach((log) => {
       const date = new Date(log.date);
-      const dayKey = date.toLocaleDateString("es-ES", { weekday: "short" });
+      const dayKey = date.toLocaleDateString("en-US", { weekday: "short" });
       if (days[dayKey] !== undefined) {
         days[dayKey]++;
       }
@@ -135,7 +135,7 @@ const AdvancedAnalytics: React.FC = () => {
 
     return Object.entries(days).map(([name, completions]) => ({
       name,
-      Completados: completions,
+      Completions: completions,
     }));
   }, [logs]);
 
@@ -149,14 +149,14 @@ const AdvancedAnalytics: React.FC = () => {
     <div className="space-y-8">
       <div className="flex items-center gap-2 mb-6">
         <TrendingUp className="text-ritual-accent" size={24} />
-        <h2 className="text-2xl font-display font-bold">Analytics Avanzados</h2>
+        <h2 className="text-2xl font-display font-bold">Advanced Analytics</h2>
       </div>
 
       {/* Tarjetas de estadística generales */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-5">
           <div className="text-zinc-500 text-xs uppercase mb-1">
-            Tasa de Completitud
+            Completion Rate
           </div>
           <div className="text-2xl font-mono text-ritual-accent">
             {completionRate.toFixed(1)}%
@@ -164,19 +164,19 @@ const AdvancedAnalytics: React.FC = () => {
         </div>
         <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-5">
           <div className="text-zinc-500 text-xs uppercase mb-1">
-            Total Completados
+            Total Completed
           </div>
           <div className="text-2xl font-mono text-white">{logs.length}</div>
         </div>
         <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-5">
           <div className="text-zinc-500 text-xs uppercase mb-1">
-            Rituales Activos
+            Active Rituals
           </div>
           <div className="text-2xl font-mono text-white">{rituals.length}</div>
         </div>
         <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-5">
           <div className="text-zinc-500 text-xs uppercase mb-1">
-            Mejor Racha
+            Best Streak
           </div>
           <div className="text-2xl font-mono text-white">
             {Math.max(...rituals.map((r) => r.streak || 0), 0)}
@@ -188,7 +188,7 @@ const AdvancedAnalytics: React.FC = () => {
       <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-6">
         <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
           <Calendar size={20} className="text-ritual-accent" />
-          Progreso Semanal
+          Weekly Progress
         </h3>
         <ResponsiveContainer width="100%" height={300}>
           <LineChart data={weeklyData}>
@@ -205,7 +205,7 @@ const AdvancedAnalytics: React.FC = () => {
             <Legend />
             <Line
               type="monotone"
-              dataKey="Completados"
+              dataKey="Completions"
               stroke="#22c55e"
               strokeWidth={2}
               dot={{ fill: "#22c55e", r: 4 }}
@@ -217,7 +217,7 @@ const AdvancedAnalytics: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Gráfico de barras: tendencia por mes */}
         <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-6">
-          <h3 className="text-lg font-bold mb-4">Tendencias Mensuales</h3>
+          <h3 className="text-lg font-bold mb-4">Monthly Trends</h3>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={monthlyData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
@@ -230,16 +230,14 @@ const AdvancedAnalytics: React.FC = () => {
                   borderRadius: "8px",
                 }}
               />
-              <Bar dataKey="Completados" fill="#22c55e" radius={[8, 8, 0, 0]} />
+              <Bar dataKey="Completions" fill="#22c55e" radius={[8, 8, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
 
         {/* Gráfico circular: distribución por dificultad */}
         <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-6">
-          <h3 className="text-lg font-bold mb-4">
-            Distribución por Dificultad
-          </h3>
+          <h3 className="text-lg font-bold mb-4">Difficulty Distribution</h3>
           <ResponsiveContainer width="100%" height={300}>
             <PieChart>
               <Pie
@@ -252,7 +250,7 @@ const AdvancedAnalytics: React.FC = () => {
                 }
                 outerRadius={100}
                 fill="#8884d8"
-                dataKey="Completados"
+                dataKey="Completions"
               >
                 {difficultyData.map((entry, index) => (
                   <Cell
@@ -277,7 +275,7 @@ const AdvancedAnalytics: React.FC = () => {
       <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-6">
         <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
           <Target size={20} className="text-ritual-accent" />
-          Días Más Productivos
+          Most Productive Days
         </h3>
         <ResponsiveContainer width="100%" height={300}>
           <BarChart data={dayOfWeekData}>
@@ -291,7 +289,7 @@ const AdvancedAnalytics: React.FC = () => {
                 borderRadius: "8px",
               }}
             />
-            <Bar dataKey="Completados" fill="#22c55e" radius={[8, 8, 0, 0]} />
+            <Bar dataKey="Completions" fill="#22c55e" radius={[8, 8, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
       </div>
@@ -300,7 +298,7 @@ const AdvancedAnalytics: React.FC = () => {
 };
 
 // Añade al prototipo de Date un método para obtener el número de semana del año (ISO-8601)
-/* eslint-disable no-extend-native */
+
 declare global {
   interface Date {
     getWeek(): number;
