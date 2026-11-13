@@ -1,5 +1,11 @@
-import React, { lazy, Suspense } from "react";
-import { createBrowserRouter, Navigate, RouterProvider } from "react-router-dom";
+import React, { lazy, Suspense, useEffect } from "react";
+import {
+  createBrowserRouter,
+  Navigate,
+  Outlet,
+  RouterProvider,
+  useLocation,
+} from "react-router-dom";
 import { AppLayout } from "./components/layout/AppLayout";
 import { ErrorBoundary } from "./components/ui/ErrorBoundary";
 import { RouteError } from "./components/ui/RouteError";
@@ -29,9 +35,41 @@ function page(node: React.ReactNode) {
   return <Suspense fallback={<Loading />}>{node}</Suspense>;
 }
 
+const PAGE_TITLES: Record<string, string> = {
+  "/": "RitualKiller — Convierte tu disciplina en un ritual",
+  "/login": "Entrar · RitualKiller",
+  "/reset-password": "Restablecer contraseña · RitualKiller",
+  "/auth/callback": "Verificando sesión · RitualKiller",
+  "/app/dashboard": "Altar · RitualKiller",
+  "/app/habits": "Rituales · RitualKiller",
+  "/app/goals": "Objetivos · RitualKiller",
+  "/app/social": "Coven · RitualKiller",
+  "/app/shop": "Mercado · RitualKiller",
+  "/app/inventory": "Inventario · RitualKiller",
+  "/app/analytics": "Analíticas · RitualKiller",
+  "/app/achievements": "Logros · RitualKiller",
+  "/app/settings": "Ajustes · RitualKiller",
+  "/app/notifications": "Notificaciones · RitualKiller",
+  "/app/admin": "Admin · RitualKiller",
+};
+
+function RootLayout() {
+  const { pathname, hash } = useLocation();
+
+  useEffect(() => {
+    if (!hash) window.scrollTo(0, 0);
+    document.title = pathname.startsWith("/app/profile/")
+      ? "Perfil · RitualKiller"
+      : (PAGE_TITLES[pathname] ?? "RitualKiller");
+  }, [pathname, hash]);
+
+  return <Outlet />;
+}
+
 const router = createBrowserRouter([
   {
     path: "/",
+    element: <RootLayout />,
     errorElement: <RouteError />,
     children: [
       { index: true, element: page(<LandingPage />) },
