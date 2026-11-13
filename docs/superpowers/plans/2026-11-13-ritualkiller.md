@@ -89,7 +89,7 @@ Convertir el prototipo actual en una app móvil-first, segura y con datos persis
 - [x] `pnpm verify` en bucle hasta 0 errores.
 - [x] Revisión final de seguridad y RLS.
 - [x] README actualizado.
-- [ ] Push a `origin/master` (pendiente de ejecutar).
+- [x] Push a `origin/master`.
 - [ ] Verificación real de las migraciones contra un proyecto Supabase (requiere acceso al proyecto).
 - [ ] Build de la imagen Docker (el daemon no está disponible en este entorno).
 
