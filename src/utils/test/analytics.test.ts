@@ -6,7 +6,7 @@ import {
   calculateCompletionRate,
   filterLogsByDays,
   isRitualCompleted,
-} from "./analytics";
+} from "../analytics";
 
 const NOW = new Date(2026, 10, 13);
 

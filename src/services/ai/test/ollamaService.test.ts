@@ -3,7 +3,7 @@ import {
   fallbackSuggestions,
   generateRitualSuggestions,
   parseOllamaResponse,
-} from "./ollamaService";
+} from "../ollamaService";
 
 afterEach(() => {
   vi.unstubAllGlobals();

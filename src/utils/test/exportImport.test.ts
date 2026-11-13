@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Ritual, RitualLog } from "@/types";
-import { csvCell, exportData, exportToCSV, importData } from "./exportImport";
+import { csvCell, exportData, exportToCSV, importData } from "../exportImport";
 
 const ritual: Ritual = {
   id: "r1",

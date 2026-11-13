@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { daysUntil, isSameWeek, lastNDays, toDateKey } from "./dates";
+import { daysUntil, isSameWeek, lastNDays, toDateKey } from "../dates";
 
 describe("date helpers", () => {
   it("builds local date keys without UTC shifts", () => {
