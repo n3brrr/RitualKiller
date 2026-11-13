@@ -1,182 +1,115 @@
-/**
- * RitualCalendar.tsx
- *
- * Muestra un calendario mensual visualizando el progreso diario de los rituales completados.
- * Presenta cada día con un indicador de avance y permite navegar entre meses.
- * Utiliza colores para señalar días completos, parciales o sin actividad.
- */
+import { useMemo, useState } from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import type { Ritual, RitualLog } from "@/types";
+import { toDateKey } from "@/utils/dates";
 
-import React, { useState } from "react";
-import { ChevronLeft, ChevronRight, Check } from "lucide-react";
-import { useRitualStore } from "../../features/rituals/stores/useRitualStore";
+interface RitualCalendarProps {
+  rituals: Ritual[];
+  logs: RitualLog[];
+}
 
-const RitualCalendar: React.FC = () => {
-  const { rituals, logs } = useRitualStore();
-  const [currentDate, setCurrentDate] = useState(new Date());
+const WEEKDAYS = ["L", "M", "X", "J", "V", "S", "D"];
 
-  const year = currentDate.getFullYear();
-  const month = currentDate.getMonth();
-  const firstDayOfMonth = new Date(year, month, 1);
-  const lastDayOfMonth = new Date(year, month + 1, 0);
-  const daysInMonth = lastDayOfMonth.getDate();
-  const startingDayOfWeek = firstDayOfMonth.getDay();
+export function RitualCalendar({ rituals, logs }: RitualCalendarProps) {
+  const [cursor, setCursor] = useState(() => new Date());
+  const year = cursor.getFullYear();
+  const month = cursor.getMonth();
 
-  const monthNames = [
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July",
-    "August",
-    "September",
-    "October",
-    "November",
-    "December",
-  ];
+  const logsByDate = useMemo(() => {
+    const map = new Map<string, Set<string>>();
+    for (const log of logs) {
+      const date = log.date.slice(0, 10);
+      const completed = map.get(date) ?? new Set<string>();
+      completed.add(log.ritualId);
+      map.set(date, completed);
+    }
+    return map;
+  }, [logs]);
 
-  const weekDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const firstDay = new Date(year, month, 1);
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const leadingBlanks = (firstDay.getDay() + 6) % 7;
+  const todayKey = toDateKey();
 
-  // Navega al mes anterior
-  const goToPreviousMonth = () => {
-    setCurrentDate(new Date(year, month - 1, 1));
+  const monthLabel = cursor.toLocaleDateString("es", { month: "long", year: "numeric" });
+
+  const shiftMonth = (delta: number) => {
+    setCursor(new Date(year, month + delta, 1));
   };
-
-  // Navega al mes siguiente
-  const goToNextMonth = () => {
-    setCurrentDate(new Date(year, month + 1, 1));
-  };
-
-  /*
-   * Retorna cuántos rituales fueron completados en un día concreto.
-   */
-  const getDayCompletionStatus = (
-    day: number,
-  ): { completed: number; total: number } => {
-    const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-    const dayLogs = logs.filter((log) => log.date === dateStr);
-    return {
-      completed: dayLogs.length,
-      total: rituals.length,
-    };
-  };
-
-  /*
-   * Devuelve la clase de color según porcentaje completado ese día.
-   */
-  const getCompletionColor = (completed: number, total: number): string => {
-    if (total === 0) return "bg-zinc-900";
-    const ratio = completed / total;
-    if (ratio === 1) return "bg-ritual-accent";
-    if (ratio >= 0.7) return "bg-ritual-accent/60";
-    if (ratio >= 0.4) return "bg-ritual-accent/40";
-    return "bg-zinc-900";
-  };
-
-  const days: (number | null)[] = [];
-
-  // Celdas vacías iniciales según el día de inicio del mes
-  for (let i = 0; i < startingDayOfWeek; i++) {
-    days.push(null);
-  }
-  // Días numerados del mes
-  for (let day = 1; day <= daysInMonth; day++) {
-    days.push(day);
-  }
 
   return (
-    <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-6">
-      <div className="flex items-center justify-between mb-6">
-        <button
-          onClick={goToPreviousMonth}
-          className="p-2 hover:bg-zinc-900 rounded-lg transition-colors"
-        >
-          <ChevronLeft className="text-zinc-400" size={20} />
-        </button>
-
-        <h2 className="text-xl font-display font-bold">
-          {monthNames[month]} {year}
-        </h2>
-
-        <button
-          onClick={goToNextMonth}
-          className="p-2 hover:bg-zinc-900 rounded-lg transition-colors"
-        >
-          <ChevronRight className="text-zinc-400" size={20} />
-        </button>
-      </div>
-
-      {/* Encabezados de días de la semana */}
-      <div className="grid grid-cols-7 gap-2 mb-2">
-        {weekDays.map((day) => (
-          <div
-            key={day}
-            className="text-center text-xs font-bold text-zinc-500 uppercase"
+    <section aria-label="Calendario de rituales">
+      <div className="mb-4 flex items-center justify-between">
+        <h3 className="font-display text-sm font-bold uppercase tracking-wider text-zinc-300">
+          Calendario
+        </h3>
+        <div className="flex items-center gap-1">
+          <button
+            type="button"
+            onClick={() => shiftMonth(-1)}
+            aria-label="Mes anterior"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-lg text-zinc-400 hover:bg-zinc-900 hover:text-white"
           >
-            {day}
-          </div>
-        ))}
+            <ChevronLeft size={18} />
+          </button>
+          <span className="min-w-32 text-center text-xs uppercase tracking-wider text-zinc-400">
+            {monthLabel}
+          </span>
+          <button
+            type="button"
+            onClick={() => shiftMonth(1)}
+            aria-label="Mes siguiente"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-lg text-zinc-400 hover:bg-zinc-900 hover:text-white"
+          >
+            <ChevronRight size={18} />
+          </button>
+        </div>
       </div>
 
-      {/* Celdas del calendario */}
-      <div className="grid grid-cols-7 gap-2">
-        {days.map((day, index) => {
-          if (day === null) {
-            return <div key={`empty-${index}`} className="aspect-square" />;
-          }
+      <div className="grid grid-cols-7 gap-1 text-center">
+        {WEEKDAYS.map((day) => (
+          <span key={day} className="pb-1 text-[10px] font-bold uppercase text-zinc-600">
+            {day}
+          </span>
+        ))}
 
-          const { completed, total } = getDayCompletionStatus(day);
-          // Identifica si es el día actual
-          const isToday =
-            day === new Date().getDate() &&
-            month === new Date().getMonth() &&
-            year === new Date().getFullYear();
+        {Array.from({ length: leadingBlanks }, (_, index) => (
+          <span key={`blank-${index}`} aria-hidden="true" />
+        ))}
+
+        {Array.from({ length: daysInMonth }, (_, index) => {
+          const day = index + 1;
+          const dateKey = toDateKey(new Date(year, month, day));
+          const completed = logsByDate.get(dateKey)?.size ?? 0;
+          const ratio = rituals.length > 0 ? Math.min(1, completed / rituals.length) : 0;
+          const isToday = dateKey === todayKey;
 
           return (
             <div
-              key={day}
-              className={`aspect-square rounded-lg border-2 p-2 flex flex-col items-center justify-center transition-all hover:scale-105 ${
-                isToday ? "border-ritual-accent" : "border-zinc-800"
-              } ${getCompletionColor(completed, total)}`}
-              title={`${day}: ${completed}/${total} rituals completed`}
+              key={dateKey}
+              aria-label={`${dateKey}: ${completed} de ${rituals.length} rituales`}
+              className={`relative flex aspect-square flex-col items-center justify-center rounded-md border text-xs ${
+                isToday ? "border-ritual-accent/60" : "border-zinc-900"
+              } ${completed > 0 ? "bg-ritual-accent/10 text-zinc-100" : "text-zinc-600"}`}
             >
-              <span
-                className={`text-sm font-bold ${
-                  isToday ? "text-ritual-accent" : "text-zinc-300"
-                }`}
-              >
-                {day}
-              </span>
-              {/* Muestra el valor de completados solo si hay al menos uno */}
+              <span>{day}</span>
               {completed > 0 && (
-                <div className="flex items-center gap-1 mt-1">
-                  <Check size={10} className="text-white" />
-                  <span className="text-[10px] text-white">{completed}</span>
-                </div>
+                <span
+                  className="absolute bottom-1 h-0.5 w-3/4 overflow-hidden rounded-full bg-zinc-800"
+                  aria-hidden="true"
+                >
+                  <span
+                    className="block h-full bg-ritual-accent"
+                    style={{ width: `${ratio * 100}%` }}
+                  />
+                </span>
               )}
             </div>
           );
         })}
       </div>
-
-      {/* Leyenda visual para interpretar los colores */}
-      <div className="mt-6 flex items-center justify-center gap-4 text-xs text-zinc-500">
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded bg-zinc-900 border border-zinc-800"></div>
-          <span>Uncompleted</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded bg-ritual-accent/40"></div>
-          <span>Partial</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded bg-ritual-accent"></div>
-          <span>Complete</span>
-        </div>
-      </div>
-    </div>
+    </section>
   );
-};
+}
 
 export default RitualCalendar;

@@ -1,121 +1,89 @@
-import React from "react";
-import { useAuthStore } from "@/features/auth/stores/useAuthStore";
 import { Package, Zap } from "lucide-react";
+import { useShop } from "@/hooks/useShop";
+import { useI18n } from "@/i18n";
 import { SHOP_ITEMS } from "@/data/items";
+import { formatDateTime } from "@/utils/dates";
+import Loading from "@/components/animations/Loading";
 
-const InventoryPage = () => {
-  const useItem = useAuthStore((state) => state.useItem);
-  const user = useAuthStore((state) => state.user);
+export default function InventoryPage() {
+  const { quantities, buffs, isLoading, consume, error } = useShop();
+  const { t } = useI18n();
 
-  if (!user) return null;
+  if (isLoading) return <Loading />;
 
-  const handleUseItem = (itemId: string) => {
-    useItem(itemId);
-  };
-
-  // Group items by ID to show counts
-  const inventoryCounts = user.inventory.reduce(
-    (acc: Record<string, number>, itemId: string) => {
-      acc[itemId] = (acc[itemId] || 0) + 1;
-      return acc;
-    },
-    {} as Record<string, number>,
-  );
+  const owned = SHOP_ITEMS.filter((item) => (quantities[item.id] ?? 0) > 0);
 
   return (
-    <div className="space-y-8 animate-fade-in">
-      <header className="flex justify-between items-end border-b border-zinc-900 pb-6">
-        <div>
-          <h2 className="text-3xl font-display font-bold text-white mb-1">
-            Inventory
-          </h2>
-          <p className="text-zinc-500">Your possessions and dark artifacts.</p>
-        </div>
-        <div className="text-zinc-400 text-sm">
-          {user.inventory.length} Items
-        </div>
+    <div className="mx-auto max-w-3xl space-y-6">
+      <header>
+        <h1 className="flex items-center gap-2 font-display text-2xl font-bold sm:text-3xl">
+          <Package className="text-ritual-accent" aria-hidden="true" />
+          {t("nav.inventory")}
+        </h1>
+        <p className="text-sm text-zinc-500">Tus artefactos y ventajas activas.</p>
       </header>
 
-      {/* Active Buffs Display */}
-      {user.active_buffs && user.active_buffs.length > 0 && (
-        <div className="mb-6">
-          <h3 className="text-sm uppercase tracking-wider text-zinc-500 font-bold mb-3">
-            Active Effects
-          </h3>
-          <div className="flex gap-4 flex-wrap">
-            {user.active_buffs.map((buff, idx) => {
-              if (buff.expiresAt < Date.now()) return null; // Don't show expired
-              const item = SHOP_ITEMS.find((i) => i.id === buff.itemId);
-              return (
-                <div
-                  key={idx}
-                  className="bg-ritual-accent/10 border border-ritual-accent/30 px-4 py-2 rounded-lg flex items-center gap-3 text-ritual-accent"
-                >
-                  <Zap size={16} />
-                  <div>
-                    <div className="font-bold text-sm">
-                      {item?.name || buff.itemId}
-                    </div>
-                    <div className="text-xs opacity-70">
-                      Expires: {new Date(buff.expiresAt).toLocaleTimeString()}
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
+      {error && (
+        <p role="alert" className="rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-400">
+          {error.message}
+        </p>
       )}
 
-      {user.inventory.length === 0 ? (
-        <div className="flex flex-col items-center justify-center p-12 border border-dashed border-zinc-800 rounded-xl bg-zinc-900/20 text-zinc-500">
-          <Package size={48} className="mb-4 opacity-50" />
-          <p>Your inventory is empty.</p>
-          <p className="text-sm mt-2">
-            Visit the Black Market to acquire artifacts.
-          </p>
-        </div>
+      {buffs.length > 0 && (
+        <section>
+          <h2 className="mb-2 text-xs font-bold uppercase tracking-widest text-zinc-500">
+            Ventajas activas
+          </h2>
+          <ul className="space-y-2">
+            {buffs.map((buff) => {
+              const item = SHOP_ITEMS.find((shopItem) => shopItem.id === buff.itemId);
+              return (
+                <li
+                  key={buff.id}
+                  className="flex items-center justify-between gap-2 rounded-lg border border-ritual-accent/30 bg-ritual-accent/5 p-3"
+                >
+                  <span className="text-sm text-zinc-200">{item?.name ?? buff.itemId}</span>
+                  <span className="text-xs text-ritual-accent">
+                    x{buff.multiplier} · hasta {formatDateTime(buff.expiresAt)}
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      )}
+
+      {owned.length === 0 ? (
+        <p className="rounded-xl border border-dashed border-zinc-800 p-8 text-center text-sm text-zinc-500">
+          Tu inventario está vacío. Visita el mercado.
+        </p>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {Object.entries(inventoryCounts).map(([itemId, count]) => {
-            const itemDef = SHOP_ITEMS.find((i) => i.id === itemId);
-            if (!itemDef) return null; // Unknown item
-
-            return (
-              <div
-                key={itemId}
-                className="bg-zinc-950 border border-zinc-800 p-4 rounded-xl flex items-center gap-4 transition-colors hover:border-zinc-700"
-              >
-                <div className="w-16 h-16 bg-zinc-900/50 rounded-lg flex items-center justify-center border border-zinc-800 text-3xl">
-                  {itemDef.icon}
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          {owned.map((item) => (
+            <article key={item.id} className="rounded-xl border border-zinc-800 bg-zinc-950 p-4">
+              <div className="flex items-start gap-3">
+                <div className="text-3xl" aria-hidden="true">
+                  {item.icon}
                 </div>
-                <div className="flex-1">
-                  <div className="flex justify-between items-start">
-                    <h4 className="font-bold text-white">{itemDef.name}</h4>
-                    <span className="bg-zinc-800 text-zinc-400 text-xs px-2 py-0.5 rounded-full">
-                      x{count}
-                    </span>
-                  </div>
-                  <p className="text-xs text-zinc-500 mt-1 line-clamp-2">
-                    {itemDef.description}
+                <div className="min-w-0 flex-1">
+                  <h2 className="font-bold text-white">{item.name}</h2>
+                  <p className="text-xs text-zinc-500">{item.description}</p>
+                  <p className="mt-1 text-xs text-zinc-400">
+                    Cantidad: <strong className="text-ritual-accent">{quantities[item.id]}</strong>
                   </p>
-
-                  {itemDef.duration !== -1 && (
-                    <button
-                      onClick={() => handleUseItem(itemId)}
-                      className="mt-3 text-xs bg-white/10 hover:bg-white/20 text-white px-3 py-1.5 rounded transition-colors w-full"
-                    >
-                      Use Item
-                    </button>
-                  )}
                 </div>
               </div>
-            );
-          })}
+              <button
+                type="button"
+                onClick={() => void consume(item.id).catch(() => undefined)}
+                className="mt-3 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg border border-zinc-700 text-sm font-bold text-zinc-200 hover:border-ritual-accent hover:text-ritual-accent"
+              >
+                <Zap size={16} aria-hidden="true" /> Usar
+              </button>
+            </article>
+          ))}
         </div>
       )}
     </div>
   );
-};
-
-export default InventoryPage;
+}

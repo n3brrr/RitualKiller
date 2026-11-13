@@ -1,0 +1,266 @@
+import { useState } from "react";
+import { Calendar, Plus, Target, Trash2 } from "lucide-react";
+import { useGoals } from "@/hooks/useGoals";
+import { useRituals } from "@/hooks/useRituals";
+import { useI18n } from "@/i18n";
+import { addDays, daysUntil, toDateKey } from "@/utils/dates";
+import Loading from "@/components/animations/Loading";
+
+export default function GoalsPage() {
+  const { goals, isLoading, error, createGoal, isCreating, removeGoal } = useGoals();
+  const { rituals, logs } = useRituals();
+  const { t } = useI18n();
+
+  const [showCreator, setShowCreator] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
+  const [form, setForm] = useState({
+    title: "",
+    description: "",
+    targetDate: toDateKey(addDays(new Date(), 30)),
+    targetValue: 30,
+    ritualIds: [] as string[],
+  });
+
+  if (isLoading) return <Loading />;
+
+  const handleCreate = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setFormError(null);
+    if (form.title.trim().length < 2) {
+      setFormError("El título del objetivo es obligatorio");
+      return;
+    }
+    if (!form.targetDate) {
+      setFormError("Selecciona una fecha objetivo");
+      return;
+    }
+
+    try {
+      await createGoal({
+        title: form.title,
+        description: form.description,
+        targetDate: form.targetDate,
+        targetValue: Math.max(1, form.targetValue),
+        ritualIds: form.ritualIds,
+      });
+      setForm({
+        title: "",
+        description: "",
+        targetDate: toDateKey(addDays(new Date(), 30)),
+        targetValue: 30,
+        ritualIds: [],
+      });
+      setShowCreator(false);
+    } catch (createError) {
+      setFormError(createError instanceof Error ? createError.message : "No se pudo crear");
+    }
+  };
+
+  const toggleRitual = (id: string) => {
+    setForm((current) => ({
+      ...current,
+      ritualIds: current.ritualIds.includes(id)
+        ? current.ritualIds.filter((item) => item !== id)
+        : [...current.ritualIds, id],
+    }));
+  };
+
+  const progressFor = (goal: (typeof goals)[number]) => {
+    const relevant =
+      goal.ritual_ids.length > 0
+        ? logs.filter((log) => goal.ritual_ids.includes(log.ritualId))
+        : logs;
+    return Math.min(relevant.length, goal.target_value);
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!window.confirm("¿Eliminar este objetivo?")) return;
+    await removeGoal(id).catch((deleteError: unknown) =>
+      setFormError(deleteError instanceof Error ? deleteError.message : "No se pudo eliminar"),
+    );
+  };
+
+  return (
+    <div className="mx-auto max-w-3xl space-y-6">
+      <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="font-display text-2xl font-bold sm:text-3xl">{t("goals.title")}</h1>
+          <p className="text-sm text-zinc-500">Objetivos medidos con tus rituales completados.</p>
+        </div>
+        <button
+          type="button"
+          onClick={() => setShowCreator((value) => !value)}
+          aria-expanded={showCreator}
+          className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-ritual-accent px-4 font-bold text-black hover:bg-emerald-400"
+        >
+          <Plus size={16} aria-hidden="true" />
+          {showCreator ? t("common.close") : t("goals.new")}
+        </button>
+      </header>
+
+      {(error || formError) && (
+        <p role="alert" className="rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-400">
+          {formError ?? error?.message}
+        </p>
+      )}
+
+      {showCreator && (
+        <form
+          onSubmit={handleCreate}
+          className="space-y-4 rounded-xl border border-zinc-800 bg-zinc-950 p-4 sm:p-6"
+        >
+          <label className="block">
+            <span className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-zinc-500">
+              Título
+            </span>
+            <input
+              type="text"
+              value={form.title}
+              onChange={(event) => setForm({ ...form, title: event.target.value })}
+              maxLength={120}
+              required
+              className="min-h-11 w-full rounded-lg border border-zinc-700 bg-black px-4 text-white outline-none focus:border-ritual-accent"
+            />
+          </label>
+
+          <label className="block">
+            <span className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-zinc-500">
+              Descripción
+            </span>
+            <textarea
+              value={form.description}
+              onChange={(event) => setForm({ ...form, description: event.target.value })}
+              maxLength={500}
+              rows={2}
+              className="w-full rounded-lg border border-zinc-700 bg-black px-4 py-2 text-white outline-none focus:border-ritual-accent"
+            />
+          </label>
+
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <label className="block">
+              <span className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-zinc-500">
+                {t("goals.targetDate")}
+              </span>
+              <input
+                type="date"
+                value={form.targetDate}
+                min={toDateKey()}
+                onChange={(event) => setForm({ ...form, targetDate: event.target.value })}
+                required
+                className="min-h-11 w-full rounded-lg border border-zinc-700 bg-black px-4 text-white outline-none focus:border-ritual-accent"
+              />
+            </label>
+
+            <label className="block">
+              <span className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-zinc-500">
+                {t("goals.targetValue")}
+              </span>
+              <input
+                type="number"
+                min={1}
+                max={10000}
+                value={form.targetValue}
+                onChange={(event) =>
+                  setForm({ ...form, targetValue: Math.max(1, Number(event.target.value)) })
+                }
+                className="min-h-11 w-full rounded-lg border border-zinc-700 bg-black px-4 text-white outline-none focus:border-ritual-accent"
+              />
+            </label>
+          </div>
+
+          <fieldset>
+            <legend className="mb-2 text-[10px] font-bold uppercase tracking-wider text-zinc-500">
+              {t("goals.linked")}
+            </legend>
+            <div className="max-h-48 space-y-1 overflow-y-auto rounded-lg border border-zinc-800 p-2">
+              {rituals.length === 0 && (
+                <p className="p-2 text-sm text-zinc-600">No tienes rituales todavía.</p>
+              )}
+              {rituals.map((ritual) => (
+                <label
+                  key={ritual.id}
+                  className="flex min-h-11 cursor-pointer items-center gap-3 rounded-lg px-2 hover:bg-zinc-900"
+                >
+                  <input
+                    type="checkbox"
+                    checked={form.ritualIds.includes(ritual.id)}
+                    onChange={() => toggleRitual(ritual.id)}
+                    className="h-4 w-4 accent-ritual-accent"
+                  />
+                  <span className="text-sm text-zinc-300">{ritual.title}</span>
+                </label>
+              ))}
+            </div>
+          </fieldset>
+
+          <button
+            type="submit"
+            disabled={isCreating}
+            className="inline-flex min-h-11 w-full items-center justify-center rounded-lg bg-white px-5 font-bold text-black hover:bg-zinc-200 disabled:opacity-50 sm:w-auto"
+          >
+            {isCreating ? t("common.saving") : t("common.create")}
+          </button>
+        </form>
+      )}
+
+      {goals.length === 0 ? (
+        <p className="rounded-xl border border-dashed border-zinc-800 p-8 text-center text-sm text-zinc-500">
+          {t("goals.empty")}
+        </p>
+      ) : (
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          {goals.map((goal) => {
+            const progress = progressFor(goal);
+            const percent = Math.min(100, Math.round((progress / goal.target_value) * 100));
+            const remaining = daysUntil(goal.target_date);
+
+            return (
+              <article key={goal.id} className="rounded-xl border border-zinc-800 bg-zinc-950 p-4">
+                <div className="mb-2 flex items-start justify-between gap-2">
+                  <div>
+                    <h2 className="font-bold text-white">{goal.title}</h2>
+                    {goal.description && (
+                      <p className="mt-1 text-sm text-zinc-500">{goal.description}</p>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => void handleDelete(goal.id)}
+                    aria-label={`Eliminar ${goal.title}`}
+                    className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-zinc-600 hover:text-red-500"
+                  >
+                    <Trash2 size={16} aria-hidden="true" />
+                  </button>
+                </div>
+
+                <div className="mb-1 flex justify-between text-xs text-zinc-500">
+                  <span>
+                    {progress} / {goal.target_value}
+                  </span>
+                  <span>{percent}%</span>
+                </div>
+                <div className="h-2 overflow-hidden rounded-full bg-zinc-900">
+                  <div className="h-full bg-ritual-accent" style={{ width: `${percent}%` }} />
+                </div>
+
+                <div className="mt-3 flex flex-wrap gap-3 text-[10px] uppercase tracking-wider text-zinc-500">
+                  <span className="inline-flex items-center gap-1">
+                    <Calendar size={12} aria-hidden="true" /> {goal.target_date}
+                  </span>
+                  <span className={remaining < 0 ? "text-red-400" : ""}>
+                    {remaining >= 0
+                      ? `${remaining} ${t("goals.remaining")}`
+                      : `vencido hace ${Math.abs(remaining)} días`}
+                  </span>
+                  <span className="inline-flex items-center gap-1">
+                    <Target size={12} aria-hidden="true" /> {goal.ritual_ids.length} rituales
+                  </span>
+                </div>
+              </article>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}

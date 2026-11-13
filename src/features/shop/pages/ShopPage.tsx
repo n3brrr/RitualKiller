@@ -1,190 +1,119 @@
 import { useState } from "react";
-import { ShopItem } from "@/types";
-import { Zap, Check, X, FlaskConical, Scroll, Skull } from "lucide-react";
-import { gsap } from "gsap";
-import { useAuthStore } from "@/features/auth/stores/useAuthStore";
-
+import { ShoppingBag, Zap } from "lucide-react";
+import { useAuth } from "@/features/auth/AuthProvider";
+import { useShop } from "@/hooks/useShop";
+import { useI18n } from "@/i18n";
 import { SHOP_ITEMS } from "@/data/items";
+import type { Rarity } from "@/types";
 
-const ShopPage = () => {
-  const user = useAuthStore((state) => state.user);
-  const buyItemFromStore = useAuthStore((state) => state.buyItem);
+const RARITY_STYLES: Record<Rarity, string> = {
+  common: "border-zinc-700 text-zinc-300",
+  rare: "border-blue-500/40 text-blue-400",
+  legendary: "border-yellow-500/40 text-yellow-400",
+};
+
+export default function ShopPage() {
+  const { user } = useAuth();
+  const { quantities, purchase, isPurchasing, error } = useShop();
+  const { t } = useI18n();
+  const [message, setMessage] = useState<string | null>(null);
+  const [selected, setSelected] = useState<string | null>(null);
 
   if (!user) return null;
+  if (error && !message) {
+    return (
+      <p role="alert" className="rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-400">
+        {error.message}
+      </p>
+    );
+  }
 
-  const [selectedItem, setSelectedItem] = useState<ShopItem | null>(null);
-
-  // Controla la compra de un ítem, incluye animación y actualización de usuario
-  const buyItem = (item: ShopItem) => {
-    if (user.essence >= item.cost) {
-      // Execute purchase
-      const success = buyItemFromStore(item);
-
-      if (success) {
-        // Animación de compra exitosa sobre la tarjeta del ítem
-        gsap.to(`#shop-item-${item.id}`, {
-          scale: 0.95,
-          duration: 0.1,
-          yoyo: true,
-          repeat: 1,
-          onComplete: () => {
-            gsap.fromTo(
-              `#shop-item-${item.id}`,
-              { borderColor: "#27272a" },
-              {
-                borderColor: "#22c55e",
-                duration: 0.5,
-                onComplete: () => {
-                  gsap.to(`#shop-item-${item.id}`, {
-                    borderColor: "#27272a",
-                    duration: 0.5,
-                  });
-                },
-              },
-            );
-            setSelectedItem(null); // Close modal on success
-          },
-        });
+  const handlePurchase = async (itemId: string, name: string, cost: number) => {
+    if (user.essence < cost) {
+      setMessage("No tienes suficiente esencia.");
+      return;
+    }
+    setMessage(null);
+    setSelected(itemId);
+    try {
+      const result = await purchase(itemId);
+      if (!result.success) {
+        setMessage(
+          result.reason === "insufficient_essence"
+            ? "No tienes suficiente esencia."
+            : "No se pudo completar la compra.",
+        );
+      } else {
+        setMessage(`${name} adquirido.`);
       }
-    } else {
-      // Animación de error (temblor) si no hay suficiente esencia
-      const target = selectedItem ? "#modal-content" : `#shop-item-${item.id}`;
-      gsap.to(target, {
-        x: 10,
-        duration: 0.1,
-        yoyo: true,
-        repeat: 3,
-        borderColor: "#ef4444",
-        onComplete: () => {
-          gsap.to(target, {
-            borderColor: selectedItem ? "#27272a" : "#27272a",
-            duration: 0.5,
-          });
-        },
-      });
+    } catch (purchaseError) {
+      setMessage(purchaseError instanceof Error ? purchaseError.message : "No se pudo comprar");
+    } finally {
+      setSelected(null);
     }
   };
 
   return (
-    <div>
-      <div className="flex justify-between items-center mb-8">
-        <h2 className="text-3xl font-display font-bold">Mercado Negro</h2>
-        {/* Esencia disponible del usuario */}
-        <div className="bg-zinc-900 px-4 py-2 rounded-lg border border-zinc-800 text-ritual-accent font-mono font-bold">
-          {user.essence} Esencia
+    <div className="mx-auto max-w-4xl space-y-6">
+      <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h1 className="flex items-center gap-2 font-display text-2xl font-bold sm:text-3xl">
+            <ShoppingBag className="text-ritual-accent" aria-hidden="true" />
+            {t("nav.shop")}
+          </h1>
+          <p className="text-sm text-zinc-500">Intercambia esencia por ventajas y artefactos.</p>
         </div>
-      </div>
+        <div className="flex items-center gap-2 rounded-lg border border-zinc-800 bg-zinc-950 px-4 py-2">
+          <Zap size={16} className="text-ritual-accent" aria-hidden="true" />
+          <span className="font-mono text-lg text-ritual-accent">{user.essence}</span>
+        </div>
+      </header>
 
-      {/* Renderiza la grilla de ítems disponibles en el shop */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {message && (
+        <p role="status" className="rounded-lg border border-ritual-accent/30 bg-ritual-accent/10 p-3 text-sm text-ritual-accent">
+          {message}
+        </p>
+      )}
+
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         {SHOP_ITEMS.map((item) => {
-          const owned = user.inventory.includes(item.id);
+          const owned = quantities[item.id] ?? 0;
+          const cantAfford = user.essence < item.cost;
+
           return (
-            <div
+            <article
               key={item.id}
-              id={`shop-item-${item.id}`}
-              onClick={() => !owned && setSelectedItem(item)}
-              className={`bg-zinc-950 border p-6 rounded-xl flex flex-col items-center text-center relative overflow-hidden transition-all duration-300 ${
-                owned
-                  ? "border-zinc-800 opacity-50 cursor-default"
-                  : "border-zinc-800 hover:border-ritual-accent hover:shadow-[0_0_20px_rgba(34,197,94,0.1)] cursor-pointer"
-              }`}
+              className={`rounded-xl border bg-zinc-950 p-4 ${RARITY_STYLES[item.rarity]}`}
             >
-              {owned && (
-                <div className="absolute top-2 right-2 text-zinc-500">
-                  <Check size={16} />
+              <div className="mb-2 flex items-start justify-between gap-2">
+                <div className="text-3xl" aria-hidden="true">
+                  {item.icon}
                 </div>
-              )}
-
-              <div className="text-4xl mb-4 grayscale group-hover:grayscale-0">
-                {item.icon}
+                <span className="rounded border border-zinc-800 px-2 py-0.5 text-[10px] uppercase tracking-wider text-zinc-500">
+                  {item.rarity}
+                </span>
               </div>
-              <h3 className="font-bold text-lg text-white mb-2">{item.name}</h3>
-              <p className="text-zinc-500 text-sm mb-6 h-10 line-clamp-2">
-                {item.description}
-              </p>
+              <h2 className="font-bold text-white">{item.name}</h2>
+              <p className="mt-1 min-h-10 text-sm text-zinc-500">{item.description}</p>
 
-              <div
-                className={`w-full py-2 rounded font-bold text-sm uppercase tracking-wider flex items-center justify-center gap-2 ${
-                  owned
-                    ? "bg-zinc-900 text-zinc-600"
-                    : "bg-zinc-100/10 text-zinc-300"
-                }`}
-              >
-                {owned ? (
-                  "Adquirido"
-                ) : (
-                  <>
-                    {item.cost}{" "}
-                    <span className="text-xs opacity-70">Esencia</span>
-                  </>
-                )}
+              <div className="mt-3 flex items-center justify-between gap-2">
+                <div className="text-xs text-zinc-500">
+                  <span className="font-mono text-ritual-accent">{item.cost}</span> esencia
+                  {owned > 0 && <span className="ml-2 text-zinc-600">· tienes {owned}</span>}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => void handlePurchase(item.id, item.name, item.cost)}
+                  disabled={cantAfford || isPurchasing || selected === item.id}
+                  className="inline-flex min-h-11 items-center rounded-lg bg-ritual-accent px-4 text-sm font-bold text-black hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  {selected === item.id ? "Comprando..." : "Comprar"}
+                </button>
               </div>
-            </div>
+            </article>
           );
         })}
       </div>
-
-      {/* Modal de detalles y compra de ítem */}
-      {selectedItem && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center px-4">
-          <div
-            className="absolute inset-0 bg-black/80 backdrop-blur-sm"
-            onClick={() => setSelectedItem(null)}
-          ></div>
-          <div
-            id="modal-content"
-            className="relative bg-zinc-950 border border-zinc-800 p-8 rounded-2xl max-w-md w-full shadow-2xl animate-fade-in-up"
-          >
-            {/* Botón para cerrar el modal */}
-            <button
-              onClick={() => setSelectedItem(null)}
-              className="absolute top-4 right-4 text-zinc-500 hover:text-white"
-            >
-              <X size={24} />
-            </button>
-
-            <div className="flex flex-col items-center text-center mb-6">
-              <div className="text-6xl mb-6 p-6 bg-zinc-900/50 rounded-full border border-zinc-800">
-                {selectedItem.icon}
-              </div>
-              <h3 className="text-2xl font-display font-bold text-white mb-2">
-                {selectedItem.name}
-              </h3>
-              <div
-                className={`text-xs uppercase tracking-widest px-3 py-1 rounded-full border mb-4 ${
-                  selectedItem.rarity === "legendary"
-                    ? "border-yellow-500/30 text-yellow-500 bg-yellow-500/10"
-                    : selectedItem.rarity === "rare"
-                      ? "border-purple-500/30 text-purple-500 bg-purple-500/10"
-                      : "border-zinc-500/30 text-zinc-500 bg-zinc-500/10"
-                }`}
-              >
-                {selectedItem.rarity === "common"
-                  ? "Común"
-                  : selectedItem.rarity === "rare"
-                    ? "Raro"
-                    : "Legendario"}
-              </div>
-              <p className="text-zinc-400 leading-relaxed">
-                {selectedItem.description}
-              </p>
-            </div>
-
-            <div className="flex gap-3">
-              {/* Botón para comprar el ítem (aplica animación y lógica de compra) */}
-              <button
-                onClick={() => buyItem(selectedItem)}
-                className="flex-1 bg-ritual-accent text-black font-bold py-3 rounded-lg hover:bg-emerald-400 transition-colors flex items-center justify-center gap-2 uppercase tracking-wider text-sm"
-              >
-                Comprar por {selectedItem.cost} <Zap size={16} fill="black" />
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
-};
-
-export default ShopPage;
+}

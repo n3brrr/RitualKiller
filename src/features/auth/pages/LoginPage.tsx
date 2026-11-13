@@ -1,178 +1,192 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { User } from "@/types";
-import { signInWithEmail, signUpWithEmail } from "@/services/authService";
-import { useAuthStore } from "@/features/auth/stores/useAuthStore";
-import "@/styles/login.css";
+import { useState } from "react";
+import { Link, Navigate, useNavigate } from "react-router-dom";
+import { Skull } from "lucide-react";
+import { useAuth } from "@/features/auth/AuthProvider";
+import { requestPasswordReset, signInWithEmail, signUpWithEmail } from "@/services/authService";
+import { useI18n } from "@/i18n";
+import { validateEmail, validatePassword, validateUsername } from "@/utils/validation";
+import Loading from "@/components/animations/Loading";
 
-const LoginPage: React.FC = () => {
+type Mode = "login" | "signup" | "reset";
+
+export default function LoginPage() {
+  const { session, loading } = useAuth();
+  const { t } = useI18n();
   const navigate = useNavigate();
-  const setUser = useAuthStore((state) => state.setUser);
+  const [mode, setMode] = useState<Mode>("login");
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [isSignUp, setIsSignUp] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
 
-  // Maneja el login/registro por email y contraseña
-  const handleEmailAuth = async (e: React.FormEvent) => {
-    e.preventDefault();
+  if (loading) return <Loading />;
+  if (session) return <Navigate to="/app/dashboard" replace />;
+
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
     setError(null);
-    setLoading(true);
+    setMessage(null);
 
-    try {
-      const result = isSignUp
-        ? await signUpWithEmail(email, password, username)
-        : await signInWithEmail(email, password);
+    if (!validateEmail(email)) {
+      setError("Introduce un email válido");
+      return;
+    }
 
-      if (result.error) {
-        setError(result.error.message);
-        setLoading(false);
+    if (mode === "signup") {
+      const usernameValidation = validateUsername(username);
+      if (!usernameValidation.valid) {
+        setError(usernameValidation.message ?? "Usuario inválido");
         return;
       }
+    }
 
-      // Crea el objeto usuario a partir de la respuesta de autenticación
-      if (result.data?.user) {
-        // Determina si es admin por metadata o por credenciales de prueba
-        const isAdminUser =
-          result.data.user.user_metadata?.isAdmin ||
-          (email.toLowerCase() === "admin" && password === "admin");
-
-        const user: User = {
-          id: result.data.user.id,
-          username:
-            result.data.user.user_metadata?.username ||
-            username ||
-            result.data.user.email?.split("@")[0] ||
-            "User",
-          essence: isAdminUser ? 10000 : 0, // Asigna más esencia a admin
-          rank: isAdminUser ? "Demi-God" : "Initiate",
-          inventory: isAdminUser ? ["admin-badge"] : [],
-          created_at: new Date().toISOString(),
-          isAdmin: isAdminUser,
-          avatar_url: (result.data.user.user_metadata as any)?.avatar_url,
-        };
-
-        setUser(user);
-        navigate("/app/dashboard");
+    if (mode !== "reset") {
+      const passwordValidation = validatePassword(password);
+      if (!passwordValidation.valid) {
+        setError(passwordValidation.message ?? "Contraseña inválida");
+        return;
       }
-    } catch (err: any) {
-      setError(err.message || "Error de autenticación");
+    }
+
+    setBusy(true);
+    try {
+      if (mode === "reset") {
+        const { error: resetError } = await requestPasswordReset(email);
+        if (resetError) throw resetError;
+        setMessage(t("auth.resetSent"));
+      } else if (mode === "signup") {
+        const { data, error: signUpError } = await signUpWithEmail(email, password, username);
+        if (signUpError) throw signUpError;
+        if (data.session) {
+          navigate("/app/dashboard", { replace: true });
+        } else {
+          setMessage("Cuenta creada. Revisa tu email para confirmarla.");
+        }
+      } else {
+        const { error: signInError } = await signInWithEmail(email, password);
+        if (signInError) throw signInError;
+        navigate("/app/dashboard", { replace: true });
+      }
+    } catch (authError) {
+      setError(authError instanceof Error ? authError.message : "Error de autenticación");
     } finally {
-      setLoading(false);
+      setBusy(false);
     }
   };
 
   return (
-    <div className="login-container">
-      {/* Estilos en línea para el contenedor principal de la pantalla de login */}
-      <style>{`
-                .login-container {
-                    display: flex;
-                    justify-content: center;
-                    align-items: center;
-                    min-height: 100vh;
-                    background: #111;
-                    width: 100%;
-                    overflow: hidden;
-                    position: fixed;
-                    top: 0;
-                    left: 0;
-                    z-index: 100;
-                }
-             `}</style>
+    <main className="flex min-h-screen items-center justify-center bg-ritual-black px-4 py-10">
+      <div className="w-full max-w-sm">
+        <div className="mb-8 flex flex-col items-center gap-2 text-center">
+          <Skull size={40} className="text-ritual-accent" aria-hidden="true" />
+          <h1 className="font-display text-2xl font-bold uppercase tracking-widest">
+            RitualKiller
+          </h1>
+          <p className="text-sm text-zinc-500">
+            {mode === "signup"
+              ? t("auth.createAccount")
+              : mode === "reset"
+                ? t("auth.forgot")
+                : t("auth.welcomeBack")}
+          </p>
+        </div>
 
-      <div className="login-ring">
-        <i style={{ "--clr": "#00ff0a" } as React.CSSProperties}></i>
-        <i style={{ "--clr": "#ff0057" } as React.CSSProperties}></i>
-        <i style={{ "--clr": "#fffd44" } as React.CSSProperties}></i>
-
-        <div className="login">
-          <h2>{isSignUp ? "Sign Up" : "Login"}</h2>
-
-          {/* Muestra error si existe */}
+        <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-5 sm:p-6">
           {error && (
-            <div className="mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-500 text-sm">
+            <p role="alert" className="mb-4 rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-400">
               {error}
-            </div>
+            </p>
+          )}
+          {message && (
+            <p role="status" className="mb-4 rounded-lg border border-ritual-accent/30 bg-ritual-accent/10 p-3 text-sm text-ritual-accent">
+              {message}
+            </p>
           )}
 
-          {/* Hint de credenciales admin solo para desarrollo */}
-          {import.meta.env.DEV && (
-            <div className="mb-4 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg text-yellow-500 text-xs">
-              <strong>Dev Mode:</strong> Use{" "}
-              <code className="bg-black/30 px-1 rounded">admin</code> /{" "}
-              <code className="bg-black/30 px-1 rounded">admin</code> for quick
-              tests
-            </div>
-          )}
-
-          <form
-            className="w-full flex flex-col gap-5"
-            onSubmit={handleEmailAuth}
-          >
-            {isSignUp && (
-              <div className="inputBx">
-                <input
-                  type="text"
-                  placeholder="Username"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  required={isSignUp}
-                />
-              </div>
-            )}
-            <div className="inputBx">
+          <form onSubmit={handleSubmit} className="space-y-3">
+            {mode === "signup" && (
               <input
                 type="text"
-                placeholder={isSignUp ? "Email" : "Email or Username (admin)"}
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                value={username}
+                onChange={(event) => setUsername(event.target.value)}
+                minLength={2}
+                maxLength={30}
                 required
+                autoComplete="username"
+                placeholder={t("auth.username")}
+                className="min-h-11 w-full rounded-lg border border-zinc-700 bg-black px-4 text-white outline-none focus:border-ritual-accent"
               />
-            </div>
-            <div className="inputBx">
+            )}
+
+            <input
+              type="email"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              required
+              autoComplete="email"
+              placeholder={t("auth.email")}
+              className="min-h-11 w-full rounded-lg border border-zinc-700 bg-black px-4 text-white outline-none focus:border-ritual-accent"
+            />
+
+            {mode !== "reset" && (
               <input
                 type="password"
-                placeholder="Password"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(event) => setPassword(event.target.value)}
+                minLength={6}
                 required
-                minLength={5}
+                autoComplete={mode === "signup" ? "new-password" : "current-password"}
+                placeholder={t("auth.password")}
+                className="min-h-11 w-full rounded-lg border border-zinc-700 bg-black px-4 text-white outline-none focus:border-ritual-accent"
               />
-            </div>
-            <div className="inputBx">
-              <input
-                type="submit"
-                value={loading ? "Loading..." : isSignUp ? "Sign Up" : "Login"}
-                disabled={loading}
-              />
-            </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={busy}
+              className="inline-flex min-h-11 w-full items-center justify-center rounded-lg bg-ritual-accent font-bold text-black transition-colors hover:bg-emerald-400 disabled:opacity-50"
+            >
+              {busy
+                ? t("common.loading")
+                : mode === "signup"
+                  ? t("auth.signup")
+                  : mode === "reset"
+                    ? "Enviar enlace"
+                    : t("auth.login")}
+            </button>
           </form>
-          <div className="flex flex-row gap-2">
-            <a
-              href="#"
-              onClick={(e) => {
-                e.preventDefault(); /* TODO: Reset password */
+
+          <div className="mt-4 flex flex-col items-center gap-2 text-xs text-zinc-500">
+            {mode === "login" && (
+              <button type="button" onClick={() => setMode("reset")} className="hover:text-ritual-accent">
+                {t("auth.forgot")}
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => {
+                setMode(mode === "signup" ? "login" : "signup");
+                setError(null);
+                setMessage(null);
               }}
+              className="hover:text-ritual-accent"
             >
-              Forgot my password
-            </a>
-            <a
-              href="#"
-              onClick={(e) => {
-                e.preventDefault();
-                setIsSignUp(!isSignUp);
-              }}
-            >
-              {isSignUp ? "Already have an account" : "Create account"}
-            </a>
+              {mode === "signup" ? t("auth.hasAccount") : t("auth.noAccount")}
+            </button>
+            {mode === "reset" && (
+              <button type="button" onClick={() => setMode("login")} className="hover:text-ritual-accent">
+                {t("common.back")}
+              </button>
+            )}
           </div>
         </div>
-      </div>
-    </div>
-  );
-};
 
-export default LoginPage;
+        <Link to="/" className="mt-6 block text-center text-xs text-zinc-600 hover:text-ritual-accent">
+          {t("common.back")}
+        </Link>
+      </div>
+    </main>
+  );
+}

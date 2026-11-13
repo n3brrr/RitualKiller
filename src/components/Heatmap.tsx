@@ -1,96 +1,57 @@
-/**
- * Heatmap.tsx
- *
- * Este archivo define el componente React Heatmap.
- * Muestra un heatmap semanal de la actividad de "rituales" durante el último año,
- * visualizando la intensidad diaria en formato de cuadrícula.
- */
+import { useMemo } from "react";
+import type { RitualLog } from "@/types";
+import { lastNDays } from "@/utils/dates";
 
-import React, { useMemo } from "react";
-import { RitualLog } from "../types";
+const INTENSITY = [
+  "bg-zinc-900",
+  "bg-ritual-accent/20",
+  "bg-ritual-accent/40",
+  "bg-ritual-accent/70",
+  "bg-ritual-accent",
+] as const;
 
-interface HeatmapProps {
-  logs: RitualLog[];
-}
-
-export const Heatmap: React.FC<HeatmapProps> = ({ logs }) => {
-  // Cantidad de días a renderizar: 52 semanas * 7 días = 364 días (aprox. 1 año)
-  const daysToRender = 364;
-
-  // Calcula los datos a mostrar en el heatmap usando un memo para optimización
-  const heatmapData = useMemo(() => {
-    const today = new Date();
-    const data = [];
-
-    // Mapeo: fecha (YYYY-MM-DD) -> cantidad de rituales en ese día
-    const logMap: Record<string, number> = {};
-    logs.forEach((log) => {
-      if (log.date) {
-        const dateStr = log.date.split("T")[0] || "";
-        if (dateStr) {
-          logMap[dateStr] = (logMap[dateStr] || 0) + 1;
-        }
-      }
-    });
-
-    // Genera arreglo de días desde hace 364 hasta hoy, con su respectivo conteo
-    for (let i = daysToRender; i >= 0; i--) {
-      const d = new Date(today);
-      d.setDate(d.getDate() - i);
-      const dateStr = d.toISOString().split("T")[0];
-      data.push({
-        date: dateStr,
-        count: logMap[dateStr] || 0,
-      });
+export function Heatmap({ logs }: { logs: RitualLog[] }) {
+  const cells = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const log of logs) {
+      const date = log.date.slice(0, 10);
+      counts.set(date, (counts.get(date) ?? 0) + 1);
     }
-    return data;
+
+    return lastNDays(364).map((date) => ({
+      date,
+      count: counts.get(date) ?? 0,
+    }));
   }, [logs]);
 
-  // Determina la clase de color de intensidad visual según cantidad de rituales en ese día
-  const getColor = (count: number) => {
-    if (count === 0) return "bg-ritual-gray/30";
-    if (count === 1) return "bg-ritual-accent/40";
-    if (count === 2) return "bg-ritual-accent/60";
-    if (count === 3) return "bg-ritual-accent/80";
-    return "bg-ritual-accent shadow-[0_0_10px_rgba(34,197,94,0.7)]";
-  };
+  const max = Math.max(1, ...cells.map((cell) => cell.count));
 
   return (
-    <div className="w-full overflow-x-auto pb-2">
+    <div className="space-y-3">
       <div
-        ref={(el) => {
-          // Auto-scroll horizontal al final, para mostrar la semana más reciente
-          if (el) {
-            el.scrollLeft = el.scrollWidth;
-          }
-        }}
-        className="flex gap-1 min-w-max"
+        className="grid grid-flow-col grid-rows-7 gap-1 overflow-x-auto pb-1"
+        role="img"
+        aria-label="Actividad de rituales en el último año"
       >
-        {/* Dispone las columnas por semana (7 días por columna) */}
-        {Array.from({ length: Math.ceil(heatmapData.length / 7) }).map(
-          (_, weekIndex) => (
-            <div key={weekIndex} className="flex flex-col gap-1">
-              {heatmapData
-                .slice(weekIndex * 7, weekIndex * 7 + 7)
-                .map((day) => (
-                  <div
-                    key={day.date}
-                    title={`${day.date}: ${day.count} Rituales`}
-                    className={`w-3 h-3 rounded-sm transition-all duration-300 hover:scale-125 ${getColor(day.count)}`}
-                  />
-                ))}
-            </div>
-          ),
-        )}
+        {cells.map((cell) => {
+          const level =
+            cell.count === 0 ? 0 : Math.min(4, Math.ceil((cell.count / max) * 4));
+          return (
+            <span
+              key={cell.date}
+              title={`${cell.date}: ${cell.count} rituales`}
+              className={`h-2.5 w-2.5 rounded-sm sm:h-3 sm:w-3 ${INTENSITY[level]}`}
+            />
+          );
+        })}
       </div>
-      {/* Leyenda de intensidad */}
-      <div className="mt-2 flex items-center justify-end text-xs text-zinc-500 gap-1">
-        <span>Inactivo</span>
-        <div className="w-3 h-3 bg-ritual-gray/30 rounded-sm"></div>
-        <div className="w-3 h-3 bg-ritual-accent/40 rounded-sm"></div>
-        <div className="w-3 h-3 bg-ritual-accent rounded-sm"></div>
-        <span>Despierto</span>
+      <div className="flex items-center justify-end gap-1 text-[10px] uppercase tracking-wider text-zinc-600">
+        <span>Menos</span>
+        {INTENSITY.map((className, index) => (
+          <span key={index} className={`h-2.5 w-2.5 rounded-sm ${className}`} />
+        ))}
+        <span>Más</span>
       </div>
     </div>
   );
-};
+}

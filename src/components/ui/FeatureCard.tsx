@@ -12,16 +12,13 @@ import { motion } from "framer-motion";
  * Componente de tarjeta para destacar una característica.
  * @param title - Título de la funcionalidad
  * @param desc - Descripción de la funcionalidad
- * @param index - Índice de la tarjeta (puede usarse para efectos animados o key)
  */
 export const FeatureCard = ({
   title,
   desc,
-  index,
 }: {
   title: string;
   desc: string;
-  index: number;
 }) => (
   <motion.div
     className="feature-card p-8 border border-zinc-900 bg-zinc-950/50 hover:border-ritual-accent/50 transition-all duration-500 group"

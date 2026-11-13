@@ -1,135 +1,82 @@
-import React, { lazy } from "react";
-import { createHashRouter, RouterProvider, Navigate } from "react-router-dom";
+import React, { lazy, Suspense } from "react";
+import { createBrowserRouter, Navigate, RouterProvider } from "react-router-dom";
 import { AppLayout } from "./components/layout/AppLayout";
 import { ErrorBoundary } from "./components/ui/ErrorBoundary";
+import { RouteError } from "./components/ui/RouteError";
+import { ProtectedRoute, AdminRoute } from "./components/auth/ProtectedRoute";
+import { AuthProvider } from "./features/auth/AuthProvider";
+import Loading from "./components/animations/Loading";
 import "./styles/main.css";
-import { useAuthStore } from "./features/auth/stores/useAuthStore";
 
-// Lazy loading primary routes
 const LandingPage = lazy(() => import("./features/auth/pages/LandingPage"));
 const LoginPage = lazy(() => import("./features/auth/pages/LoginPage"));
+const ResetPasswordPage = lazy(() => import("./features/auth/pages/ResetPasswordPage"));
+const AuthCallbackPage = lazy(() => import("./features/auth/pages/AuthCallbackPage"));
+const DashboardPage = lazy(() => import("./features/dashboard/pages/DashboardPage"));
+const HabitsPage = lazy(() => import("./features/rituals/pages/HabitsPage"));
+const GoalsPage = lazy(() => import("./features/goals/pages/GoalsPage"));
+const SocialPage = lazy(() => import("./features/social/pages/SocialPage"));
+const ShopPage = lazy(() => import("./features/shop/pages/ShopPage"));
+const InventoryPage = lazy(() => import("./features/inventory/pages/InventoryPage"));
+const AnalyticsPage = lazy(() => import("./features/analytics/pages/AnalyticsPage"));
+const AchievementsPage = lazy(() => import("./features/gamification/pages/AchievementsPage"));
+const SettingsPage = lazy(() => import("./features/settings/pages/SettingsPage"));
+const NotificationsPage = lazy(() => import("./features/notifications/pages/NotificationsPage"));
+const AdminPage = lazy(() => import("./features/admin/pages/AdminPage"));
+const ProfilePage = lazy(() => import("./features/users/pages/ProfilePage"));
 
-const authLoader = async () => {
-  return useAuthStore.getState().user;
-};
+function page(node: React.ReactNode) {
+  return <Suspense fallback={<Loading />}>{node}</Suspense>;
+}
 
-const protectedLoader = async () => {
-  const user = useAuthStore.getState().user;
-  if (!user) {
-    throw new Error("No estas autorizado");
-  }
-  return user;
-};
-
-const router = createHashRouter([
+const router = createBrowserRouter([
   {
     path: "/",
-    errorElement: (
-      <ErrorBoundary>
-        <div>Error cargando la app</div>
-      </ErrorBoundary>
-    ),
+    errorElement: <RouteError />,
     children: [
-      {
-        index: true,
-        loader: authLoader,
-        element: <LandingPage />,
-      },
-      {
-        path: "login",
-        element: <LoginPage />,
-      },
+      { index: true, element: page(<LandingPage />) },
+      { path: "login", element: page(<LoginPage />) },
+      { path: "reset-password", element: page(<ResetPasswordPage />) },
+      { path: "auth/callback", element: page(<AuthCallbackPage />) },
       {
         path: "app",
-        element: <AppLayout />,
-        loader: protectedLoader,
+        element: (
+          <ProtectedRoute>
+            <AppLayout />
+          </ProtectedRoute>
+        ),
         children: [
+          { index: true, element: <Navigate to="dashboard" replace /> },
+          { path: "dashboard", element: page(<DashboardPage />) },
+          { path: "habits", element: page(<HabitsPage />) },
+          { path: "goals", element: page(<GoalsPage />) },
+          { path: "social", element: page(<SocialPage />) },
+          { path: "shop", element: page(<ShopPage />) },
+          { path: "inventory", element: page(<InventoryPage />) },
+          { path: "analytics", element: page(<AnalyticsPage />) },
+          { path: "achievements", element: page(<AchievementsPage />) },
+          { path: "settings", element: page(<SettingsPage />) },
+          { path: "notifications", element: page(<NotificationsPage />) },
           {
-            path: "dashboard",
-            async lazy() {
-              const { default: Dashboard, dashboardLoader } =
-                await import("./features/dashboard/pages/DashboardPage");
-              return { Component: Dashboard, loader: dashboardLoader };
-            },
+            path: "admin",
+            element: (
+              <AdminRoute>{page(<AdminPage />)}</AdminRoute>
+            ),
           },
-          {
-            path: "habits",
-            async lazy() {
-              const { default: HabitsPage, habitsLoader } =
-                await import("./features/rituals/pages/HabitsPage");
-              return { Component: HabitsPage, loader: habitsLoader };
-            },
-          },
-          {
-            path: "social",
-            async lazy() {
-              const { default: SocialPage } =
-                await import("./features/social/pages/SocialPage");
-              return { Component: SocialPage };
-            },
-          },
-          {
-            path: "shop",
-            async lazy() {
-              const { default: ShopPage } =
-                await import("./features/shop/pages/ShopPage");
-              return { Component: ShopPage };
-            },
-          },
-          {
-            path: "analytics",
-            async lazy() {
-              const { default: AnalyticsPage } =
-                await import("./features/analytics/pages/AnalyticsPage");
-              return { Component: AnalyticsPage };
-            },
-          },
-          {
-            path: "achievements",
-            async lazy() {
-              const { default: AchievementsPage } =
-                await import("./features/gamification/pages/AchievementsPage");
-              return { Component: AchievementsPage };
-            },
-          },
-          {
-            path: "inventory",
-            async lazy() {
-              const { default: InventoryPage } =
-                await import("./features/inventory/pages/InventoryPage");
-              return { Component: InventoryPage };
-            },
-          },
-          {
-            path: "profile/:username",
-            async lazy() {
-              const { default: ProfilePage } =
-                await import("./features/users/pages/ProfilePage");
-              return { Component: ProfilePage };
-            },
-          },
-          {
-            path: "",
-            element: <Navigate to="dashboard" replace />,
-          },
+          { path: "profile/:username", element: page(<ProfilePage />) },
         ],
       },
-      {
-        path: "*",
-        element: <Navigate to="/" replace />,
-      },
+      { path: "*", element: <Navigate to="/" replace /> },
     ],
   },
 ]);
 
-import { AppProvider } from "./contexts/AppContext";
-
 function App() {
   return (
     <ErrorBoundary>
-      <AppProvider>
+      <AuthProvider>
         <RouterProvider router={router} />
-      </AppProvider>
+      </AuthProvider>
     </ErrorBoundary>
   );
 }

@@ -1,150 +1,88 @@
-import React, { useState } from "react";
-import { useParams } from "react-router-dom";
-import { useAuthStore } from "@/features/auth/stores/useAuthStore";
-import { Shield, User as UserIcon, Edit2, Save, X } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { Link, useParams } from "react-router-dom";
+import { Settings, Shield, User as UserIcon, Zap } from "lucide-react";
+import { useAuth } from "@/features/auth/AuthProvider";
+import { profileService } from "@/services/profileService";
+import { useI18n } from "@/i18n";
+import { formatDateTime } from "@/utils/dates";
+import Loading from "@/components/animations/Loading";
 
-const ProfilePage = () => {
+export default function ProfilePage() {
   const { username } = useParams<{ username: string }>();
-  const currentUser = useAuthStore((state) => state.user);
-  const setUser = useAuthStore((state) => state.setUser);
+  const { user: currentUser } = useAuth();
+  const { t } = useI18n();
 
-  const [isEditing, setIsEditing] = useState(false);
-  const [editForm, setEditForm] = useState({
-    avatar_url: "",
+  const isOwn = !username || username === currentUser?.username;
+  const profileQuery = useQuery({
+    queryKey: ["profile-public", username],
+    queryFn: () => profileService.getByUsername(username!),
+    enabled: Boolean(!isOwn && username),
   });
 
-  // TODO: Fetch user data if username !== currentUser.username
-  // For now, simpler implementation assuming current user or placeholder
+  if (isOwn && !currentUser) return <Loading />;
+  if (!isOwn && profileQuery.isLoading) return <Loading />;
 
-  const isCurrentUser =
-    !username || (currentUser && currentUser.username === username);
-  const displayUser = isCurrentUser ? currentUser : null; // Replace null with fetched user
-
-  if (!displayUser) {
+  const user = isOwn ? currentUser : profileQuery.data;
+  if (!user) {
     return (
-      <div className="text-white">Loading profile or user not found...</div>
+      <p className="rounded-xl border border-dashed border-zinc-800 p-8 text-center text-sm text-zinc-500">
+        Usuario no encontrado.
+      </p>
     );
   }
 
-  const startEditing = () => {
-    setEditForm({
-      avatar_url: displayUser.avatar_url || "",
-    });
-    setIsEditing(true);
-  };
-
-  const saveProfile = () => {
-    if (!currentUser) return;
-
-    setUser({
-      ...currentUser,
-      avatar_url: editForm.avatar_url,
-    });
-    setIsEditing(false);
-  };
-
   return (
-    <div className="space-y-8 animate-fade-in">
-      {/* Header del Perfil */}
-      <div className="relative h-48 rounded-xl overflow-hidden bg-gradient-to-r from-zinc-900 to-zinc-800 border border-zinc-800">
-        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center opacity-20 mix-blend-overlay"></div>
-        <div className="absolute bottom-0 left-0 w-full p-6 bg-gradient-to-t from-black/80 to-transparent flex items-end gap-6">
-          <div className="w-24 h-24 rounded-full bg-zinc-950 border-4 border-zinc-900 flex items-center justify-center text-4xl font-display font-bold text-ritual-accent shadow-xl overflow-hidden relative group">
-            {displayUser.avatar_url ? (
-              <img
-                src={displayUser.avatar_url}
-                alt={displayUser.username}
-                className="w-full h-full object-cover"
-              />
+    <div className="mx-auto max-w-2xl space-y-6">
+      <section className="rounded-2xl border border-zinc-800 bg-zinc-950 p-6">
+        <div className="flex flex-col items-center gap-4 text-center sm:flex-row sm:text-left">
+          <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full border border-zinc-700 bg-zinc-900 font-display text-3xl font-bold text-ritual-accent">
+            {user.avatar_url ? (
+              <img src={user.avatar_url} alt="" className="h-full w-full object-cover" />
             ) : (
-              displayUser.username.charAt(0).toUpperCase()
-            )}
-
-            {isEditing && (
-              <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                <Edit2 size={20} className="text-white" />
-              </div>
+              user.username.charAt(0).toUpperCase()
             )}
           </div>
 
-          <div className="mb-2 flex-1">
-            <h1 className="text-3xl font-display font-bold text-white flex items-center gap-2">
-              {displayUser.username}
-              {displayUser.isAdmin && (
-                <Shield size={20} className="text-yellow-500" />
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-start">
+              <h1 className="font-display text-2xl font-bold text-white">{user.username}</h1>
+              {user.isAdmin && (
+                <span className="inline-flex items-center gap-1 rounded border border-yellow-500/30 bg-yellow-500/10 px-2 py-0.5 text-[10px] uppercase text-yellow-500">
+                  <Shield size={10} aria-hidden="true" /> Admin
+                </span>
               )}
-            </h1>
-            <p className="text-zinc-400 text-sm flex items-center gap-2">
-              <span className="px-2 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-xs uppercase tracking-wider text-ritual-accent">
-                {displayUser.rank}
-              </span>
-              <span>•</span>
-              <span>
-                Joined on{" "}
-                {new Date(displayUser.created_at).toLocaleDateString()}
-              </span>
+            </div>
+            <p className="text-sm uppercase tracking-widest text-ritual-accent">{user.rank}</p>
+            <p className="mt-1 text-xs text-zinc-600">
+              Iniciado el {formatDateTime(user.created_at)}
             </p>
           </div>
 
-          {isCurrentUser && !isEditing && (
-            <button
-              onClick={startEditing}
-              className="bg-zinc-800 hover:bg-zinc-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
+          {isOwn && (
+            <Link
+              to="/app/settings"
+              className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-zinc-700 px-4 text-sm text-zinc-300 hover:border-ritual-accent hover:text-ritual-accent"
             >
-              <Edit2 size={16} /> Edit Profile
-            </button>
+              <Settings size={16} aria-hidden="true" /> {t("settings.title")}
+            </Link>
           )}
         </div>
-      </div>
+      </section>
 
-      {isEditing && (
-        <div className="bg-zinc-950 border border-zinc-800 p-6 rounded-xl animate-fade-in-up">
-          <h3 className="text-lg font-bold text-white mb-4">Edit Profile</h3>
-          <div className="space-y-4">
-            <div>
-              <label className="block text-zinc-400 text-sm mb-2">
-                Avatar URL
-              </label>
-              <input
-                type="text"
-                value={editForm.avatar_url}
-                onChange={(e) =>
-                  setEditForm({ ...editForm, avatar_url: e.target.value })
-                }
-                placeholder="https://example.com/image.jpg"
-                className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-2 text-white focus:border-ritual-accent outline-none"
-              />
-            </div>
-            <div className="flex justify-end gap-3">
-              <button
-                onClick={() => setIsEditing(false)}
-                className="px-4 py-2 text-zinc-400 hover:text-white"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={saveProfile}
-                className="bg-ritual-accent text-black font-bold px-6 py-2 rounded-lg hover:bg-emerald-400"
-              >
-                Save Changes
-              </button>
-            </div>
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+        <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-4">
+          <div className="mb-1 flex items-center gap-2 text-[10px] uppercase tracking-wider text-zinc-500">
+            <Zap size={14} aria-hidden="true" /> Esencia
           </div>
+          <div className="font-mono text-2xl text-ritual-accent">{user.essence}</div>
         </div>
-      )}
-
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-zinc-900/50 border border-zinc-800 p-6 rounded-xl">
-          <h3 className="text-zinc-500 uppercase text-xs font-bold tracking-wider mb-2">
-            Total Essence
-          </h3>
-          <p className="text-3xl font-mono text-white">{displayUser.essence}</p>
+        <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-4">
+          <div className="mb-1 flex items-center gap-2 text-[10px] uppercase tracking-wider text-zinc-500">
+            <UserIcon size={14} aria-hidden="true" /> Inventario
+          </div>
+          <div className="font-mono text-2xl text-white">{user.inventory.length}</div>
         </div>
-        {/* Add more stats here */}
       </div>
     </div>
   );
-};
-
-export default ProfilePage;
+}

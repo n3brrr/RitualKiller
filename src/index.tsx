@@ -2,6 +2,8 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import App from "./App";
+import { I18nProvider } from "./i18n";
+import { initObservability } from "./lib/observability";
 import "@fontsource/cinzel/400.css";
 import "@fontsource/cinzel/700.css";
 import "@fontsource/cinzel/900.css";
@@ -9,27 +11,28 @@ import "@fontsource/inter/300.css";
 import "@fontsource/inter/400.css";
 import "@fontsource/inter/600.css";
 import "@fontsource/inter/800.css";
-import "./styles/main.css";
 
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 1000 * 60 * 5, // 5 minutes
-      retry: 2,
+      staleTime: 1000 * 60,
+      retry: 1,
+      refetchOnWindowFocus: false,
     },
   },
 });
 
-const rootElement = document.getElementById("root");
-if (!rootElement) {
-  throw new Error("No se puede encontrar el elemento");
-}
+initObservability();
 
-const root = ReactDOM.createRoot(rootElement);
-root.render(
+const rootElement = document.getElementById("root");
+if (!rootElement) throw new Error("No se puede encontrar el elemento #root");
+
+ReactDOM.createRoot(rootElement).render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
-      <App />
+      <I18nProvider>
+        <App />
+      </I18nProvider>
     </QueryClientProvider>
   </React.StrictMode>,
 );

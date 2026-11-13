@@ -1,318 +1,195 @@
-/**
- * AdvancedAnalytics.tsx
- *
- * Este componente presenta un panel avanzado de analíticas para el usuario,
- * visualizando diferentes métricas y tendencias relacionadas con rituales y sus registros,
- * utilizando distintos tipos de gráficas para mostrar el progreso semanal, mensual,
- * distribución por dificultad y días más productivos.
- */
-
-import React, { useMemo } from "react";
+import { useMemo, useState } from "react";
 import {
-  LineChart,
-  Line,
-  BarChart,
   Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  Legend,
+  Line,
+  LineChart,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
   XAxis,
   YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
 } from "recharts";
-import { Calendar, TrendingUp, Target } from "lucide-react";
-import { useAuthStore } from "../../features/auth/stores/useAuthStore";
-import { useRitualStore } from "../../features/rituals/stores/useRitualStore";
+import { Calendar, Download, TrendingUp, Target } from "lucide-react";
+import { useRituals } from "@/hooks/useRituals";
+import { useI18n } from "@/i18n";
+import {
+  buildDailySeries,
+  buildDifficultySeries,
+  buildWeekdaySeries,
+  calculateCompletionRate,
+  filterLogsByDays,
+} from "@/utils/analytics";
+import { downloadFile, exportToCSV } from "@/utils/exportImport";
+import Loading from "@/components/animations/Loading";
 
-const AdvancedAnalytics: React.FC = () => {
-  const { rituals, logs } = useRitualStore();
-  const user = useAuthStore((state) => state.user);
+const RANGES = [7, 30, 90] as const;
+const COLORS = ["#22c55e", "#eab308", "#ef4444"];
 
-  // Agrupa los logs de los últimos 7 días por semana para mostrar progreso semanal
-  const weeklyData = useMemo(() => {
-    const weeks: { [key: string]: number } = {};
-    const today = new Date();
+export function AdvancedAnalytics() {
+  const { rituals, logs, isLoading } = useRituals();
+  const { t } = useI18n();
+  const [range, setRange] = useState<(typeof RANGES)[number]>(7);
 
-    for (let i = 6; i >= 0; i--) {
-      const date = new Date(today);
-      date.setDate(date.getDate() - i);
-      const weekKey = `Week ${date.getWeek()}`;
-      weeks[weekKey] = 0;
-    }
+  const filteredLogs = useMemo(() => filterLogsByDays(logs, range), [logs, range]);
+  const dailySeries = useMemo(
+    () => buildDailySeries(logs, range, new Date(), "es"),
+    [logs, range],
+  );
+  const difficultySeries = useMemo(
+    () => buildDifficultySeries(rituals, filteredLogs),
+    [rituals, filteredLogs],
+  );
+  const weekdaySeries = useMemo(() => buildWeekdaySeries(filteredLogs), [filteredLogs]);
+  const completionRate = useMemo(
+    () => calculateCompletionRate(rituals, filteredLogs, range),
+    [rituals, filteredLogs, range],
+  );
 
-    logs.forEach((log) => {
-      const logDate = new Date(log.date);
-      const weekKey = `Week ${logDate.getWeek()}`;
-      if (weeks[weekKey] !== undefined) {
-        weeks[weekKey]++;
-      }
-    });
+  const handleExport = () => {
+    const csv = exportToCSV(rituals, filteredLogs);
+    downloadFile(csv, `ritualkiller-analytics-${range}d.csv`, "text/csv;charset=utf-8");
+  };
 
-    return Object.entries(weeks).map(([name, completions]) => ({
-      name,
-      Completions: completions,
-    }));
-  }, [logs]);
-
-  // Distribución de finalizaciones agrupadas por dificultad del ritual
-  const difficultyData = useMemo(() => {
-    const distribution: { [key: string]: number } = {
-      novice: 0,
-      adept: 0,
-      master: 0,
-    };
-
-    rituals.forEach((ritual) => {
-      // Cuenta cuántas veces se completó cada ritual según la dificultad
-      const completed = logs.filter((l) => l.ritualId === ritual.id).length;
-      const current = distribution[ritual.difficulty];
-      if (current !== undefined) {
-        distribution[ritual.difficulty] = current + completed;
-      }
-    });
-
-    return Object.entries(distribution)
-      .filter(([_, value]) => value > 0)
-      .map(([name, value]) => ({
-        name:
-          name === "novice"
-            ? "Novice"
-            : name === "adept"
-              ? "Intermediate"
-              : "Master",
-        Completions: value,
-      }));
-  }, [rituals, logs]);
-
-  // Tendencia de rituales completados por mes en los últimos 6 meses
-  const monthlyData = useMemo(() => {
-    const months: { [key: string]: number } = {};
-    const today = new Date();
-
-    for (let i = 5; i >= 0; i--) {
-      const date = new Date(today);
-      date.setMonth(date.getMonth() - i);
-      const monthKey = date.toLocaleDateString("en-US", { month: "short" });
-      months[monthKey] = 0;
-    }
-
-    logs.forEach((log) => {
-      const logDate = new Date(log.date);
-      const monthKey = logDate.toLocaleDateString("en-US", { month: "short" });
-      if (months[monthKey] !== undefined) {
-        months[monthKey]++;
-      }
-    });
-
-    return Object.entries(months).map(([name, completions]) => ({
-      name,
-      Completions: completions,
-    }));
-  }, [logs]);
-
-  // Total de rituales realizados agrupados por día de la semana (p.ej., "Lun", "Mar", ...)
-  const dayOfWeekData = useMemo(() => {
-    const days: { [key: string]: number } = {
-      Mon: 0,
-      Tue: 0,
-      Wed: 0,
-      Thu: 0,
-      Fri: 0,
-      Sat: 0,
-      Sun: 0,
-    };
-
-    logs.forEach((log) => {
-      const date = new Date(log.date);
-      const dayKey = date.toLocaleDateString("en-US", { weekday: "short" });
-      if (days[dayKey] !== undefined) {
-        days[dayKey]++;
-      }
-    });
-
-    return Object.entries(days).map(([name, completions]) => ({
-      name,
-      Completions: completions,
-    }));
-  }, [logs]);
-
-  const COLORS = ["#22c55e", "#eab308", "#ef4444"];
-
-  // Porcentaje de completitud de rituales según los logs de los últimos 30 días
-  const completionRate =
-    rituals.length > 0 ? (logs.length / (rituals.length * 30)) * 100 : 0;
+  if (isLoading) return <Loading />;
 
   return (
-    <div className="space-y-8">
-      <div className="flex items-center gap-2 mb-6">
-        <TrendingUp className="text-ritual-accent" size={24} />
-        <h2 className="text-2xl font-display font-bold">Advanced Analytics</h2>
+    <div className="space-y-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex gap-2" role="group" aria-label={t("analytics.range")}>
+          {RANGES.map((value) => (
+            <button
+              key={value}
+              type="button"
+              onClick={() => setRange(value)}
+              aria-pressed={range === value}
+              className={`min-h-11 rounded-lg border px-4 text-sm font-bold ${
+                range === value
+                  ? "border-ritual-accent bg-ritual-accent/10 text-ritual-accent"
+                  : "border-zinc-800 bg-zinc-950 text-zinc-400 hover:text-white"
+              }`}
+            >
+              {value} días
+            </button>
+          ))}
+        </div>
+        <button
+          type="button"
+          onClick={handleExport}
+          className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-zinc-800 bg-zinc-950 px-4 text-sm font-bold text-zinc-300 hover:border-ritual-accent hover:text-ritual-accent"
+        >
+          <Download size={16} aria-hidden="true" /> {t("common.export")} CSV
+        </button>
       </div>
 
-      {/* Tarjetas de estadística generales */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-5">
-          <div className="text-zinc-500 text-xs uppercase mb-1">
-            Completion Rate
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+        <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-4">
+          <div className="mb-1 flex items-center gap-2 text-[10px] uppercase tracking-wider text-zinc-500">
+            <Target size={14} aria-hidden="true" /> Tasa
           </div>
-          <div className="text-2xl font-mono text-ritual-accent">
-            {completionRate.toFixed(1)}%
+          <div className="font-mono text-2xl text-ritual-accent">
+            {Math.round(completionRate)}%
           </div>
         </div>
-        <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-5">
-          <div className="text-zinc-500 text-xs uppercase mb-1">
-            Total Completed
+        <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-4">
+          <div className="mb-1 flex items-center gap-2 text-[10px] uppercase tracking-wider text-zinc-500">
+            <TrendingUp size={14} aria-hidden="true" /> Completados
           </div>
-          <div className="text-2xl font-mono text-white">{logs.length}</div>
+          <div className="font-mono text-2xl text-white">{filteredLogs.length}</div>
         </div>
-        <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-5">
-          <div className="text-zinc-500 text-xs uppercase mb-1">
-            Active Rituals
+        <div className="col-span-2 rounded-xl border border-zinc-800 bg-zinc-950 p-4 sm:col-span-1">
+          <div className="mb-1 flex items-center gap-2 text-[10px] uppercase tracking-wider text-zinc-500">
+            <Calendar size={14} aria-hidden="true" /> Rango
           </div>
-          <div className="text-2xl font-mono text-white">{rituals.length}</div>
-        </div>
-        <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-5">
-          <div className="text-zinc-500 text-xs uppercase mb-1">
-            Best Streak
-          </div>
-          <div className="text-2xl font-mono text-white">
-            {Math.max(...rituals.map((r) => r.streak || 0), 0)}
-          </div>
+          <div className="font-mono text-2xl text-white">{range} días</div>
         </div>
       </div>
 
-      {/* Gráfico de línea: progreso semanal */}
-      <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-6">
-        <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
-          <Calendar size={20} className="text-ritual-accent" />
-          Weekly Progress
-        </h3>
-        <ResponsiveContainer width="100%" height={300}>
-          <LineChart data={weeklyData}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
-            <XAxis dataKey="name" stroke="#71717a" />
-            <YAxis stroke="#71717a" />
-            <Tooltip
-              contentStyle={{
-                backgroundColor: "#18181b",
-                border: "1px solid #27272a",
-                borderRadius: "8px",
-              }}
-            />
-            <Legend />
-            <Line
-              type="monotone"
-              dataKey="Completions"
-              stroke="#22c55e"
-              strokeWidth={2}
-              dot={{ fill: "#22c55e", r: 4 }}
-            />
-          </LineChart>
-        </ResponsiveContainer>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Gráfico de barras: tendencia por mes */}
-        <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-6">
-          <h3 className="text-lg font-bold mb-4">Monthly Trends</h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={monthlyData}>
+      <section className="rounded-xl border border-zinc-800 bg-zinc-950 p-4">
+        <h2 className="mb-4 text-sm font-bold uppercase tracking-wider text-zinc-300">
+          Completados por día
+        </h2>
+        <div className="h-64 w-full">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={dailySeries}>
               <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
-              <XAxis dataKey="name" stroke="#71717a" />
-              <YAxis stroke="#71717a" />
+              <XAxis dataKey="label" stroke="#71717a" fontSize={11} />
+              <YAxis allowDecimals={false} stroke="#71717a" fontSize={11} />
               <Tooltip
-                contentStyle={{
-                  backgroundColor: "#18181b",
-                  border: "1px solid #27272a",
-                  borderRadius: "8px",
-                }}
+                contentStyle={{ background: "#09090b", border: "1px solid #27272a" }}
               />
-              <Bar dataKey="Completions" fill="#22c55e" radius={[8, 8, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-
-        {/* Gráfico circular: distribución por dificultad */}
-        <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-6">
-          <h3 className="text-lg font-bold mb-4">Difficulty Distribution</h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <PieChart>
-              <Pie
-                data={difficultyData}
-                cx="50%"
-                cy="50%"
-                labelLine={false}
-                label={({ name, percent }) =>
-                  `${name} ${(percent * 100).toFixed(0)}%`
-                }
-                outerRadius={100}
-                fill="#8884d8"
+              <Line
+                type="monotone"
                 dataKey="Completions"
-              >
-                {difficultyData.map((entry, index) => (
-                  <Cell
-                    key={`cell-${index}`}
-                    fill={COLORS[index % COLORS.length]}
-                  />
-                ))}
-              </Pie>
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: "#18181b",
-                  border: "1px solid #27272a",
-                  borderRadius: "8px",
-                }}
+                stroke="#22c55e"
+                strokeWidth={2}
+                dot={false}
               />
-            </PieChart>
+            </LineChart>
           </ResponsiveContainer>
         </div>
-      </div>
+      </section>
 
-      {/* Gráfico de barras: días más productivos */}
-      <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-6">
-        <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
-          <Target size={20} className="text-ritual-accent" />
-          Most Productive Days
-        </h3>
-        <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={dayOfWeekData}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
-            <XAxis dataKey="name" stroke="#71717a" />
-            <YAxis stroke="#71717a" />
-            <Tooltip
-              contentStyle={{
-                backgroundColor: "#18181b",
-                border: "1px solid #27272a",
-                borderRadius: "8px",
-              }}
-            />
-            <Bar dataKey="Completions" fill="#22c55e" radius={[8, 8, 0, 0]} />
-          </BarChart>
-        </ResponsiveContainer>
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <section className="rounded-xl border border-zinc-800 bg-zinc-950 p-4">
+          <h2 className="mb-4 text-sm font-bold uppercase tracking-wider text-zinc-300">
+            Por día de la semana
+          </h2>
+          <div className="h-56 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={weekdaySeries}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
+                <XAxis dataKey="name" stroke="#71717a" fontSize={11} />
+                <YAxis allowDecimals={false} stroke="#71717a" fontSize={11} />
+                <Tooltip
+                  contentStyle={{ background: "#09090b", border: "1px solid #27272a" }}
+                />
+                <Bar dataKey="Completions" fill="#22c55e" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </section>
+
+        <section className="rounded-xl border border-zinc-800 bg-zinc-950 p-4">
+          <h2 className="mb-4 text-sm font-bold uppercase tracking-wider text-zinc-300">
+            Por dificultad
+          </h2>
+          {difficultySeries.length === 0 ? (
+            <p className="py-12 text-center text-sm text-zinc-500">
+              Sin datos en este rango.
+            </p>
+          ) : (
+            <div className="h-56 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={difficultySeries}
+                    dataKey="Completions"
+                    nameKey="name"
+                    innerRadius={45}
+                    outerRadius={80}
+                    paddingAngle={3}
+                  >
+                    {difficultySeries.map((entry, index) => (
+                      <Cell key={entry.name} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    contentStyle={{ background: "#09090b", border: "1px solid #27272a" }}
+                  />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+        </section>
       </div>
     </div>
   );
-};
-
-// Añade al prototipo de Date un método para obtener el número de semana del año (ISO-8601)
-
-declare global {
-  interface Date {
-    getWeek(): number;
-  }
 }
-
-Date.prototype.getWeek = function () {
-  const d = new Date(
-    Date.UTC(this.getFullYear(), this.getMonth(), this.getDate()),
-  );
-  const dayNum = d.getUTCDay() || 7;
-  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
-  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-  return Math.ceil(((d.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
-};
 
 export default AdvancedAnalytics;

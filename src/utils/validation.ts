@@ -1,33 +1,54 @@
-export const validateEmail = (email: string): boolean => {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailRegex.test(email);
-};
+const DIFFICULTIES = ["novice", "adept", "master"] as const;
+const FREQUENCIES = ["daily", "weekly"] as const;
 
-export const validatePassword = (password: string): { valid: boolean; message?: string } => {
-  if (password.length < 5) {
-    return { valid: false, message: "La contraseña debe tener al menos 5 caracteres" };
+export function validateEmail(email: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+export function validatePassword(password: string): {
+  valid: boolean;
+  message?: string;
+} {
+  if (password.length < 6) {
+    return { valid: false, message: "La contraseña debe tener al menos 6 caracteres" };
   }
   return { valid: true };
-};
+}
 
-export const validateRitual = (ritual: {
+export function validateUsername(username: string): {
+  valid: boolean;
+  message?: string;
+} {
+  if (username.trim().length < 2 || username.trim().length > 30) {
+    return { valid: false, message: "El usuario debe tener entre 2 y 30 caracteres" };
+  }
+  if (!/^[a-zA-Z0-9_]+$/.test(username.trim())) {
+    return { valid: false, message: "Solo letras, números y guiones bajos" };
+  }
+  return { valid: true };
+}
+
+export function validateRitual(ritual: {
   title: string;
   description: string;
   difficulty: string;
-}): { valid: boolean; message?: string } => {
+}): { valid: boolean; message?: string } {
   if (!ritual.title || ritual.title.trim().length === 0) {
     return { valid: false, message: "El título del ritual es requerido" };
   }
   if (ritual.title.length > 100) {
     return { valid: false, message: "El título no puede exceder 100 caracteres" };
   }
-  if (!["novice", "adept", "master"].includes(ritual.difficulty)) {
+  if (ritual.description.length > 500) {
+    return { valid: false, message: "La descripción no puede exceder 500 caracteres" };
+  }
+  if (!DIFFICULTIES.includes(ritual.difficulty as (typeof DIFFICULTIES)[number])) {
     return { valid: false, message: "Dificultad inválida" };
   }
   return { valid: true };
-};
+}
 
-export const validateGoal = (goal: string): { valid: boolean; message?: string } => {
+export function validateGoal(goal: string): { valid: boolean; message?: string } {
   if (!goal || goal.trim().length === 0) {
     return { valid: false, message: "El objetivo es requerido" };
   }
@@ -35,4 +56,60 @@ export const validateGoal = (goal: string): { valid: boolean; message?: string }
     return { valid: false, message: "El objetivo no puede exceder 200 caracteres" };
   }
   return { valid: true };
-};
+}
+
+export function validateContent(content: string, max = 500): {
+  valid: boolean;
+  message?: string;
+} {
+  const clean = content.trim();
+  if (!clean) return { valid: false, message: "El contenido no puede estar vacío" };
+  if (clean.length > max) {
+    return { valid: false, message: `El contenido no puede exceder ${max} caracteres` };
+  }
+  return { valid: true };
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+/** Validates the backup shape before touching the database. */
+export function validateImportData(data: unknown): {
+  valid: boolean;
+  errors: string[];
+} {
+  const errors: string[] = [];
+  if (!isRecord(data)) {
+    return { valid: false, errors: ["El archivo no contiene un objeto JSON"] };
+  }
+  if (!Array.isArray(data.rituals)) errors.push("Los rituales deben ser un array");
+  if (!Array.isArray(data.logs)) errors.push("Los logs deben ser un array");
+
+  if (Array.isArray(data.rituals)) {
+    data.rituals.forEach((ritual, index) => {
+      if (!isRecord(ritual) || typeof ritual.title !== "string") {
+        errors.push(`Ritual ${index + 1}: título inválido`);
+      } else if (!DIFFICULTIES.includes(ritual.difficulty as (typeof DIFFICULTIES)[number])) {
+        errors.push(`Ritual ${index + 1}: dificultad inválida`);
+      } else if (!FREQUENCIES.includes(ritual.frequency as (typeof FREQUENCIES)[number])) {
+        errors.push(`Ritual ${index + 1}: frecuencia inválida`);
+      }
+    });
+  }
+
+  if (Array.isArray(data.logs)) {
+    data.logs.forEach((log, index) => {
+      if (
+        !isRecord(log) ||
+        typeof log.ritualId !== "string" ||
+        typeof log.date !== "string" ||
+        !/^\d{4}-\d{2}-\d{2}$/.test(log.date)
+      ) {
+        errors.push(`Log ${index + 1}: formato inválido`);
+      }
+    });
+  }
+
+  return { valid: errors.length === 0, errors };
+}

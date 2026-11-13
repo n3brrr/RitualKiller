@@ -1,180 +1,117 @@
-import React, { useMemo } from "react";
-import { Trophy, Lock, Unlock } from "lucide-react";
-import { Achievement, Rarity } from "../../types";
-import {
-  ACHIEVEMENTS,
-  calculateAchievementProgress,
-  getUnlockedAchievements,
-} from "../../data/achievements";
-import { useAuthStore } from "../../features/auth/stores/useAuthStore";
-import { useRitualStore } from "../../features/rituals/stores/useRitualStore";
+import { Lock, Trophy, Unlock } from "lucide-react";
+import { useAchievements } from "@/hooks/useAchievements";
+import { useI18n } from "@/i18n";
+import { formatDateTime } from "@/utils/dates";
+import type { Achievement } from "@/types";
+import Loading from "@/components/animations/Loading";
 
-const AchievementsList: React.FC = () => {
-  // Obtener datos del usuario y rituales desde los stores globales
-  const user = useAuthStore((state) => state.user);
-  const { rituals, logs } = useRitualStore();
+const RARITY_STYLES = {
+  common: "border-zinc-700 text-zinc-300",
+  rare: "border-blue-500/40 text-blue-400",
+  legendary: "border-yellow-500/40 text-yellow-400",
+} as const;
 
-  // Calcula el progreso real de cada logro para el usuario actual
-  const achievementsWithProgress = useMemo(() => {
-    if (!user) return [];
+const CATEGORY_LABELS: Record<Achievement["category"], string> = {
+  streak: "Rachas",
+  essence: "Esencia",
+  rituals: "Rituales",
+  social: "Comunidad",
+  special: "Especiales",
+};
 
-    return ACHIEVEMENTS.map((ach) => {
-      const progress = calculateAchievementProgress(ach, {
-        rituals,
-        logs,
-        essence: user.essence,
-      });
+export function AchievementsList() {
+  const { achievements, unlockedCount, isLoading, error } = useAchievements();
+  const { t } = useI18n();
 
-      return {
-        ...ach,
-        progress,
-        unlockedAt:
-          progress >= ach.target ? new Date().toISOString() : undefined,
-      } as Achievement;
-    });
-  }, [user, rituals, logs]);
-
-  // Filtra los logros desbloqueados y bloqueados
-  const unlocked = getUnlockedAchievements(achievementsWithProgress);
-  const locked = achievementsWithProgress.filter((a) => !a.unlockedAt);
-
-  // Devuelve clases de color según la rareza del logro
-  const getRarityColor = (rarity: Rarity) => {
-    switch (rarity) {
-      case "legendary":
-        return "border-yellow-500/50 bg-yellow-500/10";
-      case "rare":
-        return "border-purple-500/50 bg-purple-500/10";
-      default:
-        return "border-zinc-500/50 bg-zinc-500/10";
-    }
-  };
-
-  // Devuelve color de texto para los badges según la rareza
-  const getRarityTextColor = (rarity: Rarity) => {
-    switch (rarity) {
-      case "legendary":
-        return "text-yellow-500";
-      case "rare":
-        return "text-purple-500";
-      default:
-        return "text-zinc-400";
-    }
-  };
+  if (isLoading) return <Loading />;
+  if (error) {
+    return <p className="text-sm text-red-400">No se pudieron cargar los logros: {error.message}</p>;
+  }
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Trophy className="text-ritual-accent" size={24} />
-          <h2 className="text-2xl font-display font-bold">Logros</h2>
-        </div>
-        <div className="text-sm text-zinc-500">
-          {unlocked.length} / {achievementsWithProgress.length} Desbloqueados
-        </div>
-      </div>
+      <p className="text-sm text-zinc-400">
+        {unlockedCount} / {achievements.length} {t("achievements.unlocked").toLowerCase()}
+      </p>
 
-      {/* Sección de logros desbloqueados */}
-      {unlocked.length > 0 && (
-        <div>
-          <h3 className="text-sm font-bold text-zinc-400 uppercase tracking-wider mb-4 flex items-center gap-2">
-            <Unlock size={16} />
-            Desbloqueados
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-            {unlocked.map((achievement) => (
-              <div
-                key={achievement.id}
-                className={`bg-zinc-950 border-2 rounded-xl p-5 ${getRarityColor(achievement.rarity)}`}
-              >
-                <div className="flex items-start justify-between mb-3">
-                  <div className="text-4xl">{achievement.icon}</div>
-                  <span
-                    className={`text-xs px-2 py-1 rounded border ${getRarityTextColor(achievement.rarity)} border-current`}
+      {(Object.keys(CATEGORY_LABELS) as Achievement["category"][]).map((category) => {
+        const items = achievements.filter((achievement) => achievement.category === category);
+        if (items.length === 0) return null;
+
+        return (
+          <section key={category} aria-label={CATEGORY_LABELS[category]}>
+            <h2 className="mb-3 text-xs font-bold uppercase tracking-widest text-zinc-500">
+              {CATEGORY_LABELS[category]}
+            </h2>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              {items.map((achievement) => {
+                const unlocked = Boolean(achievement.unlockedAt);
+                const progress = Math.min(
+                  100,
+                  Math.round((achievement.progress / achievement.target) * 100),
+                );
+
+                return (
+                  <article
+                    key={achievement.id}
+                    className={`rounded-xl border bg-zinc-950 p-4 ${
+                      unlocked ? RARITY_STYLES[achievement.rarity] : "border-zinc-900 opacity-80"
+                    }`}
                   >
-                    {achievement.rarity === "common"
-                      ? "Común"
-                      : achievement.rarity === "rare"
-                        ? "Raro"
-                        : "Legendario"}
-                  </span>
-                </div>
-                <h3 className="font-bold text-lg text-white mb-1">
-                  {achievement.name}
-                </h3>
-                <p className="text-zinc-400 text-sm mb-3">
-                  {achievement.description}
-                </p>
-                {achievement.unlockedAt && (
-                  <div className="text-xs text-ritual-accent">
-                    Desbloqueado:{" "}
-                    {new Date(achievement.unlockedAt).toLocaleDateString()}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Sección de logros bloqueados con barra de progreso */}
-      {locked.length > 0 && (
-        <div>
-          <h3 className="text-sm font-bold text-zinc-400 uppercase tracking-wider mb-4 flex items-center gap-2">
-            <Lock size={16} />
-            Bloqueados
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {locked.map((achievement) => {
-              const progressPercent =
-                (achievement.progress / achievement.target) * 100;
-
-              return (
-                <div
-                  key={achievement.id}
-                  className="bg-zinc-950 border border-zinc-800 rounded-xl p-5 opacity-60"
-                >
-                  <div className="flex items-start justify-between mb-3">
-                    {/* Icono en escala de grises para indicar que está bloqueado */}
-                    <div className="text-4xl grayscale">{achievement.icon}</div>
-                    <span className="text-xs px-2 py-1 rounded border border-zinc-700 text-zinc-600">
-                      {achievement.rarity === "common"
-                        ? "Común"
-                        : achievement.rarity === "rare"
-                          ? "Raro"
-                          : "Legendario"}
-                    </span>
-                  </div>
-                  <h3 className="font-bold text-lg text-zinc-500 mb-1">
-                    {achievement.name}
-                  </h3>
-                  <p className="text-zinc-600 text-sm mb-3">
-                    {achievement.description}
-                  </p>
-
-                  {/* Barra de progreso visual para el logro */}
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-xs text-zinc-500">
-                      <span>Progreso</span>
-                      <span>
-                        {achievement.progress} / {achievement.target}
+                    <div className="flex items-start gap-3">
+                      <span className="text-2xl" aria-hidden="true">
+                        {achievement.icon}
                       </span>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center justify-between gap-2">
+                          <h3 className="font-bold text-white">{achievement.name}</h3>
+                          {unlocked ? (
+                            <Unlock
+                              size={16}
+                              className="shrink-0 text-ritual-accent"
+                              aria-label={t("achievements.unlocked")}
+                            />
+                          ) : (
+                            <Lock
+                              size={16}
+                              className="shrink-0 text-zinc-600"
+                              aria-label={t("achievements.locked")}
+                            />
+                          )}
+                        </div>
+                        <p className="mt-1 text-sm text-zinc-500">{achievement.description}</p>
+                      </div>
                     </div>
-                    <div className="h-2 bg-zinc-900 rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-ritual-accent transition-all duration-500"
-                        style={{ width: `${progressPercent}%` }}
-                      />
+
+                    <div className="mt-3">
+                      <div className="mb-1 flex justify-between text-[10px] uppercase tracking-wider text-zinc-500">
+                        <span>
+                          {achievement.progress} / {achievement.target}
+                        </span>
+                        <span>{progress}%</span>
+                      </div>
+                      <div className="h-1.5 overflow-hidden rounded-full bg-zinc-900">
+                        <div
+                          className={`h-full ${unlocked ? "bg-ritual-accent" : "bg-zinc-600"}`}
+                          style={{ width: `${progress}%` }}
+                        />
+                      </div>
+                      {achievement.unlockedAt && (
+                        <p className="mt-2 flex items-center gap-1 text-[10px] text-zinc-500">
+                          <Trophy size={10} aria-hidden="true" />
+                          {formatDateTime(achievement.unlockedAt)}
+                        </p>
+                      )}
                     </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
+                  </article>
+                );
+              })}
+            </div>
+          </section>
+        );
+      })}
     </div>
   );
-};
+}
 
 export default AchievementsList;

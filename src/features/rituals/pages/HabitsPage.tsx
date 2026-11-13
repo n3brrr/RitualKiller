@@ -1,416 +1,401 @@
-import React, { useState, lazy, Suspense } from "react";
-import { Frequency, Ritual, RitualLog } from "@/types";
-import { Plus, PenTool, Sparkles, BookOpen, Check } from "lucide-react";
-import { generateRitualSuggestions } from "@/utils/aiRitualGenerator";
-import RitualItem from "@/components/rituals/RitualCard";
+import { useState } from "react";
+import { BookOpen, Check, PenTool, Plus, Sparkles, X } from "lucide-react";
+import RitualCard from "@/components/rituals/RitualCard";
+import RitualLibrary from "@/components/rituals/RitualLibrary";
 import Loading from "@/components/animations/Loading";
-import { ritualService } from "@/services/api/ritualService";
-import { useAuthStore } from "@/features/auth/stores/useAuthStore";
-import { useRitualStore } from "@/features/rituals/stores/useRitualStore";
-import { useLoaderData } from "react-router-dom";
+import { useAuth } from "@/features/auth/AuthProvider";
+import { useRituals } from "@/hooks/useRituals";
+import { useI18n } from "@/i18n";
+import { generateRitualSuggestions } from "@/services/ai/ollamaService";
+import type { Difficulty, Frequency, Ritual } from "@/types";
+import type { RitualTemplate } from "@/data/ritualLibrary";
+import { isRitualCompleted } from "@/utils/analytics";
+import { toDateKey } from "@/utils/dates";
+import { validateRitual } from "@/utils/validation";
 
-// Loader para React Router v7
-export const habitsLoader = async () => {
-  const user = useAuthStore.getState().user;
-  if (!user) return [];
-  return ritualService.getRituals(user.id);
-};
+type CreateMode = "manual" | "ai";
 
-// Carga diferenciada (lazy loading) de la biblioteca de rituales para optimizar rendimiento
-const RitualLibrary = lazy(() => import("@/components/rituals/RitualLibrary"));
+const BASE_REWARD: Record<Difficulty, number> = { novice: 10, adept: 25, master: 50 };
 
-const HabitsPage = () => {
-  // Datos cargados por el loader
-  const loadedRituals = useLoaderData() as Ritual[];
+export default function HabitsPage() {
+  const { user } = useAuth();
+  const {
+    rituals,
+    logs,
+    isLoading,
+    createRitual,
+    isCreating,
+    removeRitual,
+    completeRitual,
+    undoRitual,
+    isToggling,
+  } = useRituals();
+  const { t } = useI18n();
 
-  // Obtiene el estado global de los stores
-  const user = useAuthStore((state) => state.user);
-  const setUser = useAuthStore((state) => state.setUser);
-  const { rituals, setRituals, logs, addRitual, removeRitual, toggleRitual } =
-    useRitualStore();
-
-  if (!user) return null;
-
-  // Si hay datos cargados y el store está vacío, sincronizar
-  React.useEffect(() => {
-    if (loadedRituals?.length > 0 && rituals.length === 0) {
-      setRituals(loadedRituals);
-    }
-  }, [loadedRituals, rituals.length, setRituals]);
-
-  // Create a local non-nullable reference for TS narrowing
-  const currentUser = user;
-
-  // Controladores y estados locales del componente
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [goalInput, setGoalInput] = useState("");
   const [showCreator, setShowCreator] = useState(false);
-  const [createMode, setCreateMode] = useState<"ai" | "manual" | "library">(
-    "manual",
-  );
   const [showLibrary, setShowLibrary] = useState(false);
-  const [manualForm, setManualForm] = useState({
+  const [mode, setMode] = useState<CreateMode>("manual");
+  const [goalInput, setGoalInput] = useState("");
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+  const [form, setForm] = useState({
     title: "",
     description: "",
-    difficulty: "novice" as "novice" | "adept" | "master",
-    frequency: "daily" as "daily" | "weekly",
-    essenceReward: 10,
+    difficulty: "novice" as Difficulty,
+    frequency: "daily" as Frequency,
   });
 
-  // Cadena con la fecha de hoy en formato AAAA-MM-DD
-  const todayStr = new Date().toISOString().split("T")[0] || "";
+  if (!user) return null;
+  if (isLoading) return <Loading />;
 
-  // Auto-calculate essence based on difficulty and frequency
-  React.useEffect(() => {
-    // Only update if not manually edited? Or always? Assuming always for auto-fill helper.
-    // If we want to allow manual override, we might need a flag, but for now enforcing rules is safer.
-    // Or we can check if it matches previous calculation.
-    // Let's just always update it when deps change.
-    if (showCreator && createMode === "manual") {
-      const base =
-        manualForm.difficulty === "master"
-          ? 50
-          : manualForm.difficulty === "adept"
-            ? 25
-            : 10;
-      const multiplier = manualForm.frequency === "weekly" ? 3 : 1;
-      setManualForm((prev) => ({ ...prev, essenceReward: base * multiplier }));
-    }
-  }, [manualForm.difficulty, manualForm.frequency, showCreator, createMode]);
+  const todayKey = toDateKey();
+  const reward = BASE_REWARD[form.difficulty] * (form.frequency === "weekly" ? 3 : 1);
+  const pending = rituals.filter((ritual) => !isRitualCompleted(ritual, logs, new Date()));
+  const completed = rituals.filter((ritual) => isRitualCompleted(ritual, logs, new Date()));
 
-  /**
-   * Marca o desmarca la finalización de un ritual para el día actual.
-   * Gestiona tanto la lógica de completar, como deshacer la acción, actualizando los estados necesarios.
-   */
-  const toggleCompletion = (ritual: Ritual) => {
-    const { essenceChange, success } = toggleRitual(ritual.id, todayStr);
-
-    if (success) {
-      setUser({
-        ...currentUser,
-        essence: Math.max(0, currentUser.essence + essenceChange),
-      });
-    }
+  const handleError = (error: unknown) => {
+    setMessage(error instanceof Error ? error.message : "Algo salió mal");
   };
 
-  /**
-   * Crea un nuevo ritual basado en modo IA o manual.
-   * - En modo IA invoca la función generadora de sugerencias.
-   * - En modo manual toma los valores del formulario.
-   */
-  const handleCreateRitual = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleManualCreate = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setMessage(null);
+    const validation = validateRitual(form);
+    if (!validation.valid) {
+      setMessage(validation.message ?? "Ritual inválido");
+      return;
+    }
 
-    if (createMode === "ai") {
-      if (!goalInput) return;
-      setIsGenerating(true);
-      const suggestions = await generateRitualSuggestions(goalInput);
-
-      if (suggestions.length > 0) {
-        const newRituals: Ritual[] = suggestions.map((s: any, idx: number) => ({
-          id: Date.now().toString() + idx,
-          user_id: currentUser.id,
-          title: s.title,
-          description: s.description,
-          difficulty: s.difficulty,
-          frequency: "daily" as Frequency,
-          essenceReward:
-            s.difficulty === "master" ? 50 : s.difficulty === "adept" ? 25 : 10,
-          streak: 0,
-          created_at: new Date().toISOString(),
-        }));
-
-        // Add all suggested rituals
-        newRituals.forEach((r) => addRitual(r));
-
-        setGoalInput("");
-        setShowCreator(false);
-      }
-      setIsGenerating(false);
-    } else {
-      // Modo manual
-      if (!manualForm.title) return;
-      const newRitual: Ritual = {
-        id: Date.now().toString(),
-        user_id: currentUser.id,
-        title: manualForm.title,
-        description: manualForm.description,
-        difficulty: manualForm.difficulty,
-        frequency: manualForm.frequency,
-        essenceReward: Number(manualForm.essenceReward), //Cambiar esto por esencia determinada dependiendo de la dificultad y frecuencia
-        streak: 0,
-        created_at: new Date().toISOString(),
-      };
-      addRitual(newRitual);
-      setManualForm({
-        title: "",
-        description: "",
-        difficulty: "novice",
-        frequency: "daily",
-        essenceReward: 10,
+    try {
+      await createRitual({
+        title: form.title,
+        description: form.description,
+        difficulty: form.difficulty,
+        frequency: form.frequency,
+        essenceReward: reward,
       });
+      setForm({ title: "", description: "", difficulty: "novice", frequency: "daily" });
       setShowCreator(false);
+    } catch (error) {
+      handleError(error);
     }
   };
 
-  // Elimina un ritual por su ID
-  const deleteRitual = (id: string) => {
-    removeRitual(id);
+  const handleAiCreate = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setMessage(null);
+    if (!goalInput.trim()) return;
+
+    setIsGenerating(true);
+    try {
+      const suggestions = await generateRitualSuggestions(goalInput);
+      for (const suggestion of suggestions) {
+        await createRitual({
+          title: suggestion.title,
+          description: suggestion.description,
+          difficulty: suggestion.difficulty,
+          frequency: "daily",
+          essenceReward: BASE_REWARD[suggestion.difficulty],
+        });
+      }
+      setGoalInput("");
+      setShowCreator(false);
+    } catch (error) {
+      handleError(error);
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const handleImport = async (template: RitualTemplate) => {
+    setMessage(null);
+    try {
+      await createRitual({
+        title: template.title,
+        description: template.description,
+        difficulty: template.difficulty,
+        frequency: template.frequency,
+        essenceReward: template.essenceReward,
+      });
+    } catch (error) {
+      handleError(error);
+    }
+  };
+
+  const handleToggle = async (ritual: Ritual) => {
+    setMessage(null);
+    try {
+      if (isRitualCompleted(ritual, logs, new Date())) {
+        await undoRitual({ id: ritual.id, date: todayKey });
+      } else {
+        await completeRitual({ id: ritual.id, date: todayKey });
+      }
+    } catch (error) {
+      handleError(error);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!window.confirm("¿Eliminar este ritual y su historial? No se puede deshacer.")) return;
+    setMessage(null);
+    try {
+      await removeRitual(id);
+    } catch (error) {
+      handleError(error);
+    }
   };
 
   return (
-    <div className="max-w-3xl mx-auto space-y-8">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-3xl font-display font-bold">Grimoire</h2>
+    <div className="mx-auto max-w-3xl space-y-6">
+      <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="font-display text-2xl font-bold sm:text-3xl">{t("habits.title")}</h1>
+          <p className="text-sm text-zinc-500">
+            {pending.length} pendientes · {completed.length} completados
+          </p>
+        </div>
         <div className="flex gap-2">
           <button
+            type="button"
             onClick={() => {
-              setShowLibrary(!showLibrary);
+              setShowLibrary((value) => !value);
               setShowCreator(false);
             }}
-            className="bg-zinc-800 hover:bg-zinc-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 text-sm transition-colors border border-zinc-700"
+            aria-pressed={showLibrary}
+            className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-white transition-colors hover:bg-zinc-800 sm:flex-none"
           >
-            <BookOpen size={16} />
-            Biblioteca
+            <BookOpen size={16} aria-hidden="true" /> {t("habits.library")}
           </button>
           <button
+            type="button"
             onClick={() => {
-              setShowCreator(!showCreator);
+              setShowCreator((value) => !value);
               setShowLibrary(false);
             }}
-            className="bg-zinc-800 hover:bg-zinc-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 text-sm transition-colors border border-zinc-700"
+            aria-expanded={showCreator}
+            className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-lg bg-ritual-accent px-3 text-sm font-bold text-black transition-colors hover:bg-emerald-400 sm:flex-none"
           >
-            {showCreator ? "Cerrar" : "Nuevo Ritual"} <Plus size={16} />
+            {showCreator ? <X size={16} aria-hidden="true" /> : <Plus size={16} aria-hidden="true" />}
+            {showCreator ? t("common.close") : t("habits.new")}
           </button>
         </div>
-      </div>
+      </header>
 
-      {/* Mostrar biblioteca de rituales si está activa */}
-      {showLibrary && (
-        <div className="mb-8">
-          <Suspense fallback={<Loading />}>
-            <RitualLibrary
-              onImport={(ritual) => {
-                addRitual(ritual);
-                setShowLibrary(false);
-              }}
-            />
-          </Suspense>
-        </div>
+      {message && (
+        <p role="alert" className="rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-400">
+          {message}
+        </p>
       )}
 
-      {/* Formulario para crear ritual nuevo (manual o IA) */}
+      {showLibrary && <RitualLibrary onImport={handleImport} />}
+
       {showCreator && (
-        <div className="bg-zinc-900 p-6 rounded-xl border border-zinc-800 shadow-xl animate-fade-in-down">
-          <div className="flex gap-4 mb-6 border-b border-zinc-800 pb-4">
+        <section className="rounded-xl border border-zinc-800 bg-zinc-900 p-4 shadow-xl sm:p-6">
+          <div className="mb-5 flex gap-4 border-b border-zinc-800 pb-3">
             <button
-              onClick={() => setCreateMode("manual")}
-              className={`flex items-center gap-2 text-sm font-bold uppercase tracking-wider pb-1 ${
-                createMode === "manual"
-                  ? "text-ritual-accent border-b-2 border-ritual-accent"
-                  : "text-zinc-500 hover:text-zinc-300"
+              type="button"
+              onClick={() => setMode("manual")}
+              className={`flex min-h-11 items-center gap-2 border-b-2 text-xs font-bold uppercase tracking-wider ${
+                mode === "manual"
+                  ? "border-ritual-accent text-ritual-accent"
+                  : "border-transparent text-zinc-500"
               }`}
             >
-              <PenTool size={14} /> Entrada Manual
+              <PenTool size={14} aria-hidden="true" /> {t("habits.manual")}
             </button>
             <button
-              onClick={() => setCreateMode("ai")}
-              className={`flex items-center gap-2 text-sm font-bold uppercase tracking-wider pb-1 ${
-                createMode === "ai"
-                  ? "text-ritual-accent border-b-2 border-ritual-accent"
-                  : "text-zinc-500 hover:text-zinc-300"
+              type="button"
+              onClick={() => setMode("ai")}
+              className={`flex min-h-11 items-center gap-2 border-b-2 text-xs font-bold uppercase tracking-wider ${
+                mode === "ai"
+                  ? "border-ritual-accent text-ritual-accent"
+                  : "border-transparent text-zinc-500"
               }`}
             >
-              <Sparkles size={14} /> Invocador IA
+              <Sparkles size={14} aria-hidden="true" /> {t("habits.ai")}
             </button>
           </div>
 
-          <form onSubmit={handleCreateRitual} className="space-y-4">
-            {createMode === "ai" ? (
-              <>
-                <p className="text-zinc-400 text-sm mb-2">
-                  Expresa tu deseo (ej: "Ser físicamente imparable" o "Aprender
-                  a programar"). El sistema prescribirá tu sufrimiento.
-                </p>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={goalInput}
-                    onChange={(e) => setGoalInput(e.target.value)}
-                    placeholder="¿Qué buscas?"
-                    className="flex-1 bg-black border border-zinc-700 rounded-lg px-4 py-3 text-white focus:border-ritual-accent outline-none"
-                  />
-                  <button
-                    type="submit"
-                    disabled={isGenerating}
-                    className="bg-ritual-accent text-black font-bold px-6 py-3 rounded-lg hover:bg-emerald-400 disabled:opacity-50 transition-colors"
-                  >
-                    {isGenerating ? "Invocando..." : "Invocar"}
-                  </button>
-                </div>
-              </>
-            ) : (
-              <div className="space-y-4">
-                <div>
-                  <label className="text-xs text-zinc-500 uppercase font-bold block mb-1">
-                    Título del Ritual
-                  </label>
-                  <input
-                    type="text"
-                    value={manualForm.title}
-                    onChange={(e) =>
-                      setManualForm({ ...manualForm, title: e.target.value })
-                    }
-                    placeholder="ej: Carrera Matutina"
-                    className="w-full bg-black border border-zinc-700 rounded-lg px-4 py-2 text-white focus:border-ritual-accent outline-none"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="text-xs text-zinc-500 uppercase font-bold block mb-1">
-                    Descripción
-                  </label>
-                  <input
-                    type="text"
-                    value={manualForm.description}
-                    onChange={(e) =>
-                      setManualForm({
-                        ...manualForm,
-                        description: e.target.value,
-                      })
-                    }
-                    placeholder="Condiciones específicas para completar..."
-                    className="w-full bg-black border border-zinc-700 rounded-lg px-4 py-2 text-white focus:border-ritual-accent outline-none"
-                  />
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <label className="text-xs text-zinc-500 uppercase font-bold block mb-1">
-                      Dificultad
-                    </label>
-                    <select
-                      value={manualForm.difficulty}
-                      onChange={(e) =>
-                        setManualForm({
-                          ...manualForm,
-                          difficulty: e.target.value as any,
-                        })
-                      }
-                      className="w-full bg-black border border-zinc-700 rounded-lg px-4 py-2 text-white focus:border-ritual-accent outline-none appearance-none"
-                    >
-                      <option value="novice">Novato</option>
-                      <option value="adept">Intermedio</option>
-                      <option value="master">Maestro</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="text-xs text-zinc-500 uppercase font-bold block mb-1">
-                      Frecuencia
-                    </label>
-                    <select className="w-full bg-black border border-zinc-700 rounded-lg px-4 py-2 text-white focus:border-ritual-accent outline-none appearance-none">
-                      <option value="daily">Diario</option>
-                      <option value="weekly">Semanal</option>
-                    </select>
-                  </div>
-                  {/* Essence input removed or read-only if auto-calculated? keeping it editable but auto-updates */}
-                  <div>
-                    <label className="text-xs text-zinc-500 uppercase font-bold block mb-1">
-                      Recompensa de Esencia
-                    </label>
-                    <input
-                      type="number"
-                      value={manualForm.essenceReward}
-                      onChange={(e) =>
-                        setManualForm({
-                          ...manualForm,
-                          essenceReward: Number(e.target.value),
-                        })
-                      }
-                      className="w-full bg-black border border-zinc-700 rounded-lg px-4 py-2 text-white focus:border-ritual-accent outline-none"
-                    />
-                  </div>
-                </div>
-                {/* Auto-calculate essence effect */}
+          {mode === "manual" ? (
+            <form onSubmit={handleManualCreate} className="space-y-4">
+              <Field label={t("habits.titleLabel")}>
+                <input
+                  type="text"
+                  value={form.title}
+                  onChange={(event) => setForm({ ...form, title: event.target.value })}
+                  maxLength={100}
+                  required
+                  placeholder="ej: Carrera matutina"
+                  className="min-h-11 w-full rounded-lg border border-zinc-700 bg-black px-4 text-white outline-none focus:border-ritual-accent"
+                />
+              </Field>
 
-                <div className="flex justify-end pt-2">
-                  <button
-                    type="submit"
-                    className="bg-white text-black font-bold px-6 py-2 rounded-lg hover:bg-zinc-200 transition-colors"
+              <Field label={t("habits.description")}>
+                <textarea
+                  value={form.description}
+                  onChange={(event) => setForm({ ...form, description: event.target.value })}
+                  maxLength={500}
+                  rows={2}
+                  placeholder="Condiciones para completarlo..."
+                  className="w-full rounded-lg border border-zinc-700 bg-black px-4 py-2 text-white outline-none focus:border-ritual-accent"
+                />
+              </Field>
+
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <Field label={t("habits.difficulty")}>
+                  <select
+                    value={form.difficulty}
+                    onChange={(event) =>
+                      setForm({ ...form, difficulty: event.target.value as Difficulty })
+                    }
+                    className="min-h-11 w-full rounded-lg border border-zinc-700 bg-black px-4 text-white outline-none focus:border-ritual-accent"
                   >
-                    Crear Ritual
-                  </button>
-                </div>
+                    <option value="novice">Novato</option>
+                    <option value="adept">Intermedio</option>
+                    <option value="master">Maestro</option>
+                  </select>
+                </Field>
+
+                <Field label={t("habits.frequency")}>
+                  <select
+                    value={form.frequency}
+                    onChange={(event) =>
+                      setForm({ ...form, frequency: event.target.value as Frequency })
+                    }
+                    className="min-h-11 w-full rounded-lg border border-zinc-700 bg-black px-4 text-white outline-none focus:border-ritual-accent"
+                  >
+                    <option value="daily">Diario</option>
+                    <option value="weekly">Semanal</option>
+                  </select>
+                </Field>
               </div>
-            )}
-          </form>
-        </div>
+
+              <div className="flex items-center justify-between gap-3 border-t border-zinc-800 pt-3">
+                <span className="text-sm text-zinc-400">
+                  {t("habits.reward")}:{" "}
+                  <strong className="font-mono text-ritual-accent">+{reward}</strong>
+                </span>
+                <button
+                  type="submit"
+                  disabled={isCreating}
+                  className="inline-flex min-h-11 items-center justify-center rounded-lg bg-white px-5 font-bold text-black transition-colors hover:bg-zinc-200 disabled:opacity-50"
+                >
+                  {isCreating ? t("common.saving") : t("habits.create")}
+                </button>
+              </div>
+            </form>
+          ) : (
+            <form onSubmit={handleAiCreate} className="space-y-3">
+              <p className="text-sm text-zinc-400">
+                Describe tu objetivo. Ollama propondrá tres rituales; si no está disponible se usan
+                sugerencias locales.
+              </p>
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <input
+                  type="text"
+                  value={goalInput}
+                  onChange={(event) => setGoalInput(event.target.value)}
+                  maxLength={200}
+                  required
+                  placeholder="ej: Aprender a programar"
+                  className="min-h-11 flex-1 rounded-lg border border-zinc-700 bg-black px-4 text-white outline-none focus:border-ritual-accent"
+                />
+                <button
+                  type="submit"
+                  disabled={isGenerating || isCreating}
+                  className="inline-flex min-h-11 items-center justify-center rounded-lg bg-ritual-accent px-5 font-bold text-black transition-colors hover:bg-emerald-400 disabled:opacity-50"
+                >
+                  {isGenerating ? "Invocando..." : t("habits.invoke")}
+                </button>
+              </div>
+            </form>
+          )}
+        </section>
       )}
 
-      {/* Renderiza los rituales creados por el usuario, o muestra mensaje si no existen */}
-      {/* Ritual Lists */}
-      <div className="space-y-8">
-        {/* Pending Rituals */}
-        <div>
-          <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-            <Sparkles size={20} className="text-ritual-accent" />
-            Pendientes
-          </h3>
-          <div className="space-y-3">
-            {rituals.filter(
-              (r) =>
-                !logs.some((l) => l.ritualId === r.id && l.date === todayStr),
-            ).length === 0 && (
-              <div className="text-zinc-600 italic p-4 border border-dashed border-zinc-800 rounded-lg">
-                No hay sacrificios pendientes.
-              </div>
-            )}
-            {rituals
-              .filter(
-                (r) =>
-                  !logs.some((l) => l.ritualId === r.id && l.date === todayStr),
-              )
-              .map((ritual) => (
-                <RitualItem
-                  key={ritual.id}
-                  ritual={ritual}
-                  isDone={false}
-                  onToggle={toggleCompletion}
-                  onDelete={deleteRitual}
-                />
-              ))}
-          </div>
-        </div>
+      <RitualList
+        title={t("habits.pending")}
+        empty={t("habits.empty")}
+        rituals={pending}
+        logs={logs}
+        onToggle={handleToggle}
+        onDelete={handleDelete}
+        busy={isToggling}
+        icon={<Sparkles size={18} className="text-ritual-accent" aria-hidden="true" />}
+      />
 
-        {/* Completed Rituals */}
-        {rituals.some((r) =>
-          logs.some((l) => l.ritualId === r.id && l.date === todayStr),
-        ) && (
-          <div className="opacity-60 grayscale-[50%] hover:grayscale-0 transition-all duration-500">
-            <h3 className="text-xl font-bold text-zinc-400 mb-4 flex items-center gap-2">
-              <Check size={20} />
-              Completados
-            </h3>
-            <div className="space-y-3">
-              {rituals
-                .filter((r) =>
-                  logs.some((l) => l.ritualId === r.id && l.date === todayStr),
-                )
-                .map((ritual) => (
-                  <RitualItem
-                    key={ritual.id}
-                    ritual={ritual}
-                    isDone={true}
-                    onToggle={toggleCompletion}
-                    onDelete={deleteRitual}
-                    disabled={true} // Add this prop to RitualItem
-                  />
-                ))}
-            </div>
-          </div>
-        )}
-      </div>
+      {completed.length > 0 && (
+        <RitualList
+          title={t("habits.completed")}
+          empty=""
+          rituals={completed}
+          logs={logs}
+          onToggle={handleToggle}
+          onDelete={handleDelete}
+          busy={isToggling}
+          icon={<Check size={18} aria-hidden="true" />}
+          muted
+        />
+      )}
     </div>
   );
-};
+}
 
-export default HabitsPage;
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <label className="block">
+      <span className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-zinc-500">
+        {label}
+      </span>
+      {children}
+    </label>
+  );
+}
+
+function RitualList({
+  title,
+  empty,
+  rituals,
+  logs,
+  onToggle,
+  onDelete,
+  busy,
+  icon,
+  muted = false,
+}: {
+  title: string;
+  empty: string;
+  rituals: Ritual[];
+  logs: Parameters<typeof isRitualCompleted>[1];
+  onToggle: (ritual: Ritual) => void;
+  onDelete: (id: string) => void;
+  busy: boolean;
+  icon: React.ReactNode;
+  muted?: boolean;
+}) {
+  return (
+    <section className={muted ? "opacity-70 transition-opacity hover:opacity-100" : ""}>
+      <h2 className="mb-3 flex items-center gap-2 text-lg font-bold text-white">
+        {icon}
+        {title}
+      </h2>
+      <div className="space-y-2">
+        {rituals.length === 0 && empty && (
+          <p className="rounded-lg border border-dashed border-zinc-800 p-4 text-sm italic text-zinc-600">
+            {empty}
+          </p>
+        )}
+        {rituals.map((ritual) => (
+          <RitualCard
+            key={ritual.id}
+            ritual={ritual}
+            isDone={isRitualCompleted(ritual, logs, new Date())}
+            busy={busy}
+            onToggle={onToggle}
+            onDelete={onDelete}
+          />
+        ))}
+      </div>
+    </section>
+  );
+}

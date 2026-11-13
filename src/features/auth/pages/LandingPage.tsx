@@ -93,17 +93,14 @@ const LandingPage: React.FC = () => {
       {/* Sección de características principales del producto */}
       <section className="max-w-7xl mx-auto px-4 py-20 grid md:grid-cols-3 gap-8 relative z-10">
         <FeatureCard
-          index={0}
           title="Rituals"
           desc="Define your daily sacrifices. Strict tracking builds iron discipline."
         />
         <FeatureCard
-          index={1}
           title="Heatmap"
           desc="Visualize your consistency. Watch your dormant potential awaken."
         />
         <FeatureCard
-          index={2}
           title="Black Market"
           desc="Exchange your suffering for digital glory and artifacts."
         />

@@ -1,144 +1,90 @@
-/*
- * RitualCard.tsx
- *
- * Componente que representa la tarjeta visual de un Ritual individual.
- * Muestra información clave del ritual, incluyendo título, descripción, dificultad, recompensa y racha.
- * Permite marcar el ritual como completado y eliminarlo.
- * Incluye animaciones visuales en la interacción del usuario para mejorar el feedback.
- */
-
-import { useEffect, useRef } from "react";
-import { Ritual } from "../../types/index.ts";
+import type { Ritual } from "@/types";
 import { Check, Trash2, Zap } from "lucide-react";
-import gsap from "gsap";
-import { translateDifficulty } from "../../utils/translations";
+import { translateDifficulty, translateFrequency } from "@/utils/translations";
 
-// Componente de tarjeta para mostrar información de un ritual individual
-const RitualItem = ({
-  ritual,
-  isDone,
-  onToggle,
-  onDelete,
-  disabled = false,
-}: {
+interface RitualCardProps {
   ritual: Ritual;
   isDone: boolean;
-  onToggle: (r: Ritual) => void;
+  busy?: boolean;
+  onToggle: (ritual: Ritual) => void;
   onDelete: (id: string) => void;
-  disabled?: boolean;
-}) => {
-  // Referencias para animaciones
-  const cardRef = useRef<HTMLDivElement>(null);
-  const buttonRef = useRef<HTMLButtonElement>(null);
+}
 
-  // Animaciones al marcar como hecho
-  useEffect(() => {
-    if (isDone && cardRef.current && buttonRef.current) {
-      // Efecto de "flasheo" verde en la tarjeta al completar
-      gsap.fromTo(
-        cardRef.current,
-        { boxShadow: "0 0 0px rgba(34, 197, 94, 0)", borderColor: "#27272a" },
-        {
-          boxShadow: "0 0 30px rgba(34, 197, 94, 0.2)",
-          borderColor: "rgba(34, 197, 94, 0.5)",
-          duration: 0.4,
-          yoyo: true,
-          repeat: 1,
-          ease: "power2.out",
-        },
-      );
+const DIFFICULTY_STYLES = {
+  novice: "border-green-900/60 text-green-500",
+  adept: "border-yellow-900/60 text-yellow-500",
+  master: "border-red-900/60 text-red-500",
+} as const;
 
-      // Efecto "pop" en el botón
-      gsap.fromTo(
-        buttonRef.current,
-        { scale: 1 },
-        {
-          scale: 1.4,
-          duration: 0.3,
-          ease: "back.out(1.7)",
-          yoyo: true,
-          repeat: 1,
-        },
-      );
-    }
-  }, [isDone]);
-
+export function RitualCard({ ritual, isDone, busy = false, onToggle, onDelete }: RitualCardProps) {
   return (
-    <div
-      ref={cardRef}
-      className={`group relative bg-zinc-950 border ${
-        isDone ? "border-ritual-accent/30" : "border-zinc-800"
-      } p-5 rounded-xl transition-all duration-300 hover:border-zinc-600 flex justify-between items-center overflow-hidden`}
+    <article
+      className={`relative flex items-start justify-between gap-3 rounded-xl border p-4 transition-colors sm:p-5 ${
+        isDone
+          ? "border-ritual-accent/30 bg-ritual-accent/5"
+          : "border-zinc-800 bg-zinc-950 hover:border-zinc-700"
+      }`}
     >
-      {/* Capa visual para indicar ritual completado */}
-      {isDone && (
-        <div className="absolute inset-0 bg-ritual-accent/5 pointer-events-none transition-opacity duration-500"></div>
-      )}
-
-      <div className="relative z-10">
-        <div className="flex items-center gap-3">
-          <h4
-            className={`font-bold text-lg transition-all duration-300 ${
-              isDone
-                ? "text-ritual-accent line-through opacity-70"
-                : "text-zinc-200"
+      <div className="min-w-0 flex-1">
+        <div className="flex flex-wrap items-center gap-2">
+          <h3
+            className={`text-base font-bold sm:text-lg ${
+              isDone ? "text-ritual-accent line-through opacity-70" : "text-zinc-100"
             }`}
           >
             {ritual.title}
-          </h4>
-          {/* Muestra racha si es mayor a 1 */}
+          </h3>
           {ritual.streak > 1 && (
-            <div className="flex items-center gap-1 text-xs text-yellow-500 font-mono bg-yellow-500/10 px-2 py-0.5 rounded border border-yellow-500/20">
-              <Zap size={10} fill="currentColor" /> {ritual.streak} day streak
-            </div>
+            <span className="inline-flex items-center gap-1 rounded border border-yellow-500/20 bg-yellow-500/10 px-2 py-0.5 font-mono text-[10px] text-yellow-500">
+              <Zap size={10} fill="currentColor" aria-hidden="true" />
+              {ritual.streak}
+            </span>
           )}
         </div>
-        <p className="text-zinc-500 text-sm">{ritual.description}</p>
-        <div className="flex gap-2 mt-2">
-          {/* Dificultad del ritual */}
-          <span
-            className={`text-[10px] uppercase tracking-wider px-2 py-0.5 rounded border ${
-              ritual.difficulty === "master"
-                ? "border-red-900 text-red-500"
-                : ritual.difficulty === "adept"
-                  ? "border-yellow-900 text-yellow-500"
-                  : "border-green-900 text-green-500"
-            }`}
-          >
+
+        {ritual.description && (
+          <p className="mt-1 line-clamp-2 text-sm text-zinc-500">{ritual.description}</p>
+        )}
+
+        <div className="mt-2 flex flex-wrap gap-1.5 text-[10px] uppercase tracking-wider">
+          <span className={`rounded border px-2 py-0.5 ${DIFFICULTY_STYLES[ritual.difficulty]}`}>
             {translateDifficulty(ritual.difficulty)}
           </span>
-          {/* Recompensa en esencia */}
-          <span className="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded border border-zinc-800 text-zinc-400">
-            +{ritual.essenceReward} Essence
+          <span className="rounded border border-zinc-800 px-2 py-0.5 text-zinc-400">
+            {translateFrequency(ritual.frequency)}
+          </span>
+          <span className="rounded border border-zinc-800 px-2 py-0.5 text-zinc-400">
+            +{ritual.essenceReward} essence
           </span>
         </div>
       </div>
 
-      {/* Botones de acción: completar y eliminar */}
-      <div className="flex items-center gap-4 relative z-10">
+      <div className="flex shrink-0 items-center gap-1">
         <button
-          ref={buttonRef}
-          onClick={() => !disabled && onToggle(ritual)}
-          disabled={disabled}
-          className={`w-12 h-12 rounded-full flex items-center justify-center border-2 transition-all duration-300 ${
+          type="button"
+          onClick={() => onToggle(ritual)}
+          disabled={busy}
+          aria-label={isDone ? `Desmarcar ${ritual.title}` : `Completar ${ritual.title}`}
+          aria-pressed={isDone}
+          className={`inline-flex h-11 w-11 items-center justify-center rounded-full border-2 transition-colors disabled:cursor-wait disabled:opacity-60 ${
             isDone
-              ? "bg-ritual-accent text-black border-ritual-accent shadow-[0_0_15px_rgba(34,197,94,0.5)]"
-              : disabled
-                ? "bg-zinc-800 border-zinc-700 text-zinc-600 cursor-not-allowed"
-                : "bg-transparent border-zinc-700 text-zinc-700 hover:border-ritual-accent hover:text-ritual-accent"
+              ? "border-ritual-accent bg-ritual-accent text-black"
+              : "border-zinc-700 text-zinc-600 hover:border-ritual-accent hover:text-ritual-accent"
           }`}
         >
-          <Check size={24} />
+          <Check size={20} aria-hidden="true" />
         </button>
         <button
+          type="button"
           onClick={() => onDelete(ritual.id)}
-          className="text-zinc-700 hover:text-red-500 transition-colors"
+          aria-label={`Eliminar ${ritual.title}`}
+          className="inline-flex h-11 w-11 items-center justify-center rounded-full text-zinc-600 transition-colors hover:text-red-500"
         >
-          <Trash2 size={18} />
+          <Trash2 size={18} aria-hidden="true" />
         </button>
       </div>
-    </div>
+    </article>
   );
-};
+}
 
-export default RitualItem;
+export default RitualCard;

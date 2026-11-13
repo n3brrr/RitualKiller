@@ -1,94 +1,97 @@
-import { User, Ritual, RitualLog } from '../types';
+import type { Difficulty, Frequency, Ritual, RitualLog } from "../types";
+import { validateImportData as validateShape } from "./validation";
+
+export interface ExportRitual {
+  id: string;
+  title: string;
+  description: string;
+  difficulty: Difficulty;
+  frequency: Frequency;
+  essenceReward: number;
+}
+
+export interface ExportLog {
+  ritualId: string;
+  date: string;
+  essence_gained: number;
+}
 
 export interface ExportData {
   version: string;
   exportDate: string;
-  user: User;
-  rituals: Ritual[];
-  logs: RitualLog[];
+  rituals: ExportRitual[];
+  logs: ExportLog[];
 }
 
-export const exportData = (user: User, rituals: Ritual[], logs: RitualLog[]): string => {
+/** Prevent CSV formula injection and quote every cell. */
+export function csvCell(value: string | number): string {
+  let text = String(value);
+  if (/^[=+\-@\t\r]/.test(text)) text = `'${text}`;
+  return `"${text.replace(/"/g, '""')}"`;
+}
+
+export function exportData(rituals: Ritual[], logs: RitualLog[]): string {
   const data: ExportData = {
-    version: '1.0.0',
+    version: "2.0.0",
     exportDate: new Date().toISOString(),
-    user,
-    rituals,
-    logs,
+    rituals: rituals.map((ritual) => ({
+      id: ritual.id,
+      title: ritual.title,
+      description: ritual.description,
+      difficulty: ritual.difficulty,
+      frequency: ritual.frequency,
+      essenceReward: ritual.essenceReward,
+    })),
+    logs: logs.map((log) => ({
+      ritualId: log.ritualId,
+      date: log.date,
+      essence_gained: log.essence_gained,
+    })),
   };
-
   return JSON.stringify(data, null, 2);
-};
+}
 
-export const exportToCSV = (rituals: Ritual[], logs: RitualLog[]): string => {
-  // CSV Header
-  const headers = ['Fecha', 'Ritual', 'Dificultad', 'Esencia Ganada'];
-  
-  // CSV Rows
-  const rows = logs.map(log => {
-    const ritual = rituals.find(r => r.id === log.ritualId);
+export function exportToCSV(rituals: Ritual[], logs: RitualLog[]): string {
+  const headers = ["Fecha", "Ritual", "Dificultad", "Esencia ganada"];
+  const rows = logs.map((log) => {
+    const ritual = rituals.find((item) => item.id === log.ritualId);
     return [
       log.date,
-      ritual?.title || 'Desconocido',
-      ritual?.difficulty ? (ritual.difficulty === 'novice' ? 'Novato' : ritual.difficulty === 'adept' ? 'Intermedio' : 'Maestro') : 'N/A',
-      log.essence_gained?.toString() || '0',
+      ritual?.title ?? "Desconocido",
+      ritual?.difficulty ?? "N/A",
+      log.essence_gained,
     ];
   });
+  return [headers, ...rows].map((row) => row.map(csvCell).join(",")).join("\n");
+}
 
-  // Combine headers and rows
-  const csvContent = [
-    headers.join(','),
-    ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
-  ].join('\n');
-
-  return csvContent;
-};
-
-export const downloadFile = (content: string, filename: string, mimeType: string) => {
+export function downloadFile(content: string, filename: string, mimeType: string): void {
   const blob = new Blob([content], { type: mimeType });
   const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
+  const link = document.createElement("a");
   link.href = url;
   link.download = filename;
   document.body.appendChild(link);
   link.click();
-  document.body.removeChild(link);
+  link.remove();
   URL.revokeObjectURL(url);
-};
+}
 
-export const importData = (jsonString: string): ExportData | null => {
+/**
+ * Parses a backup. Returns null when the shape is unusable; caller decides how
+ * to surface the validation errors.
+ */
+export function importData(jsonString: string): ExportData | null {
   try {
-    const data = JSON.parse(jsonString) as ExportData;
-    
-    // Validate structure
-    if (!data.user || !data.rituals || !data.logs) {
-      throw new Error('Formato de datos inválido');
+    const parsed = JSON.parse(jsonString) as unknown;
+    const validation = validateShape(parsed);
+    if (!validation.valid) {
+      console.error("Invalid backup:", validation.errors);
+      return null;
     }
-
-    return data;
+    return parsed as ExportData;
   } catch (error) {
-    console.error('Error importando los datos:', error);
+    console.error("Error importing data:", error);
     return null;
   }
-};
-
-export const validateImportData = (data: ExportData): { valid: boolean; errors: string[] } => {
-  const errors: string[] = [];
-
-  if (!data.user || !data.user.id) {
-    errors.push('Datos de usuario inválidos');
-  }
-
-  if (!Array.isArray(data.rituals)) {
-    errors.push('Los rituales deben ser un array');
-  }
-
-  if (!Array.isArray(data.logs)) {
-    errors.push('Los logs deben ser un array');
-  }
-
-  return {
-    valid: errors.length === 0,
-    errors,
-  };
-};
+}

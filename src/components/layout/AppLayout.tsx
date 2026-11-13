@@ -1,17 +1,10 @@
-/*
- * AppLayout.tsx
- *
- * Este archivo define el layout principal de la aplicación después de iniciar sesión.
- * Proporciona la estructura de navegación lateral (sidebar en desktop, footer en móvil),
- * integración con el usuario autenticado, control de acceso y layout responsivo para las vistas de la app.
- */
-
-import React from "react";
-import { NavLink, useNavigate, Outlet, Navigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import {
   Skull,
   LayoutDashboard,
   CheckSquare,
+  Target,
   ShoppingBag,
   Users,
   LogOut,
@@ -20,190 +13,261 @@ import {
   Zap,
   ShieldCheck,
   Package,
+  Settings,
+  Menu,
+  X,
 } from "lucide-react";
-import { useAuthStore } from "@/features/auth/stores/useAuthStore";
-import { isAdmin } from "@/utils/adminUtils";
+import { useAuth } from "@/features/auth/AuthProvider";
+import { useI18n, type TranslationKey } from "@/i18n";
+import { getRank, rankProgress } from "@/utils/rank";
+import { notificationService } from "@/services/notificationService";
+import { NotificationBell } from "./NotificationBell";
 
-// Obtiene el rango del usuario según su essence
-const getRank = (essence: number) => {
-  if (essence < 100)
-    return { title: "Initiate", next: 100, icon: <Shield size={12} /> };
-  if (essence < 500)
-    return { title: "Neophyte", next: 500, icon: <Shield size={12} /> };
-  if (essence < 1000)
-    return { title: "Adept", next: 1000, icon: <Skull size={12} /> };
-  if (essence < 2500)
-    return { title: "Warlock", next: 2500, icon: <Skull size={12} /> };
-  if (essence < 5000)
-    return { title: "Lich", next: 5000, icon: <Crown size={12} /> };
-  return { title: "Demi-God", next: 10000, icon: <Zap size={12} /> };
-};
+interface NavItem {
+  to: string;
+  labelKey: TranslationKey;
+  icon: React.ReactNode;
+}
+
+const NAV_ITEMS: NavItem[] = [
+  { to: "/app/dashboard", labelKey: "nav.dashboard", icon: <LayoutDashboard size={20} /> },
+  { to: "/app/habits", labelKey: "nav.habits", icon: <CheckSquare size={20} /> },
+  { to: "/app/goals", labelKey: "nav.goals", icon: <Target size={20} /> },
+  { to: "/app/social", labelKey: "nav.social", icon: <Users size={20} /> },
+  { to: "/app/shop", labelKey: "nav.shop", icon: <ShoppingBag size={20} /> },
+  { to: "/app/inventory", labelKey: "nav.inventory", icon: <Package size={20} /> },
+  { to: "/app/analytics", labelKey: "nav.analytics", icon: <Zap size={20} /> },
+  { to: "/app/achievements", labelKey: "nav.achievements", icon: <Crown size={20} /> },
+  { to: "/app/settings", labelKey: "nav.settings", icon: <Settings size={20} /> },
+];
+
+const MOBILE_QUICK: NavItem[] = [
+  NAV_ITEMS[0]!,
+  NAV_ITEMS[1]!,
+  NAV_ITEMS[2]!,
+  NAV_ITEMS[3]!,
+  NAV_ITEMS[8]!,
+];
 
 export const AppLayout: React.FC = () => {
-  const { user, setUser } = useAuthStore();
+  const { user, signOut } = useAuth();
+  const { t, locale, setLocale } = useI18n();
   const navigate = useNavigate();
+  const [menuOpen, setMenuOpen] = useState(false);
 
-  // Si no hay usuario autenticado, redirige al landing
-  if (!user) {
-    return <Navigate to="/" replace />;
-  }
+  useEffect(() => {
+    if (user && user.locale !== locale) setLocale(user.locale);
+  }, [user, user?.locale, locale, setLocale]);
 
-  // Calcula el rango del usuario según su essence
+  useEffect(() => {
+    void notificationService.ensureReminder().catch(() => undefined);
+  }, [user?.id]);
+
+  if (!user) return null;
+
   const rank = getRank(user.essence);
-  // Calcula el progreso del rango del usuario
-  const progress = Math.min(100, (user.essence / rank.next) * 100);
+  const progress = rankProgress(user.essence);
+  const navItems = user.isAdmin
+    ? [...NAV_ITEMS, { to: "/app/admin", labelKey: "nav.admin" as const, icon: <ShieldCheck size={20} /> }]
+    : NAV_ITEMS;
 
-  // Maneja el cierre de sesión del usuario
-  const handleLogout = () => {
-    setUser(null);
-    localStorage.removeItem("rk_user");
-    navigate("/");
-  };
-
-  // Clase de navegador activo para el menú lateral
-  const navItemClass = ({ isActive }: { isActive: boolean }) =>
-    `flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 ${
+  const navClass = ({ isActive }: { isActive: boolean }) =>
+    `flex min-h-11 items-center gap-3 rounded-xl px-4 py-2.5 transition-colors ${
       isActive
-        ? "bg-ritual-accent/10 text-ritual-accent border border-ritual-accent/20 shadow-[0_0_15px_rgba(34,197,94,0.1)]"
-        : "text-zinc-500 hover:text-zinc-200 hover:bg-zinc-900"
+        ? "bg-ritual-accent/10 text-ritual-accent border border-ritual-accent/20"
+        : "text-zinc-500 hover:bg-zinc-900 hover:text-zinc-200 border border-transparent"
     }`;
 
+  const handleLogout = async () => {
+    await signOut();
+    navigate("/login", { replace: true });
+  };
+
   return (
-    <div className="min-h-screen bg-ritual-black text-zinc-100 flex font-sans">
-      {/* Sidebar de navegación principal (versión desktop) */}
-      <aside className="fixed left-0 top-0 h-full w-64 border-r border-zinc-900 bg-ritual-dark/95 backdrop-blur hidden md:flex flex-col z-50">
-        <div className="p-6 flex items-center gap-3">
-          <Skull className="w-8 h-8 text-ritual-accent animate-pulse-slow" />
-          <span className="font-display font-bold text-xl tracking-wider text-white">
+    <div className="min-h-screen bg-ritual-black text-zinc-100 flex">
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-lg focus:bg-ritual-accent focus:px-4 focus:py-2 focus:font-bold focus:text-black"
+      >
+        Saltar al contenido
+      </a>
+
+      {/* Desktop sidebar */}
+      <aside className="fixed left-0 top-0 z-50 hidden h-full w-64 flex-col border-r border-zinc-900 bg-ritual-dark/95 backdrop-blur md:flex">
+        <div className="flex items-center gap-3 p-6">
+          <Skull className="h-8 w-8 text-ritual-accent" />
+          <span className="flex-1 font-display text-xl font-bold tracking-wider text-white">
             RitualKiller
           </span>
+          <NotificationBell />
         </div>
 
-        <nav className="flex-1 px-4 space-y-2 mt-4">
-          <NavLink to="/app/dashboard" className={navItemClass}>
-            <LayoutDashboard size={20} />
-            <span>Altar</span>
-          </NavLink>
-          <NavLink to="/app/habits" className={navItemClass}>
-            <CheckSquare size={20} />
-            <span>Rituals</span>
-          </NavLink>
-          <NavLink to="/app/social" className={navItemClass}>
-            <Users size={20} />
-            <span>Social</span>
-          </NavLink>
-          <NavLink to="/app/shop" className={navItemClass}>
-            <ShoppingBag size={20} />
-            <span>Black Market</span>
-          </NavLink>
-          <NavLink to="/app/inventory" className={navItemClass}>
-            <Package size={20} />
-            <span>Inventory</span>
-          </NavLink>
-          <NavLink to="/app/analytics" className={navItemClass}>
-            <Zap size={20} />
-            <span>Analytics</span>
-          </NavLink>
-          <NavLink to="/app/achievements" className={navItemClass}>
-            <Crown size={20} />
-            <span>Achievements</span>
-          </NavLink>
+        <nav className="flex-1 space-y-1 overflow-y-auto px-4" aria-label="Principal">
+          {navItems.map((item) => (
+            <NavLink key={item.to} to={item.to} className={navClass}>
+              {item.icon}
+              <span>{t(item.labelKey)}</span>
+            </NavLink>
+          ))}
         </nav>
 
-        {/* Perfil de usuario con indicador de progreso y cierre de sesión */}
-        <div className="p-6 border-t border-zinc-900 bg-zinc-950/30">
+        <div className="border-t border-zinc-900 bg-zinc-950/30 p-4">
           <NavLink
             to={`/app/profile/${user.username}`}
-            className="flex items-center gap-3 mb-4 hover:bg-zinc-900/50 p-2 rounded-lg transition-colors cursor-pointer group"
+            className="mb-3 flex items-center gap-3 rounded-lg p-2 hover:bg-zinc-900/50"
           >
-            {/* Avatar (primera letra del usuario) */}
-            <div className="w-10 h-10 bg-zinc-800 rounded-full flex items-center justify-center border border-zinc-700 text-ritual-accent font-display font-bold shadow-inner group-hover:border-ritual-accent transition-colors">
-              {user.username.charAt(0).toUpperCase()}
+            <div className="flex h-10 w-10 items-center justify-center rounded-full border border-zinc-700 bg-zinc-800 font-display font-bold text-ritual-accent">
+              {user.avatar_url ? (
+                <img
+                  src={user.avatar_url}
+                  alt=""
+                  className="h-full w-full rounded-full object-cover"
+                />
+              ) : (
+                user.username.charAt(0).toUpperCase()
+              )}
             </div>
-            <div>
-              <div className="font-bold text-sm text-zinc-100 flex items-center gap-2 group-hover:text-ritual-accent transition-colors">
-                {user.username}
-                {isAdmin(user) && (
-                  <span className="text-[10px] px-1.5 py-0.5 bg-yellow-500/20 text-yellow-500 rounded border border-yellow-500/30 flex items-center gap-1">
-                    <ShieldCheck size={10} />
-                    ADMIN
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 text-sm font-bold text-zinc-100">
+                <span className="truncate">{user.username}</span>
+                {user.isAdmin && (
+                  <span className="flex items-center gap-1 rounded border border-yellow-500/30 bg-yellow-500/20 px-1.5 py-0.5 text-[10px] text-yellow-500">
+                    <Shield size={10} /> ADMIN
                   </span>
                 )}
               </div>
-              <div className="text-[10px] text-ritual-accent flex items-center gap-1 uppercase tracking-wider">
-                {rank.icon} {rank.title}
+              <div className="text-[10px] uppercase tracking-wider text-ritual-accent">
+                {user.rank}
               </div>
             </div>
           </NavLink>
 
-          {/* Barra de progreso del rango */}
-          <div className="mb-4">
-            <div className="flex justify-between text-[10px] text-zinc-500 mb-1 uppercase tracking-wider">
-              <span>Progress</span>
+          <div className="mb-3">
+            <div className="mb-1 flex justify-between text-[10px] uppercase tracking-wider text-zinc-500">
+              <span>Progreso</span>
               <span>
                 {user.essence} / {rank.next}
               </span>
             </div>
-            <div className="h-1.5 w-full bg-zinc-800 rounded-full overflow-hidden border border-zinc-800">
+            <div className="h-1.5 w-full overflow-hidden rounded-full border border-zinc-800 bg-zinc-800">
               <div
-                className="h-full bg-ritual-accent transition-all duration-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]"
+                className="h-full bg-ritual-accent transition-all duration-500"
                 style={{ width: `${progress}%` }}
-              ></div>
+              />
             </div>
           </div>
 
           <button
-            onClick={handleLogout}
-            className="flex items-center gap-2 text-zinc-500 hover:text-red-500 transition-colors text-xs uppercase tracking-widest w-full pt-3 border-t border-zinc-800/50"
+            type="button"
+            onClick={() => void handleLogout()}
+            className="flex min-h-11 w-full items-center gap-2 border-t border-zinc-800/50 pt-2 text-xs uppercase tracking-widest text-zinc-500 transition-colors hover:text-red-500"
           >
             <LogOut size={14} />
-            <span>Sever Bond</span>
+            <span>{t("auth.logout")}</span>
           </button>
         </div>
       </aside>
 
-      {/* Navegación inferior móvil */}
-      <div className="md:hidden fixed bottom-0 left-0 w-full bg-ritual-dark border-t border-zinc-900 z-50 px-4 py-3 flex justify-between items-center safe-pb">
-        <NavLink
-          to="/app/dashboard"
-          className={({ isActive }) =>
-            isActive ? "text-ritual-accent" : "text-zinc-600"
-          }
+      {/* Mobile header */}
+      <header className="safe-pt fixed inset-x-0 top-0 z-50 flex items-center justify-between border-b border-zinc-900 bg-ritual-dark/95 px-4 py-2 backdrop-blur md:hidden">
+        <button
+          type="button"
+          onClick={() => setMenuOpen(true)}
+          aria-label="Abrir menú"
+          aria-expanded={menuOpen}
+          className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg text-zinc-400 hover:text-white"
         >
-          <LayoutDashboard />
+          <Menu size={22} />
+        </button>
+        <NavLink to="/app/dashboard" className="flex items-center gap-2">
+          <Skull className="text-ritual-accent" size={22} />
+          <span className="font-display text-sm font-bold uppercase tracking-widest">
+            RitualKiller
+          </span>
         </NavLink>
-        <NavLink
-          to="/app/habits"
-          className={({ isActive }) =>
-            isActive ? "text-ritual-accent" : "text-zinc-600"
-          }
-        >
-          <CheckSquare />
-        </NavLink>
-        {/* Essencia del usuario (sólo numérico) */}
-        <div className="w-10 h-10 bg-zinc-900 rounded-full flex items-center justify-center border border-zinc-800 text-ritual-accent text-xs font-bold">
-          {user.essence}
-        </div>
-        <NavLink
-          to="/app/social"
-          className={({ isActive }) =>
-            isActive ? "text-ritual-accent" : "text-zinc-600"
-          }
-        >
-          <Users />
-        </NavLink>
-        <NavLink
-          to="/app/shop"
-          className={({ isActive }) =>
-            isActive ? "text-ritual-accent" : "text-zinc-600"
-          }
-        >
-          <ShoppingBag />
-        </NavLink>
-      </div>
+        <NotificationBell />
+      </header>
 
-      {/* Contenido principal de la app */}
-      <main className="flex-1 md:ml-64 p-4 md:p-8 pb-24 md:pb-8 max-w-7xl mx-auto w-full">
+      {/* Mobile menu */}
+      {menuOpen && (
+        <div className="fixed inset-0 z-[80] md:hidden">
+          <button
+            type="button"
+            aria-label="Cerrar menú"
+            className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+            onClick={() => setMenuOpen(false)}
+          />
+          <div className="safe-pt absolute inset-y-0 left-0 w-[min(20rem,85vw)] overflow-y-auto border-r border-zinc-800 bg-ritual-dark p-4">
+            <div className="mb-6 flex items-center justify-between">
+              <span className="font-display font-bold uppercase tracking-widest">Menú</span>
+              <button
+                type="button"
+                onClick={() => setMenuOpen(false)}
+                aria-label="Cerrar menú"
+                className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg text-zinc-400"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <nav className="space-y-1" aria-label="Menú móvil">
+              {navItems.map((item) => (
+                <NavLink
+                  key={item.to}
+                  to={item.to}
+                  onClick={() => setMenuOpen(false)}
+                  className={navClass}
+                >
+                  {item.icon}
+                  <span>{t(item.labelKey)}</span>
+                </NavLink>
+              ))}
+            </nav>
+            <div className="mt-6 border-t border-zinc-800 pt-4">
+              <NavLink
+                to={`/app/profile/${user.username}`}
+                onClick={() => setMenuOpen(false)}
+                className="flex min-h-11 items-center gap-3 rounded-lg px-4 py-2 text-zinc-400"
+              >
+                <Shield size={18} /> {user.username}
+              </NavLink>
+              <button
+                type="button"
+                onClick={() => void handleLogout()}
+                className="flex min-h-11 w-full items-center gap-3 rounded-lg px-4 py-2 text-left text-red-400"
+              >
+                <LogOut size={18} /> {t("auth.logout")}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Mobile bottom nav */}
+      <nav
+        className="safe-pb fixed inset-x-0 bottom-0 z-40 flex items-center justify-around border-t border-zinc-900 bg-ritual-dark/95 px-2 pt-1 backdrop-blur md:hidden"
+        aria-label="Accesos rápidos"
+      >
+        {MOBILE_QUICK.map((item) => (
+          <NavLink
+            key={item.to}
+            to={item.to}
+            aria-label={t(item.labelKey)}
+            className={({ isActive }) =>
+              `flex min-h-12 min-w-12 flex-col items-center justify-center gap-0.5 rounded-lg ${
+                isActive ? "text-ritual-accent" : "text-zinc-600"
+              }`
+            }
+          >
+            {item.icon}
+            <span className="text-[9px] uppercase tracking-wide">{t(item.labelKey)}</span>
+          </NavLink>
+        ))}
+      </nav>
+
+      <main
+        id="main-content"
+        className="mx-auto w-full max-w-7xl flex-1 px-4 pb-28 pt-20 sm:px-6 md:ml-64 md:px-8 md:pb-10 md:pt-8"
+      >
         <Outlet />
       </main>
     </div>

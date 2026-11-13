@@ -1,336 +1,292 @@
-/*
- * EnhancedSocial.tsx
- *
- * Componente de red social interna de la aplicación.
- * Permite a los usuarios publicar logros, dar like, seguir a otros, comentar publicaciones y visualizar interacciones recientes del "Coven".
- */
-
-import React, { useState } from "react";
+import { useState } from "react";
 import {
-  Users,
-  MessageCircle,
   Heart,
+  MessageCircle,
+  Send,
   Share2,
+  Trash2,
+  UserCheck,
   UserPlus,
-  Trophy,
-  TrendingUp,
+  Flag,
 } from "lucide-react";
-import { SocialPost, Comment } from "../../types";
-import { useAuthStore } from "../../features/auth/stores/useAuthStore";
+import { useAuth } from "@/features/auth/AuthProvider";
+import { useSocial } from "@/hooks/useSocial";
+import { useI18n } from "@/i18n";
+import { formatDateTime } from "@/utils/dates";
+import Loading from "@/components/animations/Loading";
+import type { SocialPost } from "@/types";
 
-const EnhancedSocial: React.FC = () => {
-  const user = useAuthStore((state) => state.user);
+export function EnhancedSocial() {
+  const { user } = useAuth();
+  const {
+    posts,
+    following,
+    isLoading,
+    error,
+    createPost,
+    isPosting,
+    toggleLike,
+    addComment,
+    toggleFollow,
+    reportPost,
+    deletePost,
+  } = useSocial();
+  const { t } = useI18n();
 
-  // Estado para publicaciones, personas seguidas, nuevo post y entradas de comentarios
-  const [posts, setPosts] = useState<SocialPost[]>([
-    {
-      id: "1",
-      author: "NeonSamurai",
-      authorId: "user1",
-      content:
-        "Just completed the 6AM protocol for 30 consecutive days. My focus is laser sharp.",
-      timestamp: "2h ago",
-      likes: 42,
-      isSystem: false,
-      comments: [],
-      likedByMe: false,
-    },
-    {
-      id: "2",
-      author: "System",
-      authorId: "system",
-      content: "User @GhostWalker has ascended to Rank: Adept.",
-      timestamp: "4h ago",
-      likes: 128,
-      isSystem: true,
-      comments: [],
-      likedByMe: true,
-    },
-  ]);
-  const [following, setFollowing] = useState<string[]>([]);
-  const [newPostContent, setNewPostContent] = useState("");
-  const [commentInputs, setCommentInputs] = useState<{ [key: string]: string }>(
-    {},
-  );
+  const [content, setContent] = useState("");
+  const [message, setMessage] = useState<string | null>(null);
+  const [openComments, setOpenComments] = useState<string | null>(null);
+  const [drafts, setDrafts] = useState<Record<string, string>>({});
 
-  /*
-   * Maneja el "like" y "unlike" en un post, actualizando contador y estado.
-   */
-  const handleLike = (postId: string) => {
-    setPosts((prev) =>
-      prev.map((post) =>
-        post.id === postId
-          ? {
-              ...post,
-              likes: post.likedByMe ? post.likes - 1 : post.likes + 1,
-              likedByMe: !post.likedByMe,
-            }
-          : post,
-      ),
-    );
+  if (!user) return null;
+  if (isLoading) return <Loading />;
+
+  const handleError = (actionError: unknown) => {
+    setMessage(actionError instanceof Error ? actionError.message : "Algo salió mal");
   };
 
-  /*
-   * Permite seguir o dejar de seguir a un usuario.
-   */
-  const handleFollow = (userId: string) => {
-    setFollowing((prev) =>
-      prev.includes(userId)
-        ? prev.filter((id) => id !== userId)
-        : [...prev, userId],
-    );
+  const handlePublish = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setMessage(null);
+    try {
+      await createPost(content);
+      setContent("");
+    } catch (publishError) {
+      handleError(publishError);
+    }
   };
 
-  /*
-   * Publica una nueva entrada si el texto no está vacío y hay usuario autenticado.
-   */
-  const handlePost = () => {
-    if (!newPostContent.trim() || !user) return;
-
-    const newPost: SocialPost = {
-      id: Date.now().toString(),
-      author: user.username,
-      authorId: user.id,
-      content: newPostContent,
-      timestamp: "Now",
-      likes: 0,
-      isSystem: false,
-      comments: [],
-      likedByMe: false,
-    };
-
-    setPosts((prev) => [newPost, ...prev]);
-    setNewPostContent("");
+  const handleComment = async (post: SocialPost) => {
+    const draft = drafts[post.id]?.trim();
+    if (!draft) return;
+    setMessage(null);
+    try {
+      await addComment({ postId: post.id, content: draft });
+      setDrafts((current) => ({ ...current, [post.id]: "" }));
+    } catch (commentError) {
+      handleError(commentError);
+    }
   };
 
-  /*
-   * Permite a un usuario comentar un post existente.
-   */
-  const handleComment = (postId: string) => {
-    const commentText = commentInputs[postId];
-    if (!commentText?.trim() || !user) return;
-
-    const newComment: Comment = {
-      id: Date.now().toString(),
-      postId,
-      author: user.username,
-      authorId: user.id,
-      content: commentText,
-      timestamp: new Date().toISOString(),
-    };
-
-    setPosts((prev) =>
-      prev.map((post) =>
-        post.id === postId
-          ? { ...post, comments: [...(post.comments || []), newComment] }
-          : post,
-      ),
-    );
-
-    setCommentInputs((prev) => ({ ...prev, [postId]: "" }));
+  const handleReport = async (post: SocialPost) => {
+    const reason = window.prompt("Motivo del reporte (mínimo 3 caracteres):");
+    if (!reason) return;
+    setMessage(null);
+    try {
+      await reportPost({ postId: post.id, reason });
+      setMessage("Reporte enviado a moderación.");
+    } catch (reportError) {
+      handleError(reportError);
+    }
   };
-
-  // En el futuro se podría filtrar por seguidos
-  const filteredPosts = posts;
 
   return (
-    <div className="space-y-6">
-      {/* Cabecera con título y leyenda de ranking */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Users className="text-ritual-accent" size={24} />
-          <h2 className="text-2xl font-display font-bold">The Coven</h2>
-        </div>
-        <div className="flex items-center gap-2 text-sm text-zinc-500">
-          <TrendingUp size={16} />
-          <span>Ranking available soon</span>
-        </div>
-      </div>
+    <div className="space-y-4">
+      <header>
+        <h1 className="font-display text-2xl font-bold sm:text-3xl">{t("social.title")}</h1>
+        <p className="text-sm text-zinc-500">Comparte tu progreso y sigue a otros iniciados.</p>
+      </header>
 
-      {/* Formulario para crear publicación */}
-      <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-4">
-        <div className="flex gap-4">
-          <div className="w-10 h-10 bg-zinc-800 rounded-full flex items-center justify-center text-zinc-400 flex-shrink-0 overflow-hidden">
-            {user?.avatar_url ? (
-              <img
-                src={user.avatar_url}
-                alt={user.username}
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              user?.username.charAt(0).toUpperCase() || "U"
-            )}
-          </div>
-          <div className="flex-1">
-            <textarea
-              value={newPostContent}
-              onChange={(e) => setNewPostContent(e.target.value)}
-              placeholder="Share your achievements with the community..."
-              rows={3}
-              className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-4 py-2 text-white placeholder-zinc-600 focus:border-ritual-accent outline-none resize-none"
-            />
-            <div className="flex justify-end mt-2">
-              <button
-                onClick={handlePost}
-                disabled={!newPostContent.trim()}
-                className="px-4 py-2 bg-ritual-accent text-black font-bold rounded-lg hover:bg-emerald-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Post
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
+      {(message || error) && (
+        <p role="alert" className="rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-400">
+          {message ?? error?.message}
+        </p>
+      )}
 
-      {/* Listado de publicaciones del feed */}
-      <div className="space-y-4">
-        {filteredPosts.map((post) => (
-          <div
-            key={post.id}
-            className="bg-zinc-950 border border-zinc-800 rounded-xl p-6 hover:border-zinc-700 transition-colors"
+      <form onSubmit={handlePublish} className="rounded-xl border border-zinc-800 bg-zinc-950 p-4">
+        <label htmlFor="post-content" className="sr-only">
+          {t("social.placeholder")}
+        </label>
+        <textarea
+          id="post-content"
+          value={content}
+          onChange={(event) => setContent(event.target.value)}
+          maxLength={500}
+          rows={3}
+          placeholder={t("social.placeholder")}
+          className="w-full resize-none rounded-lg border border-zinc-700 bg-black px-4 py-2 text-white outline-none focus:border-ritual-accent"
+        />
+        <div className="mt-2 flex items-center justify-between text-xs text-zinc-600">
+          <span>{content.length}/500</span>
+          <button
+            type="submit"
+            disabled={isPosting || content.trim().length === 0}
+            className="inline-flex min-h-11 items-center gap-2 rounded-lg bg-ritual-accent px-4 font-bold text-black hover:bg-emerald-400 disabled:opacity-50"
           >
-            <div className="flex items-start justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <div
-                  className={`w-10 h-10 rounded-full flex items-center justify-center overflow-hidden ${
-                    post.isSystem ? "bg-ritual-accent/20" : "bg-zinc-800"
-                  }`}
-                >
-                  {post.isSystem ? (
-                    <Trophy className="text-ritual-accent" size={20} />
-                  ) : (
-                    // Por ahora sólo se muestra la inicial del autor; se puede extender si hay imagen de avatar.
-                    <span className="text-zinc-400 font-bold">
+            <Send size={14} aria-hidden="true" />
+            {isPosting ? t("common.saving") : t("social.post")}
+          </button>
+        </div>
+      </form>
+
+      {posts.length === 0 ? (
+        <p className="rounded-xl border border-dashed border-zinc-800 p-8 text-center text-sm text-zinc-500">
+          {t("social.empty")}
+        </p>
+      ) : (
+        <ul className="space-y-3">
+          {posts.map((post) => {
+            const isOwn = post.authorId === user.id;
+            const isFollowing = following.includes(post.authorId);
+
+            return (
+              <li key={post.id} className="rounded-xl border border-zinc-800 bg-zinc-950 p-4">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex min-w-0 items-center gap-2">
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-zinc-700 bg-zinc-900 font-display text-sm font-bold text-ritual-accent">
                       {post.author.charAt(0).toUpperCase()}
                     </span>
-                  )}
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span
-                      className={`font-bold ${
-                        post.isSystem ? "text-ritual-accent" : "text-white"
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-bold text-white">
+                        {post.author}
+                        {post.isSystem && (
+                          <span className="ml-2 text-[10px] uppercase text-zinc-500">sistema</span>
+                        )}
+                      </p>
+                      <p className="text-[10px] uppercase tracking-wider text-zinc-600">
+                        {formatDateTime(post.createdAt)}
+                      </p>
+                    </div>
+                  </div>
+
+                  {!isOwn && (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        void toggleFollow({ targetId: post.authorId, following: isFollowing })
+                      }
+                      className={`inline-flex min-h-11 items-center gap-1 rounded-lg border px-2 text-xs ${
+                        isFollowing
+                          ? "border-zinc-700 text-zinc-400"
+                          : "border-ritual-accent/40 text-ritual-accent"
                       }`}
                     >
-                      @{post.author}
-                    </span>
-                    {/* Solo mostrar botón seguir si no es sistema ni el usuario actual */}
-                    {!post.isSystem && post.authorId !== user?.id && (
-                      <button
-                        onClick={() => handleFollow(post.authorId!)}
-                        className={`text-xs px-2 py-1 rounded border transition-colors ${
-                          following.includes(post.authorId!)
-                            ? "bg-ritual-accent/10 border-ritual-accent text-ritual-accent"
-                            : "bg-zinc-900 border-zinc-700 text-zinc-400 hover:border-zinc-600"
-                        }`}
-                      >
-                        {following.includes(post.authorId!) ? (
-                          <>
-                            <UserPlus size={12} className="inline mr-1" />
-                            Following
-                          </>
-                        ) : (
-                          <>
-                            <UserPlus size={12} className="inline mr-1" />
-                            Follow
-                          </>
-                        )}
-                      </button>
-                    )}
-                  </div>
-                  <span className="text-zinc-600 text-xs">
-                    {post.timestamp}
-                  </span>
+                      {isFollowing ? (
+                        <UserCheck size={14} aria-hidden="true" />
+                      ) : (
+                        <UserPlus size={14} aria-hidden="true" />
+                      )}
+                      {isFollowing ? t("social.following") : t("social.follow")}
+                    </button>
+                  )}
                 </div>
-              </div>
-            </div>
 
-            <p className="text-zinc-300 mb-4">{post.content}</p>
+                <p className="mt-3 whitespace-pre-wrap break-words text-sm text-zinc-200">
+                  {post.content}
+                </p>
 
-            {/* Acciones de post: like, comentar, compartir */}
-            <div className="flex items-center gap-6 text-zinc-500">
-              <button
-                onClick={() => handleLike(post.id)}
-                className={`flex items-center gap-2 transition-colors ${post.likedByMe ? "text-ritual-accent" : "hover:text-ritual-accent"}`}
-              >
-                <Heart
-                  size={18}
-                  className={
-                    post.likedByMe
-                      ? "fill-ritual-accent text-ritual-accent"
-                      : ""
-                  }
-                />
-                <span className="text-sm">{post.likes}</span>
-              </button>
-              <button className="flex items-center gap-2 hover:text-ritual-accent transition-colors">
-                <MessageCircle size={18} />
-                <span className="text-sm">{post.comments?.length || 0}</span>
-              </button>
-              <button className="flex items-center gap-2 hover:text-ritual-accent transition-colors">
-                <Share2 size={18} />
-              </button>
-            </div>
+                <div className="mt-3 flex flex-wrap items-center gap-1 border-t border-zinc-900 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => void toggleLike({ postId: post.id, liked: post.likedByMe })}
+                    aria-pressed={post.likedByMe}
+                    aria-label={`${post.likes} likes`}
+                    className={`inline-flex min-h-11 items-center gap-1 rounded-lg px-3 text-xs ${
+                      post.likedByMe ? "text-red-400" : "text-zinc-500 hover:text-zinc-300"
+                    }`}
+                  >
+                    <Heart size={16} fill={post.likedByMe ? "currentColor" : "none"} aria-hidden="true" />
+                    {post.likes}
+                  </button>
 
-            {/* Sección de comentarios si existen */}
-            {post.comments && post.comments.length > 0 && (
-              <div className="mt-4 pt-4 border-t border-zinc-800 space-y-3">
-                {post.comments.map((comment) => (
-                  <div key={comment.id} className="flex gap-3">
-                    <div className="w-8 h-8 bg-zinc-800 rounded-full flex items-center justify-center flex-shrink-0">
-                      <span className="text-xs text-zinc-400 font-bold">
-                        {comment.author.charAt(0).toUpperCase()}
-                      </span>
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="text-sm font-bold text-white">
-                          @{comment.author}
-                        </span>
-                        <span className="text-xs text-zinc-600">
-                          {new Date(comment.timestamp).toLocaleDateString()}
-                        </span>
+                  <button
+                    type="button"
+                    onClick={() => setOpenComments(openComments === post.id ? null : post.id)}
+                    aria-expanded={openComments === post.id}
+                    className="inline-flex min-h-11 items-center gap-1 rounded-lg px-3 text-xs text-zinc-500 hover:text-zinc-300"
+                  >
+                    <MessageCircle size={16} aria-hidden="true" />
+                    {post.comments.length}
+                  </button>
+
+                  {!isOwn && (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => void handleReport(post)}
+                        aria-label={t("social.report")}
+                        className="inline-flex h-11 w-11 items-center justify-center rounded-lg text-zinc-600 hover:text-yellow-500"
+                      >
+                        <Flag size={16} aria-hidden="true" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          void navigator.clipboard
+                            ?.writeText(`${window.location.origin}/app/profile/${post.author}`)
+                            .then(() => setMessage("Enlace de perfil copiado."))
+                            .catch(() => setMessage("No se pudo copiar el enlace."));
+                        }}
+                        aria-label="Copiar enlace del perfil"
+                        className="inline-flex h-11 w-11 items-center justify-center rounded-lg text-zinc-600 hover:text-zinc-300"
+                      >
+                        <Share2 size={16} aria-hidden="true" />
+                      </button>
+                    </>
+                  )}
+
+                  {isOwn && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (window.confirm("¿Eliminar esta publicación?")) {
+                          void deletePost(post.id).catch(handleError);
+                        }
+                      }}
+                      aria-label="Eliminar publicación"
+                      className="inline-flex h-11 w-11 items-center justify-center rounded-lg text-zinc-600 hover:text-red-500"
+                    >
+                      <Trash2 size={16} aria-hidden="true" />
+                    </button>
+                  )}
+                </div>
+
+                {openComments === post.id && (
+                  <div className="mt-2 space-y-2 border-t border-zinc-900 pt-2">
+                    {post.comments.length === 0 && (
+                      <p className="text-xs text-zinc-600">Sin comentarios todavía.</p>
+                    )}
+                    {post.comments.map((comment) => (
+                      <div key={comment.id} className="rounded-lg bg-zinc-900/60 p-2 text-sm">
+                        <span className="font-bold text-zinc-300">{comment.author}</span>
+                        <span className="ml-2 break-words text-zinc-400">{comment.content}</span>
                       </div>
-                      <p className="text-sm text-zinc-400">{comment.content}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+                    ))}
 
-            {/* Entrada para agregar nuevo comentario */}
-            <div className="mt-4 pt-4 border-t border-zinc-800">
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={commentInputs[post.id] || ""}
-                  onChange={(e) =>
-                    setCommentInputs((prev) => ({
-                      ...prev,
-                      [post.id]: e.target.value,
-                    }))
-                  }
-                  placeholder="Write a comment..."
-                  className="flex-1 bg-zinc-900 border border-zinc-700 rounded-lg px-4 py-2 text-white placeholder-zinc-600 focus:border-ritual-accent outline-none text-sm"
-                  onKeyPress={(e) => {
-                    if (e.key === "Enter") {
-                      handleComment(post.id);
-                    }
-                  }}
-                />
-                <button
-                  onClick={() => handleComment(post.id)}
-                  className="px-4 py-2 bg-zinc-800 text-white rounded-lg hover:bg-zinc-700 transition-colors text-sm"
-                >
-                  Comment
-                </button>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
+                    <form
+                      onSubmit={(event) => {
+                        event.preventDefault();
+                        void handleComment(post);
+                      }}
+                      className="flex gap-2"
+                    >
+                      <input
+                        type="text"
+                        value={drafts[post.id] ?? ""}
+                        onChange={(event) =>
+                          setDrafts((current) => ({ ...current, [post.id]: event.target.value }))
+                        }
+                        maxLength={500}
+                        placeholder={t("social.comment")}
+                        aria-label={t("social.comment")}
+                        className="min-h-11 flex-1 rounded-lg border border-zinc-700 bg-black px-3 text-sm text-white outline-none focus:border-ritual-accent"
+                      />
+                      <button
+                        type="submit"
+                        className="inline-flex min-h-11 items-center justify-center rounded-lg border border-zinc-700 px-3 text-zinc-300 hover:border-ritual-accent"
+                      >
+                        <Send size={16} aria-hidden="true" />
+                      </button>
+                    </form>
+                  </div>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      )}
     </div>
   );
-};
+}
 
 export default EnhancedSocial;

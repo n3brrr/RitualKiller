@@ -1,15 +1,8 @@
-/*
- * achievements.ts
- *
- * Define la lista base de logros (achievements) y utilidades relacionadas para el sistema de logros de la aplicación.
- * - Contiene los logros configurados (sin progreso) y funciones para calcular el avance de cada logro y obtener los desbloqueados.
- */
+import type { Achievement, Ritual, RitualLog } from "../types";
 
-import { Achievement, Rarity } from "../types";
+export type AchievementDefinition = Omit<Achievement, "progress" | "unlockedAt">;
 
-// Lista de logros base, omitimos campos que dependen del usuario como progreso/fecha de desbloqueo
-export const ACHIEVEMENTS: Omit<Achievement, "progress" | "unlockedAt">[] = [
-  // Logros de racha de días completando rituales
+export const ACHIEVEMENTS: AchievementDefinition[] = [
   {
     id: "ach-streak-7",
     name: "First Week",
@@ -37,7 +30,6 @@ export const ACHIEVEMENTS: Omit<Achievement, "progress" | "unlockedAt">[] = [
     target: 100,
     category: "streak",
   },
-  // Logros por acumular esencia
   {
     id: "ach-essence-1000",
     name: "Hoarder",
@@ -65,7 +57,6 @@ export const ACHIEVEMENTS: Omit<Achievement, "progress" | "unlockedAt">[] = [
     target: 50000,
     category: "essence",
   },
-  // Logros por crear o completar rituales
   {
     id: "ach-rituals-10",
     name: "Initiate",
@@ -93,7 +84,6 @@ export const ACHIEVEMENTS: Omit<Achievement, "progress" | "unlockedAt">[] = [
     target: 100,
     category: "rituals",
   },
-  // Logros sociales (interacción en comunidad)
   {
     id: "ach-social-first",
     name: "First Voice",
@@ -112,7 +102,6 @@ export const ACHIEVEMENTS: Omit<Achievement, "progress" | "unlockedAt">[] = [
     target: 10,
     category: "social",
   },
-  // Logros especiales
   {
     id: "ach-perfect-week",
     name: "Perfect Week",
@@ -133,69 +122,88 @@ export const ACHIEVEMENTS: Omit<Achievement, "progress" | "unlockedAt">[] = [
   },
 ];
 
-/*
- * Calcula el progreso actual de un logro según los datos del usuario.
- * @param achievement Objeto de logro a evaluar.
- * @param userData Información relevante del usuario: rituales, logs, esencia, posts.
- * @returns Progreso numérico para el logro.
- */
-export const calculateAchievementProgress = (
-  achievement: Omit<Achievement, "progress" | "unlockedAt">,
-  userData: {
-    rituals: any[];
-    logs: any[];
-    essence: number;
-    posts?: any[];
-  },
-): number => {
+interface UserData {
+  rituals: Array<Pick<Ritual, "id" | "streak" | "difficulty">>;
+  logs: Array<Pick<RitualLog, "ritualId" | "date">>;
+  essence: number;
+  posts?: unknown[];
+}
+
+function longestFullDayRun(userData: UserData): number {
+  if (userData.rituals.length === 0) return 0;
+
+  const completionsByDay = new Map<string, Set<string>>();
+  for (const log of userData.logs) {
+    const date = log.date.slice(0, 10);
+    const completed = completionsByDay.get(date) ?? new Set<string>();
+    completed.add(log.ritualId);
+    completionsByDay.set(date, completed);
+  }
+
+  const fullDays = [...completionsByDay.entries()]
+    .filter(([, completed]) => completed.size >= userData.rituals.length)
+    .map(([date]) => date)
+    .sort();
+
+  let best = 0;
+  let current = 0;
+  let previous: string | null = null;
+  for (const date of fullDays) {
+    if (previous) {
+      const [year, month, day] = previous.split("-").map(Number);
+      const next = new Date(year ?? 0, (month ?? 1) - 1, (day ?? 1) + 1);
+      const expected = `${next.getFullYear()}-${String(next.getMonth() + 1).padStart(2, "0")}-${String(next.getDate()).padStart(2, "0")}`;
+      current = expected === date ? current + 1 : 1;
+    } else {
+      current = 1;
+    }
+    best = Math.max(best, current);
+    previous = date;
+  }
+  return best;
+}
+
+/** Progress never exceeds the achievement target. */
+export function calculateAchievementProgress(
+  achievement: AchievementDefinition,
+  userData: UserData,
+): number {
   switch (achievement.category) {
-    case "streak":
-      // Máxima racha registrada entre los rituales del usuario
-      const maxStreak = Math.max(
-        ...userData.rituals.map((r) => r.streak || 0),
-        0,
-      );
+    case "streak": {
+      const maxStreak = Math.max(...userData.rituals.map((ritual) => ritual.streak ?? 0), 0);
       return Math.min(maxStreak, achievement.target);
-
+    }
     case "essence":
-      // Esencia acumulada por el usuario
       return Math.min(userData.essence, achievement.target);
-
     case "rituals":
-      // Si el logro es de completar, cuenta logs. Si es de creación, cuenta rituales distintos
-      if (achievement.id.includes("complete")) {
-        return Math.min(userData.logs.length, achievement.target);
-      }
-      return Math.min(userData.rituals.length, achievement.target);
-
+      return Math.min(
+        achievement.id.includes("complete") ? userData.logs.length : userData.rituals.length,
+        achievement.target,
+      );
     case "social":
-      // Cantidad de publicaciones en la comunidad
-      return Math.min(userData.posts?.length || 0, achievement.target);
-
-    case "special":
+      return Math.min(userData.posts?.length ?? 0, achievement.target);
+    case "special": {
       if (achievement.id === "ach-perfect-week") {
-        // Lógica especial pendiente para 'Semana Perfecta'
-        return 0;
+        return Math.min(longestFullDayRun(userData), achievement.target);
       }
       if (achievement.id === "ach-all-difficulties") {
-        // Cuántas dificultades distintas de rituales ha completado el usuario
-        const difficulties = new Set(userData.rituals.map((r) => r.difficulty));
+        const completedIds = new Set(userData.logs.map((log) => log.ritualId));
+        const difficulties = new Set(
+          userData.rituals
+            .filter((ritual) => completedIds.has(ritual.id))
+            .map((ritual) => ritual.difficulty),
+        );
         return Math.min(difficulties.size, achievement.target);
       }
       return 0;
-
+    }
     default:
       return 0;
   }
-};
+}
 
-/*
- * Retorna los logros desbloqueados (aquellos con progreso completo y fecha de desbloqueo).
- * @param achievements Lista de logros con progreso y fecha.
- * @returns Sólo los logros desbloqueados por el usuario.
- */
-export const getUnlockedAchievements = (
-  achievements: Achievement[],
-): Achievement[] => {
-  return achievements.filter((a) => a.progress >= a.target && a.unlockedAt);
-};
+export function getUnlockedAchievements(achievements: Achievement[]): Achievement[] {
+  return achievements.filter(
+    (achievement) => achievement.progress >= achievement.target && achievement.unlockedAt,
+  );
+}

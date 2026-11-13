@@ -1,274 +1,178 @@
-/*
- * RitualLibrary.tsx
- *
- * Este componente muestra la biblioteca de rituales prediseñados.
- * Permite a los usuarios buscar, filtrar e importar rituales de una colección estática,
- * mostrando información relevante de cada ritual como dificultad, esencia y tags.
- */
-
-import React, { useState, useMemo } from "react";
-import { Search, BookOpen, Star, Plus } from "lucide-react";
+import { useMemo, useState } from "react";
+import { BookOpen, Plus, Search, Star } from "lucide-react";
 import {
-  RitualTemplate,
-  RitualCategory,
-  RITUAL_LIBRARY,
   getPopularRituals,
+  RITUAL_LIBRARY,
   searchRituals,
-  convertTemplateToRitual,
-} from "../../data/ritualLibrary";
-import { useAuthStore } from "../../features/auth/stores/useAuthStore";
-import { Difficulty, Ritual } from "../../types";
-import {
-  translateDifficulty,
-  translateFrequency,
-} from "../../utils/translations";
+  type RitualCategory,
+  type RitualTemplate,
+} from "@/data/ritualLibrary";
+import type { Difficulty } from "@/types";
+import { translateDifficulty, translateFrequency } from "@/utils/translations";
 
 interface RitualLibraryProps {
-  /*
-  Callback que se ejecuta al importar un ritual.
-  El ritual importado se genera a partir del template y el id del usuario.
-  */
-  onImport?: (ritual: Ritual) => void;
+  onImport: (template: RitualTemplate) => Promise<void> | void;
 }
 
-// Categorías disponibles para filtrar los rituales
-const CATEGORIES: { value: RitualCategory; label: string }[] = [
-  { value: "health", label: "Health" },
-  { value: "productivity", label: "Productivity" },
+const CATEGORIES: Array<{ value: RitualCategory; label: string }> = [
+  { value: "health", label: "Salud" },
+  { value: "productivity", label: "Productividad" },
   { value: "mental", label: "Mental" },
-  { value: "physical", label: "Physical" },
-  { value: "learning", label: "Learning" },
-  { value: "creativity", label: "Creativity" },
-  { value: "spiritual", label: "Spiritual" },
+  { value: "physical", label: "Físico" },
+  { value: "learning", label: "Aprendizaje" },
+  { value: "creativity", label: "Creatividad" },
+  { value: "social", label: "Social" },
+  { value: "spiritual", label: "Espiritual" },
 ];
 
-const RitualLibrary: React.FC<RitualLibraryProps> = ({ onImport }) => {
-  const user = useAuthStore((state) => state.user);
+const DIFFICULTY_STYLES = {
+  novice: "border-green-500/30 bg-green-500/10 text-green-500",
+  adept: "border-yellow-500/30 bg-yellow-500/10 text-yellow-500",
+  master: "border-red-500/30 bg-red-500/10 text-red-500",
+} as const;
 
-  // Estado para filtro de búsqueda, categoría, dificultad y populares
+export function RitualLibrary({ onImport }: RitualLibraryProps) {
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<
-    RitualCategory | "all"
-  >("all");
-  const [selectedDifficulty, setSelectedDifficulty] = useState<
-    Difficulty | "all"
-  >("all");
-  const [showPopularOnly, setShowPopularOnly] = useState(false);
+  const [category, setCategory] = useState<RitualCategory | "all">("all");
+  const [difficulty, setDifficulty] = useState<Difficulty | "all">("all");
+  const [popularOnly, setPopularOnly] = useState(false);
+  const [importingId, setImportingId] = useState<string | null>(null);
 
-  /*
-   * Filtra la lista de rituales basada en populares, búsqueda, categoría y dificultad.
-   * Usar useMemo para evitar filtrados innecesarios en cada render.
-   */
-  const filteredRituals = useMemo(() => {
-    let filtered: RitualTemplate[] = showPopularOnly
-      ? getPopularRituals()
-      : RITUAL_LIBRARY;
+  const filtered = useMemo(() => {
+    let list = searchQuery.trim()
+      ? searchRituals(searchQuery)
+      : popularOnly
+        ? getPopularRituals()
+        : RITUAL_LIBRARY;
 
-    if (selectedCategory !== "all") {
-      filtered = filtered.filter((r) => r.category === selectedCategory);
-    }
+    if (category !== "all") list = list.filter((item) => item.category === category);
+    if (difficulty !== "all") list = list.filter((item) => item.difficulty === difficulty);
+    return list;
+  }, [searchQuery, category, difficulty, popularOnly]);
 
-    if (selectedDifficulty !== "all") {
-      filtered = filtered.filter((r) => r.difficulty === selectedDifficulty);
-    }
-
-    if (searchQuery.trim()) {
-      filtered = searchRituals(searchQuery);
-      if (selectedCategory !== "all") {
-        filtered = filtered.filter((r) => r.category === selectedCategory);
-      }
-      if (selectedDifficulty !== "all") {
-        filtered = filtered.filter((r) => r.difficulty === selectedDifficulty);
-      }
-    }
-
-    return filtered;
-  }, [searchQuery, selectedCategory, selectedDifficulty, showPopularOnly]);
-
-  /*
-   * Importa un ritual template como ritual de usuario usando el id del usuario actual.
-   */
-  const handleImportRitual = (template: RitualTemplate) => {
-    if (!user || !onImport) return;
-    const ritual = convertTemplateToRitual(template, user.id);
-    onImport(ritual);
-  };
-
-  // Por defecto no previene rituales duplicados (la lógica depende del padre, si fuera necesario)
-  const isRitualAlreadyAdded = (templateId: string) => {
-    return false;
-  };
-
-  // Retorna clases según la dificultad del ritual
-  const getDifficultyColor = (difficulty: Difficulty) => {
-    switch (difficulty) {
-      case "master":
-        return "border-red-500/30 text-red-500 bg-red-500/10";
-      case "adept":
-        return "border-yellow-500/30 text-yellow-500 bg-yellow-500/10";
-      default:
-        return "border-green-500/30 text-green-500 bg-green-500/10";
+  const handleImport = async (template: RitualTemplate) => {
+    setImportingId(template.id);
+    try {
+      await onImport(template);
+    } finally {
+      setImportingId(null);
     }
   };
 
   return (
-    <div className="space-y-6">
-      {/* Encabezado */}
-      <div className="flex items-center gap-2 mb-6">
-        <BookOpen className="text-ritual-accent" size={24} />
-        <h2 className="text-2xl font-display font-bold">Ritual Library</h2>
+    <section className="space-y-4" aria-label="Biblioteca de rituales">
+      <div className="flex items-center gap-2">
+        <BookOpen className="text-ritual-accent" size={22} aria-hidden="true" />
+        <h2 className="font-display text-xl font-bold">Biblioteca</h2>
       </div>
 
-      {/* Búsqueda y filtros */}
-      <div className="space-y-4">
-        {/* Barra de búsqueda */}
+      <div className="space-y-3">
         <div className="relative">
           <Search
-            className="absolute left-3 top-1/2 transform -translate-y-1/2 text-zinc-500"
-            size={20}
+            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500"
+            size={18}
+            aria-hidden="true"
           />
           <input
-            type="text"
-            placeholder="Search rituals..."
+            type="search"
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-zinc-950 border border-zinc-800 rounded-lg pl-10 pr-4 py-3 text-white placeholder-zinc-500 focus:border-ritual-accent outline-none"
+            onChange={(event) => setSearchQuery(event.target.value)}
+            placeholder="Buscar ritual..."
+            aria-label="Buscar ritual"
+            className="min-h-11 w-full rounded-lg border border-zinc-800 bg-zinc-950 py-2 pl-10 pr-4 text-white placeholder-zinc-500 outline-none focus:border-ritual-accent"
           />
         </div>
 
-        {/* Filtros por populares, categoría y dificultad */}
-        <div className="flex flex-wrap gap-3">
+        <div className="flex flex-wrap gap-2">
           <button
-            onClick={() => setShowPopularOnly(!showPopularOnly)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors ${
-              showPopularOnly
-                ? "bg-ritual-accent/10 border-ritual-accent text-ritual-accent"
-                : "bg-zinc-900 border-zinc-800 text-zinc-400 hover:border-zinc-700"
+            type="button"
+            onClick={() => setPopularOnly((value) => !value)}
+            aria-pressed={popularOnly}
+            className={`inline-flex min-h-11 items-center gap-2 rounded-lg border px-3 text-xs uppercase tracking-wider ${
+              popularOnly
+                ? "border-ritual-accent bg-ritual-accent/10 text-ritual-accent"
+                : "border-zinc-800 bg-zinc-900 text-zinc-400"
             }`}
           >
-            <Star size={16} />
-            Popular
+            <Star size={14} aria-hidden="true" /> Populares
           </button>
 
           <select
-            value={selectedCategory}
-            onChange={(e) =>
-              setSelectedCategory(e.target.value as RitualCategory | "all")
-            }
-            className="bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-2 text-white focus:border-ritual-accent outline-none"
+            value={category}
+            onChange={(event) => setCategory(event.target.value as RitualCategory | "all")}
+            aria-label="Filtrar por categoría"
+            className="min-h-11 flex-1 rounded-lg border border-zinc-800 bg-zinc-900 px-3 text-sm text-white outline-none focus:border-ritual-accent"
           >
-            <option value="all">All categories</option>
-            {CATEGORIES.map((cat) => (
-              <option key={cat.value} value={cat.value}>
-                {cat.label}
+            <option value="all">Todas las categorías</option>
+            {CATEGORIES.map((item) => (
+              <option key={item.value} value={item.value}>
+                {item.label}
               </option>
             ))}
           </select>
 
           <select
-            value={selectedDifficulty}
-            onChange={(e) =>
-              setSelectedDifficulty(e.target.value as Difficulty | "all")
-            }
-            className="bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-2 text-white focus:border-ritual-accent outline-none"
+            value={difficulty}
+            onChange={(event) => setDifficulty(event.target.value as Difficulty | "all")}
+            aria-label="Filtrar por dificultad"
+            className="min-h-11 flex-1 rounded-lg border border-zinc-800 bg-zinc-900 px-3 text-sm text-white outline-none focus:border-ritual-accent"
           >
-            <option value="all">All difficulties</option>
-            <option value="novice">Novice</option>
-            <option value="adept">Intermediate</option>
-            <option value="master">Master</option>
+            <option value="all">Toda dificultad</option>
+            <option value="novice">Novato</option>
+            <option value="adept">Intermedio</option>
+            <option value="master">Maestro</option>
           </select>
         </div>
       </div>
 
-      {/* Grid de rituales filtrados */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredRituals.map((template) => {
-          const alreadyAdded = isRitualAlreadyAdded(template.id);
-
-          return (
-            <div
-              key={template.id}
-              className="bg-zinc-950 border border-zinc-800 rounded-xl p-5 hover:border-zinc-700 transition-all"
-            >
-              {/* Encabezado de la tarjeta de ritual */}
-              <div className="flex justify-between items-start mb-3">
-                <div className="flex-1">
-                  <h3 className="font-bold text-lg text-white mb-1">
-                    {template.title}
-                  </h3>
-                  <p className="text-zinc-400 text-sm mb-3">
-                    {template.description}
-                  </p>
-                </div>
-                {template.popular && (
-                  <Star
-                    className="text-yellow-500 fill-yellow-500/20"
-                    size={18}
-                  />
-                )}
-              </div>
-
-              {/* Meta-información: dificultad, frecuencia y esencia */}
-              <div className="flex flex-wrap gap-2 mb-4">
-                <span
-                  className={`text-xs px-2 py-1 rounded border ${getDifficultyColor(template.difficulty)}`}
-                >
-                  {translateDifficulty(template.difficulty)}
-                </span>
-                <span className="text-xs px-2 py-1 rounded border border-zinc-800 text-zinc-400">
-                  {translateFrequency(template.frequency)}
-                </span>
-                <span className="text-xs px-2 py-1 rounded border border-ritual-accent/30 text-ritual-accent">
-                  +{template.essenceReward} Essence
-                </span>
-              </div>
-
-              {/* Tags de la tarjeta */}
-              <div className="flex flex-wrap gap-1 mb-4">
-                {template.tags.slice(0, 3).map((tag) => (
-                  <span
-                    key={tag}
-                    className="text-[10px] px-2 py-0.5 rounded bg-zinc-900 text-zinc-500"
-                  >
-                    {tag}
-                  </span>
-                ))}
-              </div>
-
-              {/* Botón para importar ritual, lo desactiva si ya fue importado */}
-              <button
-                onClick={() => handleImportRitual(template)}
-                disabled={alreadyAdded}
-                className={`w-full py-2 px-4 rounded-lg font-bold text-sm transition-colors flex items-center justify-center gap-2 ${
-                  alreadyAdded
-                    ? "bg-zinc-900 text-zinc-600 cursor-not-allowed"
-                    : "bg-ritual-accent text-black hover:bg-emerald-400"
-                }`}
-              >
-                {alreadyAdded ? (
-                  <>
-                    <span>Already added</span>
-                  </>
-                ) : (
-                  <>
-                    <Plus size={16} />
-                    Import Ritual
-                  </>
-                )}
-              </button>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        {filtered.map((template) => (
+          <article
+            key={template.id}
+            className="flex flex-col rounded-xl border border-zinc-800 bg-zinc-950 p-4 transition-colors hover:border-zinc-700"
+          >
+            <div className="mb-2 flex items-start justify-between gap-2">
+              <h3 className="font-bold text-white">{template.title}</h3>
+              {template.popular && (
+                <Star
+                  className="shrink-0 fill-yellow-500/20 text-yellow-500"
+                  size={16}
+                  aria-label="Popular"
+                />
+              )}
             </div>
-          );
-        })}
+            <p className="mb-3 flex-1 text-sm text-zinc-400">{template.description}</p>
+
+            <div className="mb-3 flex flex-wrap gap-1.5 text-[10px] uppercase tracking-wider">
+              <span className={`rounded border px-2 py-0.5 ${DIFFICULTY_STYLES[template.difficulty]}`}>
+                {translateDifficulty(template.difficulty)}
+              </span>
+              <span className="rounded border border-zinc-800 px-2 py-0.5 text-zinc-400">
+                {translateFrequency(template.frequency)}
+              </span>
+              <span className="rounded border border-ritual-accent/30 px-2 py-0.5 text-ritual-accent">
+                +{template.essenceReward}
+              </span>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => void handleImport(template)}
+              disabled={importingId === template.id}
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-ritual-accent px-4 text-sm font-bold text-black transition-colors hover:bg-emerald-400 disabled:opacity-50"
+            >
+              <Plus size={16} aria-hidden="true" />
+              {importingId === template.id ? "Añadiendo..." : "Añadir"}
+            </button>
+          </article>
+        ))}
       </div>
 
-      {/* Mensaje cuando no hay rituales con los filtros aplicados */}
-      {filteredRituals.length === 0 && (
-        <div className="text-center py-12 text-zinc-500">
-          No rituals found with the selected filters.
-        </div>
+      {filtered.length === 0 && (
+        <p className="py-8 text-center text-sm text-zinc-500">No hay rituales con esos filtros.</p>
       )}
-    </div>
+    </section>
   );
-};
+}
 
 export default RitualLibrary;

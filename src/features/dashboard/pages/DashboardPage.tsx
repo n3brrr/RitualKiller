@@ -1,233 +1,173 @@
-import React, { lazy, Suspense, useMemo } from "react";
+import { lazy, Suspense, useMemo } from "react";
+import { AlertCircle, Check, CheckCircle2, Flame, Package, Zap } from "lucide-react";
 import { Heatmap } from "@/components/Heatmap";
-import { Zap, Flame, Clock, Check, AlertCircle } from "lucide-react";
 import Loading from "@/components/animations/Loading";
-import { ritualService } from "@/services/api/ritualService";
-import { useLoaderData } from "react-router-dom";
-import { Ritual, RitualLog } from "@/types";
+import { useAuth } from "@/features/auth/AuthProvider";
+import { useRituals } from "@/hooks/useRituals";
+import { useI18n } from "@/i18n";
 import { DAILY_QUOTES } from "@/data/quotes";
+import { isRitualCompleted } from "@/utils/analytics";
+import { toDateKey } from "@/utils/dates";
 
-const RitualCalendar = lazy(
-  () => import("@/components/calendar/RitualCalendar"),
-);
-const ProductivityMetrics = lazy(
-  () => import("@/components/productivity/ProductivityMetrics"),
-);
+const RitualCalendar = lazy(() => import("@/components/calendar/RitualCalendar"));
+const ProductivityMetrics = lazy(() => import("@/components/productivity/ProductivityMetrics"));
 
-import { useAuthStore } from "@/features/auth/stores/useAuthStore";
-
-// Loader para Dashboard
-export const dashboardLoader = async () => {
-  const user = useAuthStore.getState().user;
-  if (!user) return { rituals: [], logs: [] };
-
-  const [rituals, logs] = await Promise.all([
-    ritualService.getRituals(user.id),
-    ritualService.getLogs(user.id),
-  ]);
-  return { rituals, logs };
-};
-
-const Dashboard = () => {
-  const { rituals: loadedRituals, logs: loadedLogs } = useLoaderData() as {
-    rituals: Ritual[];
-    logs: RitualLog[];
-  };
-  const user = useAuthStore((state) => state.user);
-
-  // Use loaded data if available, fallback to empty (Zustand will sync if needed)
-  const rituals = loadedRituals || [];
-  const logs = loadedLogs || [];
+export default function DashboardPage() {
+  const { user } = useAuth();
+  const { rituals, logs, isLoading, error, completeRitual, isToggling } = useRituals();
+  const { t } = useI18n();
 
   const dailyQuote = useMemo(() => {
-    const dayOfYear = Math.floor(
-      (new Date().getTime() -
-        new Date(new Date().getFullYear(), 0, 0).getTime()) /
-        1000 /
-        60 /
-        60 /
-        24,
-    );
-    return DAILY_QUOTES[dayOfYear % DAILY_QUOTES.length];
+    const now = new Date();
+    const start = new Date(now.getFullYear(), 0, 0);
+    const dayOfYear = Math.floor((now.getTime() - start.getTime()) / 86_400_000);
+    return DAILY_QUOTES[dayOfYear % DAILY_QUOTES.length] ?? DAILY_QUOTES[0];
   }, []);
 
-  if (!user) return null; // Si no hay usuario autenticado, no se muestra el dashboard
+  if (isLoading) return <Loading />;
 
-  // Calcula la fecha actual en formato YYYY-MM-DD
-  const todayStr = new Date().toISOString().split("T")[0] || "";
-  // Filtra los logs para los rituales completados hoy
-  const todaysLogs = logs.filter((l) => l.date === todayStr);
-  // Guarda los IDs de rituales ya completados hoy en un Set para rápida comprobación
-  const completedIds = new Set(todaysLogs.map((l) => l.ritualId));
+  if (!user) return null;
 
-  const activeRituals = rituals.length;
-  // Rituals pendientes para hoy
-  const pendingRituals = rituals.filter((r) => !completedIds.has(r.id));
+  if (error) {
+    return (
+      <div className="rounded-xl border border-red-500/30 bg-red-500/5 p-6 text-center">
+        <AlertCircle className="mx-auto mb-2 text-red-500" size={24} />
+        <p className="text-sm text-red-400">{error.message}</p>
+      </div>
+    );
+  }
 
-  // Mejor racha conseguida por el usuario (streak máximo entre sus rituales)
-  // O podríamos calcular racha global de login, pero usaremos el max streak de rituales
-  const bestStreak = rituals.reduce((max, r) => Math.max(max, r.streak), 0);
-
-  // Racha actual (días consecutivos con al menos 1 log)
-  // Simplificación: Usaremos bestStreak como "Racha Actual" para mostrar en el header por ahora,
-  // ya que la racha global requiere lógica de backend o cálculo complejo de logs.
-  const currentStreakDisplay = bestStreak;
+  const todayKey = toDateKey();
+  const pendingRituals = rituals.filter(
+    (ritual) => !isRitualCompleted(ritual, logs, new Date()),
+  );
+  const completedCount = rituals.length - pendingRituals.length;
+  const bestStreak = Math.max(...rituals.map((ritual) => ritual.streak), 0);
 
   return (
-    <div className="space-y-8 animate-fade-in">
-      <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 border-b border-zinc-900 pb-6">
+    <div className="space-y-6 animate-fade-in sm:space-y-8">
+      <header className="flex flex-col gap-4 border-b border-zinc-900 pb-6 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h2 className="text-3xl font-display font-bold text-white mb-2">
-            Your Altar
-          </h2>
-          <p className="text-ritual-accent text-sm font-medium italic opacity-80">
-            "{dailyQuote}"
-          </p>
+          <h1 className="mb-2 font-display text-2xl font-bold text-white sm:text-3xl">
+            {t("dashboard.title")}
+          </h1>
+          <p className="text-sm italic text-ritual-accent/80">"{dailyQuote}"</p>
         </div>
-        <div className="text-left md:text-right">
-          <div className="text-4xl font-display font-bold text-zinc-200 flex items-center gap-2 justify-end">
-            {currentStreakDisplay}{" "}
+        <div className="text-left sm:text-right">
+          <div className="flex items-center gap-2 font-display text-3xl font-bold text-zinc-200 sm:justify-end sm:text-4xl">
+            {bestStreak}
             <Flame
-              size={32}
-              className={
-                currentStreakDisplay > 0
-                  ? "text-orange-500 fill-orange-500/20"
-                  : "text-zinc-700"
-              }
+              size={28}
+              className={bestStreak > 0 ? "fill-orange-500/20 text-orange-500" : "text-zinc-700"}
+              aria-hidden="true"
             />
           </div>
-          <div className="text-xs text-zinc-500 uppercase tracking-widest">
-            Daily Streak
+          <div className="text-[10px] uppercase tracking-widest text-zinc-500">
+            {t("dashboard.bestStreak")}
           </div>
         </div>
       </header>
 
-      {/* Sección de estadísticas principales */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-zinc-900/40 p-5 rounded-xl border border-zinc-800/50">
-          <div className="text-zinc-500 text-xs uppercase mb-1">
-            Total Essence
-          </div>
-          <div className="text-2xl font-mono text-ritual-accent">
-            {user.essence}
-          </div>
-        </div>
-        <div className="bg-zinc-900/40 p-5 rounded-xl border border-zinc-800/50">
-          <div className="text-zinc-500 text-xs uppercase mb-1">
-            Active Rituals
-          </div>
-          <div className="text-2xl font-mono text-white">{activeRituals}</div>
-        </div>
-        <div className="bg-zinc-900/40 p-5 rounded-xl border border-zinc-800/50">
-          <div className="text-zinc-500 text-xs uppercase mb-1">
-            Best Streak
-          </div>
-          <div className="text-2xl font-mono text-white flex items-center gap-2">
-            {bestStreak}{" "}
-            <Zap size={20} className="text-yellow-500 fill-yellow-500/20" />
-          </div>
-        </div>
-        <div className="bg-zinc-900/40 p-5 rounded-xl border border-zinc-800/50">
-          <div className="text-zinc-500 text-xs uppercase mb-1">Inventory</div>
-          <div className="text-2xl font-mono text-white">
-            {user.inventory.length}
-          </div>
-        </div>
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+        <Stat label={t("dashboard.essence")} value={user.essence} accent />
+        <Stat label={t("dashboard.active")} value={rituals.length} />
+        <Stat label={t("dashboard.pending")} value={pendingRituals.length} />
+        <Stat label={t("dashboard.inventory")} value={user.inventory.length} icon={<Package size={16} />} />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Sección: Heatmap de consistencia diaria */}
-        <div className="lg:col-span-2 bg-zinc-950/50 border border-zinc-900 p-6 rounded-2xl h-fit">
-          <div className="flex justify-between items-center mb-6">
-            <h3 className="text-sm font-bold text-zinc-400 uppercase tracking-wider flex items-center gap-2">
-              <Flame size={16} className="text-ritual-blood" />
-              Consistency Chart
-            </h3>
-          </div>
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <section className="rounded-2xl border border-zinc-900 bg-zinc-950/50 p-4 sm:p-6 lg:col-span-2">
+          <h2 className="mb-4 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-zinc-400">
+            <Flame size={16} className="text-ritual-blood" aria-hidden="true" />
+            Consistencia (último año)
+          </h2>
           <Heatmap logs={logs} />
-        </div>
+        </section>
 
-        {/* Sección: Calendario de rituales */}
-        <div className="bg-zinc-950/50 border border-zinc-900 p-6 rounded-2xl h-fit">
+        <section className="rounded-2xl border border-zinc-900 bg-zinc-950/50 p-4 sm:p-6">
           <Suspense fallback={<Loading />}>
-            <RitualCalendar />
+            <RitualCalendar rituals={rituals} logs={logs} />
           </Suspense>
-        </div>
+        </section>
 
-        {/* Sección: Rituals pendientes de completar hoy */}
-        <div className="bg-zinc-950/50 border border-zinc-900 p-6 rounded-2xl h-full flex flex-col">
-          <h3 className="text-sm font-bold text-zinc-400 uppercase tracking-wider flex items-center gap-2 mb-6">
-            <Clock size={16} className="text-ritual-accent" />
-            Pending Sacrifices
-          </h3>
+        <section className="flex h-full flex-col rounded-2xl border border-zinc-900 bg-zinc-950/50 p-4 sm:p-6">
+          <h2 className="mb-4 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-zinc-400">
+            <CheckCircle2 size={16} className="text-ritual-accent" aria-hidden="true" />
+            {t("dashboard.pending")}
+          </h2>
 
-          <div className="space-y-3 flex-1">
-            {/* Mensaje de todos los rituales completados */}
-            {pendingRituals.length === 0 && activeRituals > 0 && (
-              <div className="h-32 flex flex-col items-center justify-center text-center text-zinc-500 border border-dashed border-zinc-800 rounded-lg p-4">
-                <Check size={24} className="text-ritual-accent mb-2" />
-                <span className="text-sm">
-                  All sacrifices completed.
-                  <br />
-                  Rest now, initiate.
-                </span>
-              </div>
-            )}
-            {/* Mensaje si no hay rituales activos */}
-            {activeRituals === 0 && (
-              <div className="h-32 flex flex-col items-center justify-center text-center text-zinc-500 border border-dashed border-zinc-800 rounded-lg p-4">
-                <AlertCircle size={24} className="mb-2" />
-                <span className="text-sm">
-                  No rituals established.
-                  <br />
-                  Visit the Grimoire.
-                </span>
+          <div className="flex-1 space-y-2">
+            {rituals.length === 0 && (
+              <div className="flex min-h-32 flex-col items-center justify-center rounded-lg border border-dashed border-zinc-800 p-4 text-center text-sm text-zinc-500">
+                <AlertCircle size={24} className="mb-2" aria-hidden="true" />
+                {t("dashboard.noRituals")}
               </div>
             )}
 
-            {/* Listado de rituales pendientes para hoy */}
-            {pendingRituals.map((r) => (
+            {rituals.length > 0 && pendingRituals.length === 0 && (
+              <div className="flex min-h-32 flex-col items-center justify-center rounded-lg border border-dashed border-zinc-800 p-4 text-center text-sm text-zinc-500">
+                <Check size={24} className="mb-2 text-ritual-accent" aria-hidden="true" />
+                {t("dashboard.allDone")}
+              </div>
+            )}
+
+            {pendingRituals.map((ritual) => (
               <div
-                key={r.id}
-                className="flex justify-between items-center p-3 bg-zinc-900/30 border-l-2 border-zinc-800 hover:border-ritual-accent/50 transition-colors rounded-r-lg"
+                key={ritual.id}
+                className="flex items-center justify-between gap-2 rounded-r-lg border-l-2 border-zinc-800 bg-zinc-900/30 p-3 transition-colors hover:border-ritual-accent/50"
               >
-                <div>
-                  <div className="text-zinc-200 font-medium text-sm">
-                    {r.title}
-                  </div>
-                  <div className="text-zinc-600 text-xs">
-                    +{r.essenceReward} Essence
-                  </div>
+                <div className="min-w-0">
+                  <div className="truncate text-sm font-medium text-zinc-200">{ritual.title}</div>
+                  <div className="text-xs text-zinc-600">+{ritual.essenceReward} essence</div>
                 </div>
-                <span
-                  className={`text-[10px] uppercase tracking-wider px-2 py-0.5 rounded border ${
-                    r.difficulty === "master"
-                      ? "border-red-900/30 text-red-500/70"
-                      : r.difficulty === "adept"
-                        ? "border-yellow-900/30 text-yellow-500/70"
-                        : "border-green-900/30 text-green-500/70"
-                  }`}
+                <button
+                  type="button"
+                  onClick={() => void completeRitual({ id: ritual.id, date: todayKey })}
+                  disabled={isToggling}
+                  aria-label={`Completar ${ritual.title}`}
+                  className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-zinc-700 text-zinc-500 hover:border-ritual-accent hover:text-ritual-accent disabled:opacity-50"
                 >
-                  {r.difficulty === "novice"
-                    ? "Novice"
-                    : r.difficulty === "adept"
-                      ? "Intermediate"
-                      : "Master"}
-                </span>
+                  <Zap size={18} aria-hidden="true" />
+                </button>
               </div>
             ))}
           </div>
-        </div>
+
+          {completedCount > 0 && (
+            <p className="mt-3 text-[10px] uppercase tracking-wider text-zinc-600">
+              {completedCount} completados hoy
+            </p>
+          )}
+        </section>
       </div>
 
-      {/* Sección: Métricas de productividad */}
-      <div className="mt-8">
-        <Suspense fallback={<Loading />}>
-          <ProductivityMetrics />
-        </Suspense>
+      <Suspense fallback={<Loading />}>
+        <ProductivityMetrics rituals={rituals} logs={logs} />
+      </Suspense>
+    </div>
+  );
+}
+
+function Stat({
+  label,
+  value,
+  accent = false,
+  icon,
+}: {
+  label: string;
+  value: number | string;
+  accent?: boolean;
+  icon?: React.ReactNode;
+}) {
+  return (
+    <div className="rounded-xl border border-zinc-800/50 bg-zinc-900/40 p-4">
+      <div className="mb-1 flex items-center justify-between gap-2 text-[10px] uppercase tracking-wider text-zinc-500">
+        {label}
+        {icon}
+      </div>
+      <div className={`font-mono text-xl sm:text-2xl ${accent ? "text-ritual-accent" : "text-white"}`}>
+        {value}
       </div>
     </div>
   );
-};
-
-export default Dashboard;
+}

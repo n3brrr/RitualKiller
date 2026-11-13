@@ -6,8 +6,6 @@
  * y convertir una plantilla en un ritual concreto de usuario.
  */
 
-import { Ritual } from "../types";
-
 // Categorías posibles de rituales sugeridos
 export type RitualCategory =
   | "health"
@@ -223,22 +221,4 @@ export const searchRituals = (query: string): RitualTemplate[] => {
       r.description.toLowerCase().includes(lowerQuery) ||
       r.tags.some((tag) => tag.toLowerCase().includes(lowerQuery)),
   );
-};
-
-// Convierte una plantilla predefinida en un ritual de usuario real
-export const convertTemplateToRitual = (
-  template: RitualTemplate,
-  userId: string,
-): Ritual => {
-  return {
-    id: `${template.id}-${Date.now()}`,
-    user_id: userId,
-    title: template.title,
-    description: template.description,
-    difficulty: template.difficulty,
-    frequency: template.frequency,
-    essenceReward: template.essenceReward,
-    streak: 0,
-    created_at: new Date().toISOString(),
-  };
 };
