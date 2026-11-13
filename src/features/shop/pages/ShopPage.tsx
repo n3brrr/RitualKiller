@@ -16,11 +16,11 @@ export default function ShopPage() {
   const { user } = useAuth();
   const { quantities, purchase, isPurchasing, error } = useShop();
   const { t } = useI18n();
-  const [message, setMessage] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<{ tone: "success" | "error"; text: string } | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
 
   if (!user) return null;
-  if (error && !message) {
+  if (error && !feedback) {
     return (
       <p role="alert" className="rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-400">
         {error.message}
@@ -30,24 +30,29 @@ export default function ShopPage() {
 
   const handlePurchase = async (itemId: string, name: string, cost: number) => {
     if (user.essence < cost) {
-      setMessage("No tienes suficiente esencia.");
+      setFeedback({ tone: "error", text: "No tienes suficiente esencia." });
       return;
     }
-    setMessage(null);
+    setFeedback(null);
     setSelected(itemId);
     try {
       const result = await purchase(itemId);
       if (!result.success) {
-        setMessage(
-          result.reason === "insufficient_essence"
-            ? "No tienes suficiente esencia."
-            : "No se pudo completar la compra.",
-        );
+        setFeedback({
+          tone: "error",
+          text:
+            result.reason === "insufficient_essence"
+              ? "No tienes suficiente esencia."
+              : "No se pudo completar la compra.",
+        });
       } else {
-        setMessage(`${name} adquirido.`);
+        setFeedback({ tone: "success", text: `${name} adquirido.` });
       }
     } catch (purchaseError) {
-      setMessage(purchaseError instanceof Error ? purchaseError.message : "No se pudo comprar");
+      setFeedback({
+        tone: "error",
+        text: purchaseError instanceof Error ? purchaseError.message : "No se pudo comprar",
+      });
     } finally {
       setSelected(null);
     }
@@ -69,9 +74,16 @@ export default function ShopPage() {
         </div>
       </header>
 
-      {message && (
-        <p role="status" className="rounded-lg border border-ritual-accent/30 bg-ritual-accent/10 p-3 text-sm text-ritual-accent">
-          {message}
+      {feedback && (
+        <p
+          role={feedback.tone === "error" ? "alert" : "status"}
+          className={`rounded-lg border p-3 text-sm ${
+            feedback.tone === "error"
+              ? "border-red-500/30 bg-red-500/10 text-red-400"
+              : "border-ritual-accent/30 bg-ritual-accent/10 text-ritual-accent"
+          }`}
+        >
+          {feedback.text}
         </p>
       )}
 

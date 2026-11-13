@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Package, Zap } from "lucide-react";
 import { useShop } from "@/hooks/useShop";
 import { useI18n } from "@/i18n";
@@ -8,8 +9,36 @@ import Loading from "@/components/animations/Loading";
 export default function InventoryPage() {
   const { quantities, buffs, isLoading, consume, error } = useShop();
   const { t } = useI18n();
+  const [feedback, setFeedback] = useState<{ tone: "success" | "error"; text: string } | null>(null);
+  const [pendingId, setPendingId] = useState<string | null>(null);
 
   if (isLoading) return <Loading />;
+
+  const handleConsume = async (itemId: string, name: string) => {
+    setPendingId(itemId);
+    setFeedback(null);
+    try {
+      const result = await consume(itemId);
+      if (!result.success) {
+        setFeedback({
+          tone: "error",
+          text:
+            result.reason === "not_owned"
+              ? "Ya no tienes ese artefacto."
+              : "No se pudo usar el artefacto.",
+        });
+      } else {
+        setFeedback({ tone: "success", text: `${name} usado.` });
+      }
+    } catch (consumeError) {
+      setFeedback({
+        tone: "error",
+        text: consumeError instanceof Error ? consumeError.message : "No se pudo usar el artefacto.",
+      });
+    } finally {
+      setPendingId(null);
+    }
+  };
 
   const owned = SHOP_ITEMS.filter((item) => (quantities[item.id] ?? 0) > 0);
 
@@ -26,6 +55,19 @@ export default function InventoryPage() {
       {error && (
         <p role="alert" className="rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-400">
           {error.message}
+        </p>
+      )}
+
+      {feedback && (
+        <p
+          role={feedback.tone === "error" ? "alert" : "status"}
+          className={`rounded-lg border p-3 text-sm ${
+            feedback.tone === "error"
+              ? "border-red-500/30 bg-red-500/10 text-red-400"
+              : "border-ritual-accent/30 bg-ritual-accent/10 text-ritual-accent"
+          }`}
+        >
+          {feedback.text}
         </p>
       )}
 
@@ -75,10 +117,11 @@ export default function InventoryPage() {
               </div>
               <button
                 type="button"
-                onClick={() => void consume(item.id).catch(() => undefined)}
-                className="mt-3 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg border border-zinc-700 text-sm font-bold text-zinc-200 hover:border-ritual-accent hover:text-ritual-accent"
+                onClick={() => void handleConsume(item.id, item.name)}
+                disabled={pendingId === item.id}
+                className="mt-3 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg border border-zinc-700 text-sm font-bold text-zinc-200 hover:border-ritual-accent hover:text-ritual-accent disabled:cursor-not-allowed disabled:opacity-40"
               >
-                <Zap size={16} aria-hidden="true" /> Usar
+                <Zap size={16} aria-hidden="true" /> {pendingId === item.id ? "Usando..." : "Usar"}
               </button>
             </article>
           ))}
