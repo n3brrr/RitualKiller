@@ -5,6 +5,7 @@ import { useRituals } from "@/hooks/useRituals";
 import { useI18n } from "@/i18n";
 import { addDays, daysUntil, toDateKey } from "@/utils/dates";
 import Loading from "@/components/animations/Loading";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 
 export default function GoalsPage() {
   const { goals, isLoading, error, createGoal, isCreating, removeGoal } = useGoals();
@@ -13,6 +14,8 @@ export default function GoalsPage() {
 
   const [showCreator, setShowCreator] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; title: string } | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const [form, setForm] = useState({
     title: "",
     description: "",
@@ -73,11 +76,22 @@ export default function GoalsPage() {
     return Math.min(relevant.length, goal.target_value);
   };
 
-  const handleDelete = async (id: string) => {
-    if (!window.confirm("¿Eliminar este objetivo?")) return;
-    await removeGoal(id).catch((deleteError: unknown) =>
-      setFormError(deleteError instanceof Error ? deleteError.message : "No se pudo eliminar"),
-    );
+  const handleDelete = (id: string, title: string) => {
+    setDeleteTarget({ id, title });
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
+    setFormError(null);
+    setDeleting(true);
+    try {
+      await removeGoal(deleteTarget.id);
+    } catch (deleteError) {
+      setFormError(deleteError instanceof Error ? deleteError.message : "No se pudo eliminar");
+    } finally {
+      setDeleting(false);
+      setDeleteTarget(null);
+    }
   };
 
   return (
@@ -225,7 +239,7 @@ export default function GoalsPage() {
                   </div>
                   <button
                     type="button"
-                    onClick={() => void handleDelete(goal.id)}
+                    onClick={() => handleDelete(goal.id, goal.title)}
                     aria-label={`Eliminar ${goal.title}`}
                     className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-zinc-600 hover:text-red-500"
                   >
@@ -261,6 +275,22 @@ export default function GoalsPage() {
           })}
         </div>
       )}
+
+      <ConfirmDialog
+        open={Boolean(deleteTarget)}
+        title="Eliminar objetivo"
+        description={
+          <>
+            ¿Eliminar <strong className="text-zinc-200">{deleteTarget?.title}</strong>? No se puede
+            deshacer.
+          </>
+        }
+        confirmLabel="Eliminar"
+        destructive
+        busy={deleting}
+        onConfirm={() => void confirmDelete()}
+        onClose={() => setDeleteTarget(null)}
+      />
     </div>
   );
 }

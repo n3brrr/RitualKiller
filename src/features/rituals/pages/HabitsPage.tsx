@@ -3,6 +3,7 @@ import { BookOpen, Check, PenTool, Plus, Sparkles, X } from "lucide-react";
 import RitualCard from "@/components/rituals/RitualCard";
 import RitualLibrary from "@/components/rituals/RitualLibrary";
 import Loading from "@/components/animations/Loading";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { useAuth } from "@/features/auth/AuthProvider";
 import { useRituals } from "@/hooks/useRituals";
 import { useI18n } from "@/i18n";
@@ -38,6 +39,8 @@ export default function HabitsPage() {
   const [goalInput, setGoalInput] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Ritual | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const [form, setForm] = useState({
     title: "",
     description: "",
@@ -135,13 +138,21 @@ export default function HabitsPage() {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!window.confirm("¿Eliminar este ritual y su historial? No se puede deshacer.")) return;
+  const handleDelete = (id: string) => {
+    setDeleteTarget(rituals.find((ritual) => ritual.id === id) ?? null);
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
     setMessage(null);
+    setDeleting(true);
     try {
-      await removeRitual(id);
+      await removeRitual(deleteTarget.id);
     } catch (error) {
       handleError(error);
+    } finally {
+      setDeleting(false);
+      setDeleteTarget(null);
     }
   };
 
@@ -337,6 +348,22 @@ export default function HabitsPage() {
           muted
         />
       )}
+
+      <ConfirmDialog
+        open={Boolean(deleteTarget)}
+        title="Eliminar ritual"
+        description={
+          <>
+            ¿Eliminar <strong className="text-zinc-200">{deleteTarget?.title}</strong> y su historial?
+            No se puede deshacer.
+          </>
+        }
+        confirmLabel="Eliminar"
+        destructive
+        busy={deleting}
+        onConfirm={() => void confirmDelete()}
+        onClose={() => setDeleteTarget(null)}
+      />
     </div>
   );
 }

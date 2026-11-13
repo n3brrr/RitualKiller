@@ -10,6 +10,7 @@ import { updatePassword } from "@/services/authService";
 import { downloadFile, exportData, exportToCSV, importData } from "@/utils/exportImport";
 import { validatePassword } from "@/utils/validation";
 import Loading from "@/components/animations/Loading";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 
 export default function SettingsPage() {
   const { user, refreshProfile, signOut } = useAuth();
@@ -27,6 +28,7 @@ export default function SettingsPage() {
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   // Dependencias por campo para no pisar ediciones locales en cada refetch.
   useEffect(() => {
@@ -146,14 +148,7 @@ export default function SettingsPage() {
   };
 
   const handleDeleteData = async () => {
-    if (
-      !window.confirm(
-        `${t("settings.deleteWarning")}\n\n¿Quieres borrar todos tus datos definitivamente?`,
-      )
-    ) {
-      return;
-    }
-
+    setConfirmDelete(false);
     setBusy(true);
     setError(null);
     try {
@@ -359,7 +354,7 @@ export default function SettingsPage() {
         <div className="flex flex-col gap-2 sm:flex-row">
           <button
             type="button"
-            onClick={() => void handleDeleteData()}
+            onClick={() => setConfirmDelete(true)}
             disabled={busy}
             className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-red-500 px-4 text-sm font-bold text-white hover:bg-red-400 disabled:opacity-50"
           >
@@ -374,6 +369,24 @@ export default function SettingsPage() {
           </button>
         </div>
       </section>
+
+      <ConfirmDialog
+        open={confirmDelete}
+        title="Borrar todos tus datos"
+        description={
+          <>
+            {t("settings.deleteWarning")}{" "}
+            <strong className="text-red-400">
+              Esta acción es definitiva y no se puede deshacer.
+            </strong>
+          </>
+        }
+        confirmLabel="Borrar todo"
+        destructive
+        busy={busy}
+        onConfirm={() => void handleDeleteData()}
+        onClose={() => setConfirmDelete(false)}
+      />
     </div>
   );
 }

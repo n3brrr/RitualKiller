@@ -14,6 +14,8 @@ import { useSocial } from "@/hooks/useSocial";
 import { useI18n } from "@/i18n";
 import { formatDateTime } from "@/utils/dates";
 import Loading from "@/components/animations/Loading";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { ReportDialog } from "@/components/ui/ReportDialog";
 import type { SocialPost } from "@/types";
 
 export function EnhancedSocial() {
@@ -34,20 +36,26 @@ export function EnhancedSocial() {
   const { t } = useI18n();
 
   const [content, setContent] = useState("");
-  const [message, setMessage] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<{ tone: "success" | "error"; text: string } | null>(null);
   const [openComments, setOpenComments] = useState<string | null>(null);
   const [drafts, setDrafts] = useState<Record<string, string>>({});
+  const [reportTarget, setReportTarget] = useState<SocialPost | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<SocialPost | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   if (!user) return null;
   if (isLoading) return <Loading />;
 
   const handleError = (actionError: unknown) => {
-    setMessage(actionError instanceof Error ? actionError.message : "Algo salió mal");
+    setFeedback({
+      tone: "error",
+      text: actionError instanceof Error ? actionError.message : "Algo salió mal",
+    });
   };
 
   const handlePublish = async (event: React.FormEvent) => {
     event.preventDefault();
-    setMessage(null);
+    setFeedback(null);
     try {
       await createPost(content);
       setContent("");
@@ -59,7 +67,7 @@ export function EnhancedSocial() {
   const handleComment = async (post: SocialPost) => {
     const draft = drafts[post.id]?.trim();
     if (!draft) return;
-    setMessage(null);
+    setFeedback(null);
     try {
       await addComment({ postId: post.id, content: draft });
       setDrafts((current) => ({ ...current, [post.id]: "" }));
@@ -68,15 +76,24 @@ export function EnhancedSocial() {
     }
   };
 
-  const handleReport = async (post: SocialPost) => {
-    const reason = window.prompt("Motivo del reporte (mínimo 3 caracteres):");
-    if (!reason) return;
-    setMessage(null);
+  const handleReport = async (reason: string) => {
+    if (!reportTarget) return;
+    await reportPost({ postId: reportTarget.id, reason });
+    setReportTarget(null);
+    setFeedback({ tone: "success", text: "Reporte enviado a moderación." });
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
+    setFeedback(null);
+    setDeleting(true);
     try {
-      await reportPost({ postId: post.id, reason });
-      setMessage("Reporte enviado a moderación.");
-    } catch (reportError) {
-      handleError(reportError);
+      await deletePost(deleteTarget.id);
+    } catch (deleteError) {
+      handleError(deleteError);
+    } finally {
+      setDeleting(false);
+      setDeleteTarget(null);
     }
   };
 
@@ -87,9 +104,16 @@ export function EnhancedSocial() {
         <p className="text-sm text-zinc-500">Comparte tu progreso y sigue a otros iniciados.</p>
       </header>
 
-      {(message || error) && (
-        <p role="alert" className="rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-400">
-          {message ?? error?.message}
+      {(feedback || error) && (
+        <p
+          role={feedback?.tone === "success" ? "status" : "alert"}
+          className={`rounded-lg border p-3 text-sm ${
+            feedback?.tone === "success"
+              ? "border-ritual-accent/30 bg-ritual-accent/10 text-ritual-accent"
+              : "border-red-500/30 bg-red-500/10 text-red-400"
+          }`}
+        >
+          {feedback?.text ?? error?.message}
         </p>
       )}
 
@@ -203,7 +227,7 @@ export function EnhancedSocial() {
                     <>
                       <button
                         type="button"
-                        onClick={() => void handleReport(post)}
+                        onClick={() => setReportTarget(post)}
                         aria-label={t("social.report")}
                         className="inline-flex h-11 w-11 items-center justify-center rounded-lg text-zinc-600 hover:text-yellow-500"
                       >
@@ -214,8 +238,18 @@ export function EnhancedSocial() {
                         onClick={() => {
                           void navigator.clipboard
                             ?.writeText(`${window.location.origin}/app/profile/${post.author}`)
-                            .then(() => setMessage("Enlace de perfil copiado."))
-                            .catch(() => setMessage("No se pudo copiar el enlace."));
+                            .then(() =>
+                              setFeedback({
+                                tone: "success",
+                                text: "Enlace de perfil copiado.",
+                              }),
+                            )
+                            .catch(() =>
+                              setFeedback({
+                                tone: "error",
+                                text: "No se pudo copiar el enlace.",
+                              }),
+                            );
                         }}
                         aria-label="Copiar enlace del perfil"
                         className="inline-flex h-11 w-11 items-center justify-center rounded-lg text-zinc-600 hover:text-zinc-300"
@@ -228,11 +262,7 @@ export function EnhancedSocial() {
                   {isOwn && (
                     <button
                       type="button"
-                      onClick={() => {
-                        if (window.confirm("¿Eliminar esta publicación?")) {
-                          void deletePost(post.id).catch(handleError);
-                        }
-                      }}
+                      onClick={() => setDeleteTarget(post)}
                       aria-label="Eliminar publicación"
                       className="inline-flex h-11 w-11 items-center justify-center rounded-lg text-zinc-600 hover:text-red-500"
                     >
@@ -285,6 +315,23 @@ export function EnhancedSocial() {
           })}
         </ul>
       )}
+
+      <ReportDialog
+        open={Boolean(reportTarget)}
+        onClose={() => setReportTarget(null)}
+        onSubmit={handleReport}
+      />
+
+      <ConfirmDialog
+        open={Boolean(deleteTarget)}
+        title="Eliminar publicación"
+        description="¿Eliminar esta publicación y sus comentarios? No se puede deshacer."
+        confirmLabel="Eliminar"
+        destructive
+        busy={deleting}
+        onConfirm={() => void confirmDelete()}
+        onClose={() => setDeleteTarget(null)}
+      />
     </div>
   );
 }

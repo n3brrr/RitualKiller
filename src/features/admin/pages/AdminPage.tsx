@@ -1,19 +1,40 @@
+import { useState } from "react";
 import { AlertTriangle, Check, ShieldCheck, ShieldOff, Users, X } from "lucide-react";
 import { useAdmin } from "@/hooks/useAdmin";
 import { useAuth } from "@/features/auth/AuthProvider";
 import { useI18n } from "@/i18n";
 import { formatDateTime } from "@/utils/dates";
 import Loading from "@/components/animations/Loading";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import type { AdminUser } from "@/types";
 
 export default function AdminPage() {
   const { user } = useAuth();
   const { metrics, users, reports, errorLogs, isLoading, error, resolveReport, setAdmin } =
     useAdmin();
   const { t } = useI18n();
+  const [adminTarget, setAdminTarget] = useState<AdminUser | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
 
   if (isLoading) return <Loading />;
 
   const pendingReports = reports.filter((report) => report.status === "pending");
+
+  const changeAdmin = async (target: AdminUser, isAdmin: boolean) => {
+    setActionError(null);
+    setBusy(true);
+    try {
+      await setAdmin({ userId: target.id, isAdmin });
+    } catch (adminError) {
+      setActionError(
+        adminError instanceof Error ? adminError.message : "No se pudo cambiar el rol",
+      );
+    } finally {
+      setBusy(false);
+      setAdminTarget(null);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -25,9 +46,9 @@ export default function AdminPage() {
         <p className="text-sm text-zinc-500">Métricas globales, usuarios y moderación.</p>
       </header>
 
-      {error && (
+      {(error || actionError) && (
         <p role="alert" className="rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-400">
-          {error.message}
+          {actionError ?? error?.message}
         </p>
       )}
 
@@ -114,15 +135,9 @@ export default function AdminPage() {
                   <td className="py-2">
                     <button
                       type="button"
-                      onClick={() => {
-                        if (
-                          item.isAdmin &&
-                          !window.confirm(`¿Quitar permisos de admin a ${item.username}?`)
-                        ) {
-                          return;
-                        }
-                        void setAdmin({ userId: item.id, isAdmin: !item.isAdmin });
-                      }}
+                      onClick={() =>
+                        item.isAdmin ? setAdminTarget(item) : void changeAdmin(item, true)
+                      }
                       disabled={item.id === user?.id}
                       className={`inline-flex min-h-11 items-center gap-1 rounded-lg border px-3 text-xs disabled:opacity-40 ${
                         item.isAdmin
@@ -164,6 +179,24 @@ export default function AdminPage() {
           </ul>
         )}
       </section>
+
+      <ConfirmDialog
+        open={Boolean(adminTarget)}
+        title="Quitar permisos de admin"
+        description={
+          <>
+            ¿Quitar permisos de admin a{" "}
+            <strong className="text-zinc-200">{adminTarget?.username}</strong>?
+          </>
+        }
+        confirmLabel="Quitar permisos"
+        destructive
+        busy={busy}
+        onConfirm={() => {
+          if (adminTarget) void changeAdmin(adminTarget, false);
+        }}
+        onClose={() => setAdminTarget(null)}
+      />
     </div>
   );
 }
