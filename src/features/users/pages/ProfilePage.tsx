@@ -47,13 +47,13 @@ export default function ProfilePage() {
             <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-start">
               <h1 className="font-display text-2xl font-bold text-white">{user.username}</h1>
               {user.isAdmin && (
-                <span className="inline-flex items-center gap-1 rounded border border-yellow-500/30 bg-yellow-500/10 px-2 py-0.5 text-[10px] uppercase text-yellow-500">
+                <span className="inline-flex items-center gap-1 rounded border border-yellow-500/30 bg-yellow-500/10 px-2 py-0.5 text-xs uppercase text-yellow-500">
                   <Shield size={10} aria-hidden="true" /> Admin
                 </span>
               )}
             </div>
             <p className="text-sm uppercase tracking-widest text-ritual-accent">{user.rank}</p>
-            <p className="mt-1 text-xs text-zinc-600">
+            <p className="mt-1 text-xs text-zinc-400">
               Iniciado el {formatDateTime(user.created_at)}
             </p>
           </div>
@@ -71,13 +71,13 @@ export default function ProfilePage() {
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
         <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-4">
-          <div className="mb-1 flex items-center gap-2 text-[10px] uppercase tracking-wider text-zinc-500">
+          <div className="mb-1 flex items-center gap-2 text-xs uppercase tracking-wider text-zinc-500">
             <Zap size={14} aria-hidden="true" /> Esencia
           </div>
           <div className="font-mono text-2xl text-ritual-accent">{user.essence}</div>
         </div>
         <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-4">
-          <div className="mb-1 flex items-center gap-2 text-[10px] uppercase tracking-wider text-zinc-500">
+          <div className="mb-1 flex items-center gap-2 text-xs uppercase tracking-wider text-zinc-500">
             <UserIcon size={14} aria-hidden="true" /> Inventario
           </div>
           <div className="font-mono text-2xl text-white">{user.inventory.length}</div>

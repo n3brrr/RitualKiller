@@ -68,7 +68,7 @@ export function RitualCalendar({ rituals, logs }: RitualCalendarProps) {
 
       <div className="grid grid-cols-7 gap-1 text-center">
         {WEEKDAYS.map((day) => (
-          <span key={day} className="pb-1 text-[10px] font-bold uppercase text-zinc-600">
+          <span key={day} className="pb-1 text-xs font-bold uppercase text-zinc-400">
             {day}
           </span>
         ))}
@@ -90,7 +90,7 @@ export function RitualCalendar({ rituals, logs }: RitualCalendarProps) {
               aria-label={`${dateKey}: ${completed} de ${rituals.length} rituales`}
               className={`relative flex aspect-square flex-col items-center justify-center rounded-md border text-xs ${
                 isToday ? "border-ritual-accent/60" : "border-zinc-900"
-              } ${completed > 0 ? "bg-ritual-accent/10 text-zinc-100" : "text-zinc-600"}`}
+              } ${completed > 0 ? "bg-ritual-accent/10 text-zinc-100" : "text-zinc-400"}`}
             >
               <span>{day}</span>
               {completed > 0 && (

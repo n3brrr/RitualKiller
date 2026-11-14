@@ -45,7 +45,7 @@ export function Heatmap({ logs }: { logs: RitualLog[] }) {
           );
         })}
       </div>
-      <div className="flex items-center justify-end gap-1 text-[10px] uppercase tracking-wider text-zinc-600">
+      <div className="flex items-center justify-end gap-1 text-xs uppercase tracking-wider text-zinc-400">
         <span>Menos</span>
         {INTENSITY.map((className, index) => (
           <span key={index} className={`h-2.5 w-2.5 rounded-sm ${className}`} />

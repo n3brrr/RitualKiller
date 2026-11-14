@@ -88,7 +88,7 @@ export function AdvancedAnalytics() {
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
         <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-4">
-          <div className="mb-1 flex items-center gap-2 text-[10px] uppercase tracking-wider text-zinc-500">
+          <div className="mb-1 flex items-center gap-2 text-xs uppercase tracking-wider text-zinc-500">
             <Target size={14} aria-hidden="true" /> Tasa
           </div>
           <div className="font-mono text-2xl text-ritual-accent">
@@ -96,13 +96,13 @@ export function AdvancedAnalytics() {
           </div>
         </div>
         <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-4">
-          <div className="mb-1 flex items-center gap-2 text-[10px] uppercase tracking-wider text-zinc-500">
+          <div className="mb-1 flex items-center gap-2 text-xs uppercase tracking-wider text-zinc-500">
             <TrendingUp size={14} aria-hidden="true" /> Completados
           </div>
           <div className="font-mono text-2xl text-white">{filteredLogs.length}</div>
         </div>
         <div className="col-span-2 rounded-xl border border-zinc-800 bg-zinc-950 p-4 sm:col-span-1">
-          <div className="mb-1 flex items-center gap-2 text-[10px] uppercase tracking-wider text-zinc-500">
+          <div className="mb-1 flex items-center gap-2 text-xs uppercase tracking-wider text-zinc-500">
             <Calendar size={14} aria-hidden="true" /> Rango
           </div>
           <div className="font-mono text-2xl text-white">{range} días</div>

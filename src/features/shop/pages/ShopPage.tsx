@@ -101,7 +101,7 @@ export default function ShopPage() {
                 <div className="text-3xl" aria-hidden="true">
                   {item.icon}
                 </div>
-                <span className="rounded border border-zinc-800 px-2 py-0.5 text-[10px] uppercase tracking-wider text-zinc-500">
+                <span className="rounded border border-zinc-800 px-2 py-0.5 text-xs uppercase tracking-wider text-zinc-500">
                   {item.rarity}
                 </span>
               </div>
@@ -111,7 +111,7 @@ export default function ShopPage() {
               <div className="mt-3 flex items-center justify-between gap-2">
                 <div className="text-xs text-zinc-500">
                   <span className="font-mono text-ritual-accent">{item.cost}</span> esencia
-                  {owned > 0 && <span className="ml-2 text-zinc-600">· tienes {owned}</span>}
+                  {owned > 0 && <span className="ml-2 text-zinc-400">· tienes {owned}</span>}
                 </div>
                 <button
                   type="button"

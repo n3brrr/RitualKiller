@@ -78,7 +78,7 @@ export default function AdminPage() {
                   <p className="text-zinc-300">
                     <strong>{report.reporterName}</strong>: {report.reason}
                   </p>
-                  <p className="text-[10px] uppercase tracking-wider text-zinc-600">
+                  <p className="text-xs uppercase tracking-wider text-zinc-400">
                     {report.postId ? `post ${report.postId.slice(0, 8)}` : "usuario"} ·{" "}
                     {formatDateTime(report.createdAt)}
                   </p>
@@ -112,7 +112,7 @@ export default function AdminPage() {
         <div className="overflow-x-auto">
           <table className="w-full min-w-[32rem] text-left text-sm">
             <thead>
-              <tr className="border-b border-zinc-800 text-[10px] uppercase tracking-wider text-zinc-500">
+              <tr className="border-b border-zinc-800 text-xs uppercase tracking-wider text-zinc-500">
                 <th className="py-2 pr-3">Usuario</th>
                 <th className="py-2 pr-3">Esencia</th>
                 <th className="py-2 pr-3">Rol</th>
@@ -125,7 +125,7 @@ export default function AdminPage() {
                   <td className="py-2 pr-3 text-zinc-200">
                     {item.username}
                     {item.id === user?.id && (
-                      <span className="ml-2 text-[10px] text-zinc-500">(tú)</span>
+                      <span className="ml-2 text-xs text-zinc-500">(tú)</span>
                     )}
                   </td>
                   <td className="py-2 pr-3 font-mono text-ritual-accent">{item.essence}</td>
@@ -171,7 +171,7 @@ export default function AdminPage() {
             {errorLogs.map((entry) => (
               <li key={entry.id} className="rounded-lg border border-zinc-900 p-3 text-sm">
                 <p className="break-words text-zinc-300">{entry.message}</p>
-                <p className="mt-1 text-[10px] uppercase tracking-wider text-zinc-600">
+                <p className="mt-1 text-xs uppercase tracking-wider text-zinc-400">
                   {formatDateTime(entry.createdAt)}
                 </p>
               </li>
@@ -204,7 +204,7 @@ export default function AdminPage() {
 function Metric({ label, value, danger = false }: { label: string; value: number; danger?: boolean }) {
   return (
     <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-4">
-      <div className="mb-1 text-[10px] uppercase tracking-wider text-zinc-500">{label}</div>
+      <div className="mb-1 text-xs uppercase tracking-wider text-zinc-500">{label}</div>
       <div className={`font-mono text-2xl ${danger && value > 0 ? "text-red-400" : "text-white"}`}>
         {value}
       </div>

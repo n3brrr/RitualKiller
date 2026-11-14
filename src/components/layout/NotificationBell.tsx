@@ -35,7 +35,7 @@ export function NotificationBell() {
       >
         <Bell size={20} />
         {unreadCount > 0 && (
-          <span className="absolute right-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-ritual-accent px-1 text-[10px] font-bold text-black">
+          <span className="absolute right-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-ritual-accent px-1 text-xs font-bold text-black">
             {unreadCount > 9 ? "9+" : unreadCount}
           </span>
         )}
@@ -100,7 +100,7 @@ export function NotificationBell() {
                   )}
                 </div>
                 <p className="mt-1 text-sm text-zinc-400">{notification.message}</p>
-                <span className="mt-1 block text-xs text-zinc-600">
+                <span className="mt-1 block text-xs text-zinc-400">
                   {formatDateTime(notification.createdAt)}
                 </span>
               </button>

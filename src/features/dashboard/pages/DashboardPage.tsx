@@ -62,7 +62,7 @@ export default function DashboardPage() {
               aria-hidden="true"
             />
           </div>
-          <div className="text-[10px] uppercase tracking-widest text-zinc-500">
+          <div className="text-xs uppercase tracking-widest text-zinc-500">
             {t("dashboard.bestStreak")}
           </div>
         </div>
@@ -118,7 +118,7 @@ export default function DashboardPage() {
               >
                 <div className="min-w-0">
                   <div className="truncate text-sm font-medium text-zinc-200">{ritual.title}</div>
-                  <div className="text-xs text-zinc-600">+{ritual.essenceReward} essence</div>
+                  <div className="text-xs text-zinc-400">+{ritual.essenceReward} essence</div>
                 </div>
                 <button
                   type="button"
@@ -134,7 +134,7 @@ export default function DashboardPage() {
           </div>
 
           {completedCount > 0 && (
-            <p className="mt-3 text-[10px] uppercase tracking-wider text-zinc-600">
+            <p className="mt-3 text-xs uppercase tracking-wider text-zinc-400">
               {completedCount} completados hoy
             </p>
           )}
@@ -161,7 +161,7 @@ function Stat({
 }) {
   return (
     <div className="rounded-xl border border-zinc-800/50 bg-zinc-900/40 p-4">
-      <div className="mb-1 flex items-center justify-between gap-2 text-[10px] uppercase tracking-wider text-zinc-500">
+      <div className="mb-1 flex items-center justify-between gap-2 text-xs uppercase tracking-wider text-zinc-500">
         {label}
         {icon}
       </div>

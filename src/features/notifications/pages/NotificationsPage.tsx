@@ -56,7 +56,7 @@ export default function NotificationsPage() {
                     <h2 className="font-bold text-white">{notification.title}</h2>
                   </div>
                   <p className="mt-1 text-sm text-zinc-400">{notification.message}</p>
-                  <p className="mt-1 text-[10px] uppercase tracking-wider text-zinc-600">
+                  <p className="mt-1 text-xs uppercase tracking-wider text-zinc-400">
                     {formatDateTime(notification.createdAt)}
                   </p>
                 </div>
@@ -75,7 +75,7 @@ export default function NotificationsPage() {
                     type="button"
                     onClick={() => void removeNotification(notification.id)}
                     aria-label="Eliminar notificación"
-                    className="inline-flex h-11 w-11 items-center justify-center rounded-full text-zinc-600 hover:text-red-500"
+                    className="inline-flex h-11 w-11 items-center justify-center rounded-full text-zinc-400 hover:text-red-500"
                   >
                     <Trash2 size={16} aria-hidden="true" />
                   </button>

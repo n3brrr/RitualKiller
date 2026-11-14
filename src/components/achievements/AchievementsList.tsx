@@ -74,7 +74,7 @@ export function AchievementsList() {
                           ) : (
                             <Lock
                               size={16}
-                              className="shrink-0 text-zinc-600"
+                              className="shrink-0 text-zinc-400"
                               aria-label={t("achievements.locked")}
                             />
                           )}
@@ -84,7 +84,7 @@ export function AchievementsList() {
                     </div>
 
                     <div className="mt-3">
-                      <div className="mb-1 flex justify-between text-[10px] uppercase tracking-wider text-zinc-500">
+                      <div className="mb-1 flex justify-between text-xs uppercase tracking-wider text-zinc-500">
                         <span>
                           {achievement.progress} / {achievement.target}
                         </span>
@@ -97,7 +97,7 @@ export function AchievementsList() {
                         />
                       </div>
                       {achievement.unlockedAt && (
-                        <p className="mt-2 flex items-center gap-1 text-[10px] text-zinc-500">
+                        <p className="mt-2 flex items-center gap-1 text-xs text-zinc-500">
                           <Trophy size={10} aria-hidden="true" />
                           {formatDateTime(achievement.unlockedAt)}
                         </p>

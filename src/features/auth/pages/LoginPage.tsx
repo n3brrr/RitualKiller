@@ -183,7 +183,7 @@ export default function LoginPage() {
           </div>
         </div>
 
-        <Link to="/" className="mt-6 block text-center text-xs text-zinc-600 hover:text-ritual-accent">
+        <Link to="/" className="mt-6 block text-center text-xs text-zinc-400 hover:text-ritual-accent">
           {t("common.back")}
         </Link>
       </div>

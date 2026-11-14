@@ -35,7 +35,7 @@ export function RitualCard({ ritual, isDone, busy = false, onToggle, onDelete }:
             {ritual.title}
           </h3>
           {ritual.streak > 1 && (
-            <span className="inline-flex items-center gap-1 rounded border border-yellow-500/20 bg-yellow-500/10 px-2 py-0.5 font-mono text-[10px] text-yellow-500">
+            <span className="inline-flex items-center gap-1 rounded border border-yellow-500/20 bg-yellow-500/10 px-2 py-0.5 font-mono text-xs text-yellow-500">
               <Zap size={10} fill="currentColor" aria-hidden="true" />
               {ritual.streak}
             </span>
@@ -46,7 +46,7 @@ export function RitualCard({ ritual, isDone, busy = false, onToggle, onDelete }:
           <p className="mt-1 line-clamp-2 text-sm text-zinc-500">{ritual.description}</p>
         )}
 
-        <div className="mt-2 flex flex-wrap gap-1.5 text-[10px] uppercase tracking-wider">
+        <div className="mt-2 flex flex-wrap gap-1.5 text-xs uppercase tracking-wider">
           <span className={`rounded border px-2 py-0.5 ${DIFFICULTY_STYLES[ritual.difficulty]}`}>
             {translateDifficulty(ritual.difficulty)}
           </span>
@@ -69,7 +69,7 @@ export function RitualCard({ ritual, isDone, busy = false, onToggle, onDelete }:
           className={`inline-flex h-11 w-11 items-center justify-center rounded-full border-2 transition-colors disabled:cursor-wait disabled:opacity-60 ${
             isDone
               ? "border-ritual-accent bg-ritual-accent text-black"
-              : "border-zinc-700 text-zinc-600 hover:border-ritual-accent hover:text-ritual-accent"
+              : "border-zinc-700 text-zinc-400 hover:border-ritual-accent hover:text-ritual-accent"
           }`}
         >
           <Check size={20} aria-hidden="true" />
@@ -78,7 +78,7 @@ export function RitualCard({ ritual, isDone, busy = false, onToggle, onDelete }:
           type="button"
           onClick={() => onDelete(ritual.id)}
           aria-label={`Eliminar ${ritual.title}`}
-          className="inline-flex h-11 w-11 items-center justify-center rounded-full text-zinc-600 transition-colors hover:text-red-500"
+          className="inline-flex h-11 w-11 items-center justify-center rounded-full text-zinc-400 transition-colors hover:text-red-500"
         >
           <Trash2 size={18} aria-hidden="true" />
         </button>

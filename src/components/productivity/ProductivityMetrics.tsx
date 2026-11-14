@@ -98,13 +98,13 @@ export function ProductivityMetrics({ rituals, logs }: ProductivityMetricsProps)
         {cards.map((card) => (
           <div key={card.label} className="rounded-xl border border-zinc-800 bg-zinc-950 p-4">
             <div className="mb-2 flex items-center justify-between gap-2">
-              <span className="text-[10px] uppercase tracking-wider text-zinc-500">
+              <span className="text-xs uppercase tracking-wider text-zinc-500">
                 {card.label}
               </span>
               {card.icon}
             </div>
             <div className="font-mono text-xl font-bold text-white">{card.value}</div>
-            <div className="text-[10px] text-zinc-600">{card.detail}</div>
+            <div className="text-xs text-zinc-400">{card.detail}</div>
           </div>
         ))}
       </div>

@@ -130,7 +130,7 @@ export function EnhancedSocial() {
           placeholder={t("social.placeholder")}
           className="w-full resize-none rounded-lg border border-zinc-700 bg-black px-4 py-2 text-white outline-none focus:border-ritual-accent"
         />
-        <div className="mt-2 flex items-center justify-between text-xs text-zinc-600">
+        <div className="mt-2 flex items-center justify-between text-xs text-zinc-400">
           <span>{content.length}/500</span>
           <button
             type="submit"
@@ -164,10 +164,10 @@ export function EnhancedSocial() {
                       <p className="truncate text-sm font-bold text-white">
                         {post.author}
                         {post.isSystem && (
-                          <span className="ml-2 text-[10px] uppercase text-zinc-500">sistema</span>
+                          <span className="ml-2 text-xs uppercase text-zinc-500">sistema</span>
                         )}
                       </p>
-                      <p className="text-[10px] uppercase tracking-wider text-zinc-600">
+                      <p className="text-xs uppercase tracking-wider text-zinc-400">
                         {formatDateTime(post.createdAt)}
                       </p>
                     </div>
@@ -229,7 +229,7 @@ export function EnhancedSocial() {
                         type="button"
                         onClick={() => setReportTarget(post)}
                         aria-label={t("social.report")}
-                        className="inline-flex h-11 w-11 items-center justify-center rounded-lg text-zinc-600 hover:text-yellow-500"
+                        className="inline-flex h-11 w-11 items-center justify-center rounded-lg text-zinc-400 hover:text-yellow-500"
                       >
                         <Flag size={16} aria-hidden="true" />
                       </button>
@@ -252,7 +252,7 @@ export function EnhancedSocial() {
                             );
                         }}
                         aria-label="Copiar enlace del perfil"
-                        className="inline-flex h-11 w-11 items-center justify-center rounded-lg text-zinc-600 hover:text-zinc-300"
+                        className="inline-flex h-11 w-11 items-center justify-center rounded-lg text-zinc-400 hover:text-zinc-300"
                       >
                         <Share2 size={16} aria-hidden="true" />
                       </button>
@@ -264,7 +264,7 @@ export function EnhancedSocial() {
                       type="button"
                       onClick={() => setDeleteTarget(post)}
                       aria-label="Eliminar publicación"
-                      className="inline-flex h-11 w-11 items-center justify-center rounded-lg text-zinc-600 hover:text-red-500"
+                      className="inline-flex h-11 w-11 items-center justify-center rounded-lg text-zinc-400 hover:text-red-500"
                     >
                       <Trash2 size={16} aria-hidden="true" />
                     </button>
@@ -274,7 +274,7 @@ export function EnhancedSocial() {
                 {openComments === post.id && (
                   <div className="mt-2 space-y-2 border-t border-zinc-900 pt-2">
                     {post.comments.length === 0 && (
-                      <p className="text-xs text-zinc-600">Sin comentarios todavía.</p>
+                      <p className="text-xs text-zinc-400">Sin comentarios todavía.</p>
                     )}
                     {post.comments.map((comment) => (
                       <div key={comment.id} className="rounded-lg bg-zinc-900/60 p-2 text-sm">

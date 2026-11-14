@@ -193,7 +193,7 @@ export default function SettingsPage() {
           </h2>
           <div className="space-y-4">
             <label className="block">
-              <span className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-zinc-500">
+              <span className="mb-1 block text-xs font-bold uppercase tracking-wider text-zinc-500">
                 {t("auth.username")}
               </span>
               <input
@@ -207,7 +207,7 @@ export default function SettingsPage() {
             </label>
 
             <label className="block">
-              <span className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-zinc-500">
+              <span className="mb-1 block text-xs font-bold uppercase tracking-wider text-zinc-500">
                 {t("settings.avatar")}
               </span>
               <input
@@ -228,7 +228,7 @@ export default function SettingsPage() {
           </h2>
           <div className="space-y-4">
             <fieldset>
-              <legend className="mb-2 text-[10px] font-bold uppercase tracking-wider text-zinc-500">
+              <legend className="mb-2 text-xs font-bold uppercase tracking-wider text-zinc-500">
                 {t("settings.language")}
               </legend>
               <div className="flex gap-2">
@@ -261,7 +261,7 @@ export default function SettingsPage() {
             </label>
 
             <label className="block">
-              <span className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-zinc-500">
+              <span className="mb-1 block text-xs font-bold uppercase tracking-wider text-zinc-500">
                 {t("settings.reminder")}
               </span>
               <input

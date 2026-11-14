@@ -371,7 +371,7 @@ export default function HabitsPage() {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label className="block">
-      <span className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-zinc-500">
+      <span className="mb-1 block text-xs font-bold uppercase tracking-wider text-zinc-500">
         {label}
       </span>
       {children}
@@ -408,7 +408,7 @@ function RitualList({
       </h2>
       <div className="space-y-2">
         {rituals.length === 0 && empty && (
-          <p className="rounded-lg border border-dashed border-zinc-800 p-4 text-sm italic text-zinc-600">
+          <p className="rounded-lg border border-dashed border-zinc-800 p-4 text-sm italic text-zinc-400">
             {empty}
           </p>
         )}

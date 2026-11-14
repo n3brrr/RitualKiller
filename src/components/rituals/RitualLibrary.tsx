@@ -143,7 +143,7 @@ export function RitualLibrary({ onImport }: RitualLibraryProps) {
             </div>
             <p className="mb-3 flex-1 text-sm text-zinc-400">{template.description}</p>
 
-            <div className="mb-3 flex flex-wrap gap-1.5 text-[10px] uppercase tracking-wider">
+            <div className="mb-3 flex flex-wrap gap-1.5 text-xs uppercase tracking-wider">
               <span className={`rounded border px-2 py-0.5 ${DIFFICULTY_STYLES[template.difficulty]}`}>
                 {translateDifficulty(template.difficulty)}
               </span>

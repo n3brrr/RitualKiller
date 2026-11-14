@@ -138,19 +138,19 @@ export const AppLayout: React.FC = () => {
               <div className="flex items-center gap-2 text-sm font-bold text-zinc-100">
                 <span className="truncate">{user.username}</span>
                 {user.isAdmin && (
-                  <span className="flex items-center gap-1 rounded border border-yellow-500/30 bg-yellow-500/20 px-1.5 py-0.5 text-[10px] text-yellow-500">
+                  <span className="flex items-center gap-1 rounded border border-yellow-500/30 bg-yellow-500/20 px-1.5 py-0.5 text-xs text-yellow-500">
                     <Shield size={10} /> ADMIN
                   </span>
                 )}
               </div>
-              <div className="text-[10px] uppercase tracking-wider text-ritual-accent">
+              <div className="text-xs uppercase tracking-wider text-ritual-accent">
                 {user.rank}
               </div>
             </div>
           </NavLink>
 
           <div className="mb-3">
-            <div className="mb-1 flex justify-between text-[10px] uppercase tracking-wider text-zinc-500">
+            <div className="mb-1 flex justify-between text-xs uppercase tracking-wider text-zinc-500">
               <span>Progreso</span>
               <span>
                 {user.essence} / {rank.next}
@@ -269,12 +269,12 @@ export const AppLayout: React.FC = () => {
             aria-label={t(item.labelKey)}
             className={({ isActive }) =>
               `flex min-h-12 min-w-12 flex-col items-center justify-center gap-0.5 rounded-lg ${
-                isActive ? "text-ritual-accent" : "text-zinc-600"
+                isActive ? "text-ritual-accent" : "text-zinc-400"
               }`
             }
           >
             {item.icon}
-            <span className="text-[9px] uppercase tracking-wide">{t(item.labelKey)}</span>
+            <span className="text-[11px] uppercase tracking-wide">{t(item.labelKey)}</span>
           </NavLink>
         ))}
       </nav>

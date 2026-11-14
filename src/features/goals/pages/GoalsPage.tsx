@@ -124,7 +124,7 @@ export default function GoalsPage() {
           className="space-y-4 rounded-xl border border-zinc-800 bg-zinc-950 p-4 sm:p-6"
         >
           <label className="block">
-            <span className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-zinc-500">
+            <span className="mb-1 block text-xs font-bold uppercase tracking-wider text-zinc-500">
               Título
             </span>
             <input
@@ -138,7 +138,7 @@ export default function GoalsPage() {
           </label>
 
           <label className="block">
-            <span className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-zinc-500">
+            <span className="mb-1 block text-xs font-bold uppercase tracking-wider text-zinc-500">
               Descripción
             </span>
             <textarea
@@ -152,7 +152,7 @@ export default function GoalsPage() {
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <label className="block">
-              <span className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-zinc-500">
+              <span className="mb-1 block text-xs font-bold uppercase tracking-wider text-zinc-500">
                 {t("goals.targetDate")}
               </span>
               <input
@@ -166,7 +166,7 @@ export default function GoalsPage() {
             </label>
 
             <label className="block">
-              <span className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-zinc-500">
+              <span className="mb-1 block text-xs font-bold uppercase tracking-wider text-zinc-500">
                 {t("goals.targetValue")}
               </span>
               <input
@@ -183,12 +183,12 @@ export default function GoalsPage() {
           </div>
 
           <fieldset>
-            <legend className="mb-2 text-[10px] font-bold uppercase tracking-wider text-zinc-500">
+            <legend className="mb-2 text-xs font-bold uppercase tracking-wider text-zinc-500">
               {t("goals.linked")}
             </legend>
             <div className="max-h-48 space-y-1 overflow-y-auto rounded-lg border border-zinc-800 p-2">
               {rituals.length === 0 && (
-                <p className="p-2 text-sm text-zinc-600">No tienes rituales todavía.</p>
+                <p className="p-2 text-sm text-zinc-400">No tienes rituales todavía.</p>
               )}
               {rituals.map((ritual) => (
                 <label
@@ -241,7 +241,7 @@ export default function GoalsPage() {
                     type="button"
                     onClick={() => handleDelete(goal.id, goal.title)}
                     aria-label={`Eliminar ${goal.title}`}
-                    className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-zinc-600 hover:text-red-500"
+                    className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-zinc-400 hover:text-red-500"
                   >
                     <Trash2 size={16} aria-hidden="true" />
                   </button>
@@ -257,7 +257,7 @@ export default function GoalsPage() {
                   <div className="h-full bg-ritual-accent" style={{ width: `${percent}%` }} />
                 </div>
 
-                <div className="mt-3 flex flex-wrap gap-3 text-[10px] uppercase tracking-wider text-zinc-500">
+                <div className="mt-3 flex flex-wrap gap-3 text-xs uppercase tracking-wider text-zinc-500">
                   <span className="inline-flex items-center gap-1">
                     <Calendar size={12} aria-hidden="true" /> {goal.target_date}
                   </span>
