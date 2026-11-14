@@ -1,74 +1,55 @@
 /**
  * Loading.css
- * Estilos para el componente de animación de carga circular 3D.
- * Define la presentación y animaciones de los "anillos" que giran,
- * creando un efecto visual de loader moderno.
+ * Sigilo de carga: un trazo verde que se dibuja mientras gira.
  */
 
-.loader {
-  position: relative;
-  width: 64px;
-  height: 64px;
-  border-radius: 50%;
-  perspective: 800px;
+.rk-loader {
+  animation: rk-loader-rotate 1.8s linear infinite;
 }
 
-.inner {
-  position: absolute;
-  box-sizing: border-box;
-  width: 100%;
-  height: 100%;
-  border-radius: 50%;  
+.rk-loader-track {
+  fill: none;
+  stroke: rgba(34, 197, 94, 0.15);
+  stroke-width: 3;
 }
 
-/* Primer anillo: animación y borde inferior visible */
-.inner.one {
-  left: 0%;
-  top: 0%;
-  animation: rotate-one 1s linear infinite;
-  border-bottom: 3px solid #EFEFFA;
+.rk-loader-arc {
+  fill: none;
+  stroke: #22c55e;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-dasharray: 82 200;
+  transform-origin: center;
+  animation: rk-loader-draw 1.4s ease-in-out infinite;
 }
 
-/* Segundo anillo: animación diferente y borde derecho visible */
-.inner.two {
-  right: 0%;
-  top: 0%;
-  animation: rotate-two 1s linear infinite;
-  border-right: 3px solid #EFEFFA;
+@keyframes rk-loader-rotate {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
-/* Tercer anillo: otra animación y borde superior visible */
-.inner.three {
-  right: 0%;
-  bottom: 0%;
-  animation: rotate-three 1s linear infinite;
-  border-top: 3px solid #EFEFFA;
-}
-
-/* Keyframes para las rotaciones 3D de cada anillo */
-@keyframes rotate-one {
+@keyframes rk-loader-draw {
   0% {
-    transform: rotateX(35deg) rotateY(-45deg) rotateZ(0deg);
+    stroke-dasharray: 1 200;
+    stroke-dashoffset: 0;
+  }
+  50% {
+    stroke-dasharray: 90 200;
+    stroke-dashoffset: -25;
   }
   100% {
-    transform: rotateX(35deg) rotateY(-45deg) rotateZ(360deg);
+    stroke-dasharray: 90 200;
+    stroke-dashoffset: -100;
   }
 }
 
-@keyframes rotate-two {
-  0% {
-    transform: rotateX(50deg) rotateY(10deg) rotateZ(0deg);
+@media (prefers-reduced-motion: reduce) {
+  .rk-loader,
+  .rk-loader-arc {
+    animation: none;
   }
-  100% {
-    transform: rotateX(50deg) rotateY(10deg) rotateZ(360deg);
-  }
-}
-
-@keyframes rotate-three {
-  0% {
-    transform: rotateX(35deg) rotateY(55deg) rotateZ(0deg);
-  }
-  100% {
-    transform: rotateX(35deg) rotateY(55deg) rotateZ(360deg);
+  .rk-loader-arc {
+    stroke-dasharray: 82 200;
   }
 }
