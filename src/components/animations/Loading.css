@@ -6,9 +6,7 @@
  */
 
 .loader {
-  position: absolute;
-  top: calc(50% - 32px);
-  left: calc(50% - 32px);
+  position: relative;
   width: 64px;
   height: 64px;
   border-radius: 50%;
