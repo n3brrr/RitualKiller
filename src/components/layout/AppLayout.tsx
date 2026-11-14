@@ -16,51 +16,63 @@ import {
   Settings,
   Menu,
   X,
+  Flame,
 } from "lucide-react";
 import { useAuth } from "@/features/auth/AuthProvider";
 import { useI18n, type TranslationKey } from "@/i18n";
 import { getRank, rankProgress } from "@/utils/rank";
 import { notificationService } from "@/services/notificationService";
 import { useFocusTrap } from "@/hooks/useFocusTrap";
+import { useRituals } from "@/hooks/useRituals";
 import { NotificationBell } from "./NotificationBell";
+
+type NavGroupID = "main" | "circle" | "record" | "account";
 
 interface NavItem {
   to: string;
   labelKey: TranslationKey;
   icon: React.ReactNode;
+  group: NavGroupID;
 }
 
-const NAV_ITEMS: NavItem[] = [
-  { to: "/app/dashboard", labelKey: "nav.dashboard", icon: <LayoutDashboard size={20} /> },
-  { to: "/app/habits", labelKey: "nav.habits", icon: <CheckSquare size={20} /> },
-  { to: "/app/goals", labelKey: "nav.goals", icon: <Target size={20} /> },
-  { to: "/app/social", labelKey: "nav.social", icon: <Users size={20} /> },
-  { to: "/app/shop", labelKey: "nav.shop", icon: <ShoppingBag size={20} /> },
-  { to: "/app/inventory", labelKey: "nav.inventory", icon: <Package size={20} /> },
-  { to: "/app/analytics", labelKey: "nav.analytics", icon: <Zap size={20} /> },
-  { to: "/app/achievements", labelKey: "nav.achievements", icon: <Crown size={20} /> },
-  { to: "/app/settings", labelKey: "nav.settings", icon: <Settings size={20} /> },
+const NAV_GROUPS: Array<{ id: NavGroupID; labelKey: TranslationKey }> = [
+  { id: "main", labelKey: "nav.group.main" },
+  { id: "circle", labelKey: "nav.group.circle" },
+  { id: "record", labelKey: "nav.group.record" },
+  { id: "account", labelKey: "nav.group.account" },
 ];
 
-const MOBILE_QUICK: NavItem[] = [
-  NAV_ITEMS[0]!,
-  NAV_ITEMS[1]!,
-  NAV_ITEMS[2]!,
-  NAV_ITEMS[3]!,
-  NAV_ITEMS[8]!,
+const NAV_ITEMS: NavItem[] = [
+  { to: "/app/dashboard", labelKey: "nav.dashboard", icon: <LayoutDashboard size={20} />, group: "main" },
+  { to: "/app/habits", labelKey: "nav.habits", icon: <CheckSquare size={20} />, group: "main" },
+  { to: "/app/goals", labelKey: "nav.goals", icon: <Target size={20} />, group: "main" },
+  { to: "/app/social", labelKey: "nav.social", icon: <Users size={20} />, group: "circle" },
+  { to: "/app/shop", labelKey: "nav.shop", icon: <ShoppingBag size={20} />, group: "circle" },
+  { to: "/app/inventory", labelKey: "nav.inventory", icon: <Package size={20} />, group: "circle" },
+  { to: "/app/analytics", labelKey: "nav.analytics", icon: <Zap size={20} />, group: "record" },
+  { to: "/app/achievements", labelKey: "nav.achievements", icon: <Crown size={20} />, group: "record" },
+  { to: "/app/settings", labelKey: "nav.settings", icon: <Settings size={20} />, group: "account" },
 ];
+
+const MOBILE_QUICK = [NAV_ITEMS[0]!, NAV_ITEMS[1]!, NAV_ITEMS[2]!, NAV_ITEMS[3]!];
 
 export const AppLayout: React.FC = () => {
   const { user, signOut } = useAuth();
   const { t, locale, setLocale } = useI18n();
+  const { rituals } = useRituals();
   const navigate = useNavigate();
   const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [progressMounted, setProgressMounted] = useState(false);
   const menuRef = useFocusTrap<HTMLDivElement>(menuOpen, () => setMenuOpen(false));
 
   useEffect(() => {
     setMenuOpen(false);
   }, [location.pathname]);
+
+  useEffect(() => {
+    setProgressMounted(true);
+  }, []);
 
   useEffect(() => {
     if (user && user.locale !== locale) setLocale(user.locale);
@@ -74,15 +86,24 @@ export const AppLayout: React.FC = () => {
 
   const rank = getRank(user.essence);
   const progress = rankProgress(user.essence);
+  const bestStreak = Math.max(...rituals.map((ritual) => ritual.streak), 0);
   const navItems = user.isAdmin
-    ? [...NAV_ITEMS, { to: "/app/admin", labelKey: "nav.admin" as const, icon: <ShieldCheck size={20} /> }]
+    ? [
+        ...NAV_ITEMS,
+        {
+          to: "/app/admin",
+          labelKey: "nav.admin" as const,
+          icon: <ShieldCheck size={20} />,
+          group: "account" as const,
+        },
+      ]
     : NAV_ITEMS;
 
   const navClass = ({ isActive }: { isActive: boolean }) =>
-    `flex min-h-11 items-center gap-3 rounded-xl px-4 py-2.5 transition-colors ${
+    `relative flex min-h-11 items-center gap-3 rounded-xl border px-4 py-2.5 transition-colors ${
       isActive
-        ? "bg-ritual-accent/10 text-ritual-accent border border-ritual-accent/20"
-        : "text-zinc-500 hover:bg-zinc-900 hover:text-zinc-200 border border-transparent"
+        ? "border-ritual-accent/20 bg-ritual-accent/10 text-ritual-accent before:absolute before:left-0 before:top-1/2 before:h-6 before:w-0.5 before:-translate-y-1/2 before:rounded-full before:bg-ritual-accent"
+        : "border-transparent text-zinc-400 hover:border-ritual-accent/30 hover:bg-zinc-900 hover:text-zinc-200"
     }`;
 
   const handleLogout = async () => {
@@ -109,13 +130,26 @@ export const AppLayout: React.FC = () => {
           <NotificationBell />
         </div>
 
-        <nav className="flex-1 space-y-1 overflow-y-auto px-4" aria-label="Principal">
-          {navItems.map((item) => (
-            <NavLink key={item.to} to={item.to} className={navClass}>
-              {item.icon}
-              <span>{t(item.labelKey)}</span>
-            </NavLink>
-          ))}
+        <nav className="flex-1 space-y-4 overflow-y-auto px-4 pb-2" aria-label="Principal">
+          {NAV_GROUPS.map((group) => {
+            const items = navItems.filter((item) => item.group === group.id);
+            if (items.length === 0) return null;
+            return (
+              <div key={group.id}>
+                <p className="mb-1 px-4 text-[11px] font-bold uppercase tracking-widest text-zinc-400">
+                  {t(group.labelKey)}
+                </p>
+                <div className="space-y-1">
+                  {items.map((item) => (
+                    <NavLink key={item.to} to={item.to} className={navClass}>
+                      {item.icon}
+                      <span>{t(item.labelKey)}</span>
+                    </NavLink>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
         </nav>
 
         <div className="border-t border-zinc-900 bg-zinc-950/30 p-4">
@@ -159,7 +193,7 @@ export const AppLayout: React.FC = () => {
             <div className="h-1.5 w-full overflow-hidden rounded-full border border-zinc-800 bg-zinc-800">
               <div
                 className="h-full bg-ritual-accent transition-all duration-500"
-                style={{ width: `${progress}%` }}
+                style={{ width: `${progressMounted ? progress : 0}%` }}
               />
             </div>
           </div>
@@ -186,10 +220,28 @@ export const AppLayout: React.FC = () => {
         >
           <Menu size={22} />
         </button>
-        <NavLink to="/app/dashboard" className="flex items-center gap-2">
-          <Skull className="text-ritual-accent" size={22} />
-          <span className="font-display text-sm font-bold uppercase tracking-widest">
-            RitualKiller
+        <NavLink to="/app/dashboard" className="flex min-w-0 flex-col items-center gap-0.5">
+          <span className="flex items-center gap-2">
+            <Skull className="text-ritual-accent" size={22} />
+            <span className="font-display text-sm font-bold uppercase tracking-widest">
+              RitualKiller
+            </span>
+          </span>
+          <span className="flex items-center gap-2 font-mono text-[11px]">
+            <span
+              aria-label={`${user.essence} ${t("dashboard.essence")}`}
+              className="inline-flex items-center gap-1 text-ritual-accent"
+            >
+              <Zap size={11} aria-hidden="true" />
+              {user.essence}
+            </span>
+            <span
+              aria-label={`${bestStreak} ${t("dashboard.bestStreak")}`}
+              className="inline-flex items-center gap-1 text-yellow-500"
+            >
+              <Flame size={11} aria-hidden="true" />
+              {bestStreak}
+            </span>
           </span>
         </NavLink>
         <NotificationBell />
@@ -201,7 +253,7 @@ export const AppLayout: React.FC = () => {
           <button
             type="button"
             aria-label="Cerrar menú"
-            className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+            className="absolute inset-0 animate-fade-in bg-black/80 backdrop-blur-sm"
             onClick={() => setMenuOpen(false)}
           />
           <div
@@ -210,7 +262,7 @@ export const AppLayout: React.FC = () => {
             aria-modal="true"
             aria-label="Menú"
             tabIndex={-1}
-            className="safe-pt absolute inset-y-0 left-0 w-[min(20rem,85vw)] overflow-y-auto border-r border-zinc-800 bg-ritual-dark p-4 outline-none"
+            className="safe-pt absolute inset-y-0 left-0 w-[min(20rem,85vw)] animate-slide-in-left overflow-y-auto border-r border-zinc-800 bg-ritual-dark p-4 outline-none"
           >
             <div className="mb-6 flex items-center justify-between">
               <span className="font-display font-bold uppercase tracking-widest">Menú</span>
@@ -224,18 +276,31 @@ export const AppLayout: React.FC = () => {
                 <X size={20} />
               </button>
             </div>
-            <nav className="space-y-1" aria-label="Menú móvil">
-              {navItems.map((item) => (
-                <NavLink
-                  key={item.to}
-                  to={item.to}
-                  onClick={() => setMenuOpen(false)}
-                  className={navClass}
-                >
-                  {item.icon}
-                  <span>{t(item.labelKey)}</span>
-                </NavLink>
-              ))}
+            <nav className="space-y-4" aria-label="Menú móvil">
+              {NAV_GROUPS.map((group) => {
+                const items = navItems.filter((item) => item.group === group.id);
+                if (items.length === 0) return null;
+                return (
+                  <div key={group.id}>
+                    <p className="mb-1 px-4 text-[11px] font-bold uppercase tracking-widest text-zinc-400">
+                      {t(group.labelKey)}
+                    </p>
+                    <div className="space-y-1">
+                      {items.map((item) => (
+                        <NavLink
+                          key={item.to}
+                          to={item.to}
+                          onClick={() => setMenuOpen(false)}
+                          className={navClass}
+                        >
+                          {item.icon}
+                          <span>{t(item.labelKey)}</span>
+                        </NavLink>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
             </nav>
             <div className="mt-6 border-t border-zinc-800 pt-4">
               <NavLink
@@ -277,6 +342,19 @@ export const AppLayout: React.FC = () => {
             <span className="text-[11px] uppercase tracking-wide">{t(item.labelKey)}</span>
           </NavLink>
         ))}
+        <button
+          type="button"
+          onClick={() => setMenuOpen(true)}
+          aria-label={t("nav.more")}
+          aria-haspopup="dialog"
+          aria-expanded={menuOpen}
+          className={`flex min-h-12 min-w-12 flex-col items-center justify-center gap-0.5 rounded-lg ${
+            menuOpen ? "text-ritual-accent" : "text-zinc-400"
+          }`}
+        >
+          <Menu size={20} />
+          <span className="text-[11px] uppercase tracking-wide">{t("nav.more")}</span>
+        </button>
       </nav>
 
       <main

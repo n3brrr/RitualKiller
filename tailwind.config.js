@@ -31,11 +31,16 @@ export default {
         'fade-in': 'fadeIn 0.5s ease-in',
         'fade-in-down': 'fadeInDown 0.5s ease-out',
         'fade-in-up': 'fadeInUp 0.5s ease-out',
+        'slide-in-left': 'slideInLeft 0.2s ease-out',
       },
       keyframes: {
         flicker: {
           '0%, 100%': { opacity: '1' },
           '50%': { opacity: '0.8' },
+        },
+        slideInLeft: {
+          '0%': { opacity: '0', transform: 'translateX(-12px)' },
+          '100%': { opacity: '1', transform: 'translateX(0)' },
         },
         float: {
           '0%, 100%': { transform: 'translateY(0)' },
