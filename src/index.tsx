@@ -1,6 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { MotionConfig } from "framer-motion";
 import App from "./App";
 import { I18nProvider } from "./i18n";
 import { initObservability } from "./lib/observability";
@@ -31,7 +32,9 @@ ReactDOM.createRoot(rootElement).render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
       <I18nProvider>
-        <App />
+        <MotionConfig reducedMotion="user">
+          <App />
+        </MotionConfig>
       </I18nProvider>
     </QueryClientProvider>
   </React.StrictMode>,

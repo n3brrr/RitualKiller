@@ -10,6 +10,7 @@ const LandingPage: React.FC = () => {
 
   // Animaciones de entrada para los elementos principales de la página
   React.useLayoutEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const ctx = gsap.context(() => {
       gsap.from(".hero-text", {
         y: 50,
