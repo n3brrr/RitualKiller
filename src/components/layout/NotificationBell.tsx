@@ -1,27 +1,25 @@
 import { useEffect, useRef, useState } from "react";
 import { Bell, CheckCheck, X } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useNotifications } from "@/hooks/useNotifications";
+import { useFocusTrap } from "@/hooks/useFocusTrap";
 import { formatDateTime } from "@/utils/dates";
 
 export function NotificationBell() {
   const { notifications, unreadCount, markRead, markAllRead } = useNotifications();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const panelRef = useFocusTrap<HTMLDivElement>(open, () => setOpen(false));
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (!open) return;
     const onClick = (event: MouseEvent) => {
       if (ref.current && !ref.current.contains(event.target as Node)) setOpen(false);
     };
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setOpen(false);
-    };
     document.addEventListener("mousedown", onClick);
-    document.addEventListener("keydown", onKey);
     return () => {
       document.removeEventListener("mousedown", onClick);
-      document.removeEventListener("keydown", onKey);
     };
   }, [open]);
 
@@ -45,9 +43,12 @@ export function NotificationBell() {
 
       {open && (
         <div
+          ref={panelRef}
           role="dialog"
+          aria-modal="true"
           aria-label="Notificaciones"
-          className="absolute right-0 z-[70] mt-2 w-[min(22rem,calc(100vw-2rem))] rounded-xl border border-zinc-800 bg-zinc-950 shadow-2xl"
+          tabIndex={-1}
+          className="absolute right-0 z-[70] mt-2 w-[min(22rem,calc(100vw-2rem))] rounded-xl border border-zinc-800 bg-zinc-950 shadow-2xl outline-none"
         >
           <div className="flex items-center justify-between border-b border-zinc-800 p-4">
             <h2 className="font-display font-bold text-white">Notificaciones</h2>
@@ -65,6 +66,7 @@ export function NotificationBell() {
                 type="button"
                 onClick={() => setOpen(false)}
                 aria-label="Cerrar notificaciones"
+                data-autofocus
                 className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg text-zinc-500 hover:text-white"
               >
                 <X size={18} />
@@ -84,6 +86,8 @@ export function NotificationBell() {
                 type="button"
                 onClick={() => {
                   if (!notification.read) void markRead(notification.id);
+                  setOpen(false);
+                  navigate("/app/notifications");
                 }}
                 className={`block w-full border-b border-zinc-900 p-4 text-left last:border-0 hover:bg-zinc-900/60 ${
                   notification.read ? "opacity-60" : ""

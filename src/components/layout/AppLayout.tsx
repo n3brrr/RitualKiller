@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
   Skull,
   LayoutDashboard,
@@ -21,6 +21,7 @@ import { useAuth } from "@/features/auth/AuthProvider";
 import { useI18n, type TranslationKey } from "@/i18n";
 import { getRank, rankProgress } from "@/utils/rank";
 import { notificationService } from "@/services/notificationService";
+import { useFocusTrap } from "@/hooks/useFocusTrap";
 import { NotificationBell } from "./NotificationBell";
 
 interface NavItem {
@@ -53,7 +54,13 @@ export const AppLayout: React.FC = () => {
   const { user, signOut } = useAuth();
   const { t, locale, setLocale } = useI18n();
   const navigate = useNavigate();
+  const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useFocusTrap<HTMLDivElement>(menuOpen, () => setMenuOpen(false));
+
+  useEffect(() => {
+    setMenuOpen(false);
+  }, [location.pathname]);
 
   useEffect(() => {
     if (user && user.locale !== locale) setLocale(user.locale);
@@ -197,13 +204,21 @@ export const AppLayout: React.FC = () => {
             className="absolute inset-0 bg-black/80 backdrop-blur-sm"
             onClick={() => setMenuOpen(false)}
           />
-          <div className="safe-pt absolute inset-y-0 left-0 w-[min(20rem,85vw)] overflow-y-auto border-r border-zinc-800 bg-ritual-dark p-4">
+          <div
+            ref={menuRef}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Menú"
+            tabIndex={-1}
+            className="safe-pt absolute inset-y-0 left-0 w-[min(20rem,85vw)] overflow-y-auto border-r border-zinc-800 bg-ritual-dark p-4 outline-none"
+          >
             <div className="mb-6 flex items-center justify-between">
               <span className="font-display font-bold uppercase tracking-widest">Menú</span>
               <button
                 type="button"
                 onClick={() => setMenuOpen(false)}
                 aria-label="Cerrar menú"
+                data-autofocus
                 className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg text-zinc-400"
               >
                 <X size={20} />
