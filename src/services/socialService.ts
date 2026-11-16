@@ -33,38 +33,63 @@ function profileMap(profiles: ProfileLite[]): Map<string, ProfileLite> {
   return new Map(profiles.map((profile) => [profile.id, profile]));
 }
 
+export const FEED_PAGE_SIZE = 20;
+export type FeedScope = "all" | "following";
+
+export interface FeedPage {
+  posts: SocialPost[];
+  nextCursor: string | null;
+}
+
 export const socialService = {
-  async getFeed(userId: string): Promise<{ posts: SocialPost[]; following: string[] }> {
-    const { data: postsData, error: postsError } = await supabase
+  async getFollowing(userId: string): Promise<string[]> {
+    const { data, error } = await supabase
+      .from("follows")
+      .select("following_id")
+      .eq("follower_id", userId);
+    if (error) throw error;
+    return (data ?? []).map((row) => (row as { following_id: string }).following_id);
+  },
+
+  /**
+   * One page of the feed, newest first. `before` is the created_at cursor of
+   * the last post already shown; scope "following" limits it to followed users.
+   */
+  async getFeedPage(
+    userId: string,
+    options: { scope: FeedScope; following: string[]; before: string | null },
+  ): Promise<FeedPage> {
+    if (options.scope === "following" && options.following.length === 0) {
+      return { posts: [], nextCursor: null };
+    }
+    let query = supabase
       .from("posts")
       .select("id, user_id, content, is_system, created_at")
       .order("created_at", { ascending: false })
-      .limit(50);
+      .limit(FEED_PAGE_SIZE);
+    if (options.before) query = query.lt("created_at", options.before);
+    if (options.scope === "following") query = query.in("user_id", options.following);
+    const { data: postsData, error: postsError } = await query;
     if (postsError) throw postsError;
 
     const posts = (postsData ?? []) as PostRow[];
-    if (posts.length === 0) return { posts: [], following: [] };
+    if (posts.length === 0) return { posts: [], nextCursor: null };
 
     const postIds = posts.map((post) => post.id);
-    const [likesResult, commentsResult, followsResult] = await Promise.all([
+    const [likesResult, commentsResult] = await Promise.all([
       supabase.from("post_likes").select("post_id, user_id").in("post_id", postIds),
       supabase
         .from("comments")
         .select("id, post_id, user_id, content, created_at")
         .in("post_id", postIds)
         .order("created_at", { ascending: true }),
-      supabase.from("follows").select("following_id").eq("follower_id", userId),
     ]);
 
     if (likesResult.error) throw likesResult.error;
     if (commentsResult.error) throw commentsResult.error;
-    if (followsResult.error) throw followsResult.error;
 
     const likes = (likesResult.data ?? []) as LikeRow[];
     const comments = (commentsResult.data ?? []) as CommentRow[];
-    const following = (followsResult.data ?? []).map(
-      (row) => (row as { following_id: string }).following_id,
-    );
 
     const authorIds = Array.from(
       new Set([
@@ -103,7 +128,10 @@ export const socialService = {
     }
 
     return {
-      following,
+      nextCursor:
+        posts.length === FEED_PAGE_SIZE
+          ? (posts[posts.length - 1]?.created_at ?? null)
+          : null,
       posts: posts.map((post) => {
         const author = profiles.get(post.user_id);
         return {
@@ -161,6 +189,12 @@ export const socialService = {
     const { error } = await supabase
       .from("comments")
       .insert({ post_id: postId, user_id: userId, content: content.trim() });
+    if (error) throw error;
+  },
+
+  /** Own comments (RLS) — admins use the audited admin_delete_comment RPC. */
+  async deleteComment(commentId: string): Promise<void> {
+    const { error } = await supabase.from("comments").delete().eq("id", commentId);
     if (error) throw error;
   },
 

@@ -28,6 +28,7 @@ import { useSettings } from "@/hooks/useSettings";
 import { useFocusTrap } from "@/hooks/useFocusTrap";
 import { useRituals } from "@/hooks/useRituals";
 import { NotificationBell } from "./NotificationBell";
+import { Avatar } from "@/components/ui/Avatar";
 
 type NavGroupID = "main" | "circle" | "record" | "account";
 
@@ -226,20 +227,14 @@ export const AppLayout: React.FC = () => {
 
         <div className="border-t border-zinc-900 bg-zinc-950/30 p-4">
           <NavLink
-            to={`/app/profile/${user.username}`}
+            to={`/app/profile/${encodeURIComponent(user.username)}`}
             className="mb-3 flex items-center gap-3 rounded-lg p-2 hover:bg-zinc-900/50"
           >
-            <div className="flex h-10 w-10 items-center justify-center rounded-full border border-zinc-700 bg-zinc-800 font-display font-bold text-ritual-accent">
-              {user.avatar_url ? (
-                <img
-                  src={user.avatar_url}
-                  alt=""
-                  className="h-full w-full rounded-full object-cover"
-                />
-              ) : (
-                user.username.charAt(0).toUpperCase()
-              )}
-            </div>
+            <Avatar
+              name={user.username}
+              url={user.avatar_url ?? null}
+              shadow={user.inventory.includes("shadow_amulet")}
+            />
             <div className="min-w-0">
               <div className="flex items-center gap-2 text-sm font-bold text-zinc-100">
                 <span className="truncate">{user.username}</span>
@@ -381,7 +376,7 @@ export const AppLayout: React.FC = () => {
             </nav>
             <div className="mt-6 border-t border-zinc-800 pt-4">
               <NavLink
-                to={`/app/profile/${user.username}`}
+                to={`/app/profile/${encodeURIComponent(user.username)}`}
                 onClick={() => setMenuOpen(false)}
                 className="flex min-h-11 items-center gap-3 rounded-lg px-4 py-2 text-zinc-400"
               >

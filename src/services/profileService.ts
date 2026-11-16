@@ -1,7 +1,7 @@
 import type { User as SupabaseUser } from "@supabase/supabase-js";
 import { AppError } from "@/lib/errors";
 import { supabase } from "@/lib/supabase";
-import type { ActiveBuff, Locale, User } from "@/types";
+import type { ActiveBuff, Locale, PublicProfile, User } from "@/types";
 import { getRank } from "@/utils/rank";
 import { validateUsername } from "@/utils/validation";
 
@@ -13,6 +13,21 @@ interface ProfileRow {
   is_admin: boolean;
   locale: string;
   created_at: string;
+  suspended_until: string | null;
+}
+
+interface PublicProfileRow {
+  id: string;
+  username: string;
+  avatar_url: string | null;
+  essence: number;
+  created_at: string;
+  shadow_amulet: boolean;
+  best_streak: number;
+  active_rituals: number;
+  achievements: number;
+  followers: number;
+  following: number;
 }
 
 interface InventoryRow {
@@ -81,6 +96,7 @@ export const profileService = {
       created_at: profile.created_at,
       isAdmin: profile.is_admin,
       active_buffs: activeBuffs,
+      suspendedUntil: profile.suspended_until ?? null,
     };
   },
 
@@ -123,30 +139,27 @@ export const profileService = {
     if (error) throw error;
   },
 
-  /** Other users are read through the public_profiles view (no private columns). */
-  async getByUsername(username: string): Promise<User | null> {
-    const { data, error } = await supabase
-      .from("public_profiles")
-      .select("id, username, avatar_url, essence, created_at")
-      .eq("username", username)
-      .maybeSingle();
+  /** Other users are read through public_profiles, matched case-insensitively. */
+  async getPublicProfile(username: string): Promise<PublicProfile | null> {
+    const { data, error } = await supabase.rpc("get_public_profile", {
+      p_username: username,
+    });
     if (error) throw error;
-    if (!data) return null;
-    const profile = data as Pick<
-      ProfileRow,
-      "id" | "username" | "avatar_url" | "essence" | "created_at"
-    >;
+    const row = ((data ?? []) as PublicProfileRow[])[0];
+    if (!row) return null;
     return {
-      id: profile.id,
-      username: profile.username,
-      essence: profile.essence,
-      rank: mapRole(profile.essence),
-      inventory: [],
-      avatar_url: profile.avatar_url,
-      locale: "es",
-      created_at: profile.created_at,
-      isAdmin: false,
-      active_buffs: [],
+      id: row.id,
+      username: row.username,
+      avatarUrl: row.avatar_url,
+      essence: row.essence,
+      rank: mapRole(row.essence),
+      createdAt: row.created_at,
+      shadowAmulet: row.shadow_amulet,
+      bestStreak: row.best_streak,
+      activeRituals: row.active_rituals,
+      achievements: row.achievements,
+      followers: row.followers,
+      following: row.following,
     };
   },
 
