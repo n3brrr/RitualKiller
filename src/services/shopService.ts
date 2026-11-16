@@ -1,5 +1,5 @@
 import { supabase } from "@/lib/supabase";
-import type { ActiveBuff } from "@/types";
+import type { ActiveBuff, Rarity, ShopEffect, ShopItem } from "@/types";
 
 interface InventoryRow {
   item_id: string;
@@ -13,13 +13,45 @@ interface BuffRow {
   expires_at: string;
 }
 
+interface ShopItemRow {
+  id: string;
+  cost: number;
+  rarity: Rarity;
+  effect_type: ShopEffect | null;
+  effect_value: number | string | null;
+  consumable: boolean;
+}
+
 export interface PurchaseResult {
   success: boolean;
   reason?: string;
   essence?: number;
 }
 
+export interface ConsumeResult {
+  success: boolean;
+  reason?: string;
+  restored?: number;
+}
+
 export const shopService = {
+  /** The catalogue (prices, rarity, effects) is owned by the database. */
+  async listItems(): Promise<ShopItem[]> {
+    const { data, error } = await supabase
+      .from("shop_items")
+      .select("id, cost, rarity, effect_type, effect_value, consumable")
+      .order("cost", { ascending: true });
+    if (error) throw error;
+    return ((data ?? []) as ShopItemRow[]).map((row) => ({
+      id: row.id,
+      cost: row.cost,
+      rarity: row.rarity,
+      effectType: row.effect_type,
+      effectValue: row.effect_value === null ? null : Number(row.effect_value),
+      consumable: row.consumable,
+    }));
+  },
+
   async getInventory(
     userId: string,
   ): Promise<{ quantities: Record<string, number>; buffs: ActiveBuff[] }> {
@@ -57,9 +89,9 @@ export const shopService = {
     return data as PurchaseResult;
   },
 
-  async consume(itemId: string): Promise<{ success: boolean; reason?: string }> {
+  async consume(itemId: string): Promise<ConsumeResult> {
     const { data, error } = await supabase.rpc("consume_item", { p_item_id: itemId });
     if (error) throw error;
-    return data as { success: boolean; reason?: string };
+    return data as ConsumeResult;
   },
 };

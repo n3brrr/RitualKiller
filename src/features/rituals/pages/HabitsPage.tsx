@@ -11,7 +11,7 @@ import { difficultyKeys, frequencyKeys, useI18n } from "@/i18n";
 import type { Difficulty, Frequency, Ritual } from "@/types";
 import type { RitualTemplate } from "@/data/ritualLibrary";
 import { isRitualCompleted } from "@/utils/analytics";
-import { toDateKey } from "@/utils/dates";
+import { completionReasonKey } from "@/utils/ritualMessages";
 import { validateRitual } from "@/utils/validation";
 
 const BASE_REWARD: Record<Difficulty, number> = { novice: 10, adept: 25, master: 50 };
@@ -28,7 +28,7 @@ export default function HabitsPage() {
     refetch,
     createRitual,
     isCreating,
-    removeRitual,
+    archiveRitual,
     completeRitual,
     undoRitual,
     isToggling,
@@ -63,7 +63,6 @@ export default function HabitsPage() {
 
   // Master rituals require the Binding Contract (enforced again by the database).
   const canUseMaster = user.isAdmin || user.inventory.includes("binding_contract");
-  const todayKey = toDateKey();
   const reward = BASE_REWARD[form.difficulty] * (form.frequency === "weekly" ? 3 : 1);
   const pending = rituals.filter(
     (ritual) => !isRitualCompleted(ritual, logs, new Date()),
@@ -117,9 +116,11 @@ export default function HabitsPage() {
     setMessage(null);
     try {
       if (isRitualCompleted(ritual, logs, new Date())) {
-        await undoRitual({ id: ritual.id, date: todayKey });
+        const result = await undoRitual(ritual.id);
+        if (!result.success) setMessage(t(completionReasonKey(result.reason)));
       } else {
-        await completeRitual({ id: ritual.id, date: todayKey });
+        const result = await completeRitual(ritual.id);
+        if (!result.success) setMessage(t(completionReasonKey(result.reason)));
       }
     } catch (error) {
       handleError(error);
@@ -135,7 +136,7 @@ export default function HabitsPage() {
     setMessage(null);
     setDeleting(true);
     try {
-      await removeRitual(deleteTarget.id);
+      await archiveRitual(deleteTarget.id);
     } catch (error) {
       handleError(error);
     } finally {
@@ -337,7 +338,7 @@ export default function HabitsPage() {
             {t("habits.deleteSuffix")}
           </>
         }
-        confirmLabel={t("common.delete")}
+        confirmLabel={t("habits.archive")}
         destructive
         busy={deleting}
         onConfirm={() => void confirmDelete()}

@@ -30,7 +30,9 @@ export interface Ritual {
   description: string;
   difficulty: Difficulty;
   frequency: Frequency;
+  /** Live streak computed by the server (0 once a full period was missed). */
   streak: number;
+  bestStreak: number;
   essenceReward: number;
   created_at: string;
 }
@@ -41,18 +43,22 @@ export interface RitualLog {
   user_id: string;
   date: string;
   essence_gained: number;
+  /** Day filled by the Potion of Oblivion: keeps the streak, not a completion. */
+  protected: boolean;
 }
 
+export type ShopEffect =
+  "essence_boost" | "restore_streak" | "cosmetic" | "unlock_master";
+
+/** Catalogue row from the shop_items table (names are translated by the client). */
 export interface ShopItem {
   id: string;
-  name: string;
-  description: string;
   cost: number;
-  icon: React.ReactNode;
   rarity: Rarity;
-  effectType?: "essence_boost" | "restore_streak" | "cosmetic" | "unlock_master";
-  effectValue?: number;
-  duration?: number;
+  effectType: ShopEffect | null;
+  effectValue: number | null;
+  /** Consumable items are used from the inventory; passive ones work while owned. */
+  consumable: boolean;
 }
 
 export interface SocialPost {
@@ -115,6 +121,7 @@ export interface UserSettings {
   notificationsEnabled: boolean;
   reminderTime: string;
   locale: Locale;
+  timezone: string;
 }
 
 export interface ProductivityMetrics {

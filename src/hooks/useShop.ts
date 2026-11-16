@@ -13,9 +13,18 @@ export function useShop() {
     enabled: Boolean(userId),
   });
 
+  const catalogQuery = useQuery({
+    queryKey: ["shop", "catalog"],
+    queryFn: () => shopService.listItems(),
+    enabled: Boolean(userId),
+    staleTime: 10 * 60_000,
+  });
+
   const invalidate = () => {
     void queryClient.invalidateQueries({ queryKey: ["shop", userId] });
     void queryClient.invalidateQueries({ queryKey: ["profile", userId] });
+    // The Potion of Oblivion changes logs and streaks.
+    void queryClient.invalidateQueries({ queryKey: ["rituals", userId] });
   };
 
   const purchaseMutation = useMutation({
@@ -29,11 +38,15 @@ export function useShop() {
   });
 
   return {
+    items: catalogQuery.data ?? [],
     quantities: query.data?.quantities ?? {},
     buffs: query.data?.buffs ?? [],
-    isLoading: query.isLoading,
-    error: (query.error as Error | null) ?? null,
-    refetch: query.refetch,
+    isLoading: query.isLoading || catalogQuery.isLoading,
+    error: ((query.error ?? catalogQuery.error) as Error | null) ?? null,
+    refetch: () => {
+      void catalogQuery.refetch();
+      return query.refetch();
+    },
     purchase: purchaseMutation.mutateAsync,
     isPurchasing: purchaseMutation.isPending,
     consume: consumeMutation.mutateAsync,

@@ -31,20 +31,18 @@ export function useRituals() {
     onSuccess: invalidate,
   });
 
-  const removeMutation = useMutation({
-    mutationFn: (id: string) => ritualService.remove(id),
+  const archiveMutation = useMutation({
+    mutationFn: (id: string) => ritualService.archive(id),
     onSuccess: invalidate,
   });
 
   const completeMutation = useMutation({
-    mutationFn: ({ id, date }: { id: string; date: string }): Promise<CompleteResult> =>
-      ritualService.complete(id, date),
+    mutationFn: (id: string): Promise<CompleteResult> => ritualService.complete(id),
     onSuccess: invalidate,
   });
 
   const undoMutation = useMutation({
-    mutationFn: ({ id, date }: { id: string; date: string }): Promise<CompleteResult> =>
-      ritualService.undo(id, date),
+    mutationFn: (id: string): Promise<CompleteResult> => ritualService.undo(id),
     onSuccess: invalidate,
   });
 
@@ -55,13 +53,14 @@ export function useRituals() {
 
   return {
     rituals: query.data?.rituals ?? [],
+    archivedRituals: query.data?.archived ?? [],
     logs: query.data?.logs ?? [],
     isLoading: query.isLoading,
     error: (query.error as Error | null) ?? null,
     refetch: query.refetch,
     createRitual: createMutation.mutateAsync,
     isCreating: createMutation.isPending,
-    removeRitual: removeMutation.mutateAsync,
+    archiveRitual: archiveMutation.mutateAsync,
     completeRitual: completeMutation.mutateAsync,
     undoRitual: undoMutation.mutateAsync,
     isToggling: completeMutation.isPending || undoMutation.isPending,

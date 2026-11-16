@@ -21,7 +21,10 @@ import {
 import { useAuth } from "@/features/auth/AuthProvider";
 import { translateRank, useI18n, type TranslationKey } from "@/i18n";
 import { getRank, rankProgress } from "@/utils/rank";
+import { useQueryClient } from "@tanstack/react-query";
 import { notificationService } from "@/services/notificationService";
+import { settingsService } from "@/services/settingsService";
+import { useSettings } from "@/hooks/useSettings";
 import { useFocusTrap } from "@/hooks/useFocusTrap";
 import { useRituals } from "@/hooks/useRituals";
 import { NotificationBell } from "./NotificationBell";
@@ -118,9 +121,35 @@ export const AppLayout: React.FC = () => {
     if (user && user.locale !== locale) setLocale(user.locale);
   }, [user, user?.locale, locale, setLocale]);
 
+  const { settings } = useSettings();
+  const queryClient = useQueryClient();
+  const userId = user?.id;
+  const timezone = settings?.timezone;
+
+  // Align the stored time zone with the device first, so the reminder and the
+  // server's notion of "today" use the user's local day.
   useEffect(() => {
-    void notificationService.ensureReminder().catch(() => undefined);
-  }, [user?.id]);
+    if (!userId || !timezone) return;
+    let cancelled = false;
+    void (async () => {
+      try {
+        const changed = await settingsService.syncTimezone(userId, timezone);
+        if (changed && !cancelled) {
+          void queryClient.invalidateQueries({ queryKey: ["settings", userId] });
+          void queryClient.invalidateQueries({ queryKey: ["rituals", userId] });
+        }
+      } catch {
+        // Non-blocking: the server keeps using the previous time zone.
+      }
+      await notificationService.ensureReminder().catch(() => undefined);
+      if (!cancelled) {
+        void queryClient.invalidateQueries({ queryKey: ["notifications", userId] });
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [userId, timezone, queryClient]);
 
   if (!user) return null;
 

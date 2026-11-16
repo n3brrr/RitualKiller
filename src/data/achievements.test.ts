@@ -17,6 +17,7 @@ function ritual(overrides: Partial<Ritual> = {}): Ritual {
     difficulty: "novice",
     frequency: "daily",
     streak: 0,
+    bestStreak: 0,
     essenceReward: 10,
     created_at: "2026-01-01T00:00:00.000Z",
     ...overrides,
@@ -30,6 +31,7 @@ function log(overrides: Partial<RitualLog> = {}): RitualLog {
     user_id: "u1",
     date: "2026-11-13",
     essence_gained: 10,
+    protected: false,
     ...overrides,
   };
 }

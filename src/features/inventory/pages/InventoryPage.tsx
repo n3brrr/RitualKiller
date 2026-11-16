@@ -3,13 +3,13 @@ import { Link } from "react-router-dom";
 import { Package, ShoppingBag, Zap } from "lucide-react";
 import { useShop } from "@/hooks/useShop";
 import { shopItemKey, useI18n } from "@/i18n";
-import { SHOP_ITEMS } from "@/data/items";
+import { shopItemIcon } from "@/data/items";
 import { formatDateTime } from "@/utils/dates";
 import Loading from "@/components/animations/Loading";
 import { ErrorState } from "@/components/ui/ErrorState";
 
 export default function InventoryPage() {
-  const { quantities, buffs, isLoading, consume, error, refetch } = useShop();
+  const { items, quantities, buffs, isLoading, consume, error, refetch } = useShop();
   const { t, locale } = useI18n();
   const [feedback, setFeedback] = useState<{
     tone: "success" | "error";
@@ -41,10 +41,19 @@ export default function InventoryPage() {
           text:
             result.reason === "not_owned"
               ? t("inventory.notOwned")
-              : t("inventory.useError"),
+              : result.reason === "nothing_to_restore"
+                ? t("inventory.nothingToRestore")
+                : result.reason === "passive_item"
+                  ? t("inventory.passive")
+                  : t("inventory.useError"),
         });
       } else {
-        setFeedback({ tone: "success", text: `${t("inventory.used")}: ${name}` });
+        setFeedback({
+          tone: "success",
+          text: result.restored
+            ? `${t("inventory.used")}: ${name} · ${t("inventory.restored")}: ${result.restored}`
+            : `${t("inventory.used")}: ${name}`,
+        });
       }
     } catch (consumeError) {
       setFeedback({
@@ -57,7 +66,7 @@ export default function InventoryPage() {
     }
   };
 
-  const owned = SHOP_ITEMS.filter((item) => (quantities[item.id] ?? 0) > 0);
+  const owned = items.filter((item) => (quantities[item.id] ?? 0) > 0);
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
@@ -89,7 +98,7 @@ export default function InventoryPage() {
           </h2>
           <ul className="space-y-2">
             {buffs.map((buff) => {
-              const item = SHOP_ITEMS.find((shopItem) => shopItem.id === buff.itemId);
+              const item = items.find((shopItem) => shopItem.id === buff.itemId);
               return (
                 <li
                   key={buff.id}
@@ -133,7 +142,7 @@ export default function InventoryPage() {
             >
               <div className="flex items-start gap-3">
                 <div className="text-3xl" aria-hidden="true">
-                  {item.icon}
+                  {shopItemIcon(item.id)}
                 </div>
                 <div className="min-w-0 flex-1">
                   <h2 className="font-bold text-white">
@@ -148,17 +157,23 @@ export default function InventoryPage() {
                   </p>
                 </div>
               </div>
-              <button
-                type="button"
-                onClick={() =>
-                  void handleConsume(item.id, t(shopItemKey(item.id, "name")))
-                }
-                disabled={pendingId === item.id}
-                className="mt-3 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg border border-zinc-700 text-sm font-bold text-zinc-200 hover:border-ritual-accent hover:text-ritual-accent disabled:cursor-not-allowed disabled:opacity-40"
-              >
-                <Zap size={16} aria-hidden="true" />{" "}
-                {pendingId === item.id ? t("inventory.using") : t("inventory.use")}
-              </button>
+              {item.consumable ? (
+                <button
+                  type="button"
+                  onClick={() =>
+                    void handleConsume(item.id, t(shopItemKey(item.id, "name")))
+                  }
+                  disabled={pendingId === item.id}
+                  className="mt-3 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg border border-zinc-700 text-sm font-bold text-zinc-200 hover:border-ritual-accent hover:text-ritual-accent disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  <Zap size={16} aria-hidden="true" />{" "}
+                  {pendingId === item.id ? t("inventory.using") : t("inventory.use")}
+                </button>
+              ) : (
+                <p className="mt-3 rounded-lg border border-ritual-accent/30 bg-ritual-accent/5 p-2 text-center text-xs font-bold uppercase tracking-wider text-ritual-accent">
+                  {t("inventory.passive")}
+                </p>
+              )}
             </article>
           ))}
         </div>

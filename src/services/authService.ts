@@ -1,4 +1,5 @@
 import { supabase } from "@/lib/supabase";
+import { browserTimeZone } from "@/services/settingsService";
 
 export async function signUpWithEmail(email: string, password: string, username: string) {
   return supabase.auth.signUp({
@@ -6,7 +7,7 @@ export async function signUpWithEmail(email: string, password: string, username:
     password,
     options: {
       emailRedirectTo: `${window.location.origin}/auth/callback`,
-      data: { username },
+      data: { username, timezone: browserTimeZone() },
     },
   });
 }

@@ -1,5 +1,5 @@
 import type { Ritual } from "@/types";
-import { Check, Trash2, Zap } from "lucide-react";
+import { Archive, Check, Zap } from "lucide-react";
 import { difficultyKeys, frequencyKeys, useI18n } from "@/i18n";
 
 interface RitualCardProps {
@@ -91,10 +91,10 @@ export function RitualCard({
         <button
           type="button"
           onClick={() => onDelete(ritual.id)}
-          aria-label={`${t("common.delete")} ${ritual.title}`}
+          aria-label={`${t("habits.archive")} ${ritual.title}`}
           className="inline-flex h-11 w-11 items-center justify-center rounded-full text-zinc-400 transition-colors hover:text-red-500"
         >
-          <Trash2 size={18} aria-hidden="true" />
+          <Archive size={18} aria-hidden="true" />
         </button>
       </div>
     </article>

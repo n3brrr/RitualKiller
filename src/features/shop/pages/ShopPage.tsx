@@ -3,7 +3,8 @@ import { ShoppingBag, Zap } from "lucide-react";
 import { useAuth } from "@/features/auth/AuthProvider";
 import { useShop } from "@/hooks/useShop";
 import { rarityKeys, shopItemKey, useI18n } from "@/i18n";
-import { SHOP_ITEMS } from "@/data/items";
+import { shopItemIcon } from "@/data/items";
+import Loading from "@/components/animations/Loading";
 import { ErrorState } from "@/components/ui/ErrorState";
 import type { Rarity } from "@/types";
 
@@ -15,7 +16,8 @@ const RARITY_STYLES: Record<Rarity, string> = {
 
 export default function ShopPage() {
   const { user } = useAuth();
-  const { quantities, purchase, isPurchasing, error, refetch } = useShop();
+  const { items, quantities, purchase, isPurchasing, isLoading, error, refetch } =
+    useShop();
   const { t } = useI18n();
   const [feedback, setFeedback] = useState<{
     tone: "success" | "error";
@@ -24,6 +26,7 @@ export default function ShopPage() {
   const [selected, setSelected] = useState<string | null>(null);
 
   if (!user) return null;
+  if (isLoading) return <Loading label={t("shop.loading")} />;
   if (error) {
     return (
       <div className="mx-auto max-w-4xl">
@@ -51,7 +54,9 @@ export default function ShopPage() {
           text:
             result.reason === "insufficient_essence"
               ? t("shop.insufficient")
-              : t("shop.purchaseError"),
+              : result.reason === "already_owned"
+                ? t("shop.alreadyOwned")
+                : t("shop.purchaseError"),
         });
       } else {
         setFeedback({ tone: "success", text: `${t("shop.acquired")}: ${name}` });
@@ -99,9 +104,10 @@ export default function ShopPage() {
       )}
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        {SHOP_ITEMS.map((item) => {
+        {items.map((item) => {
           const owned = quantities[item.id] ?? 0;
           const cantAfford = user.essence < item.cost;
+          const ownedForever = !item.consumable && owned > 0;
           const name = t(shopItemKey(item.id, "name"));
 
           return (
@@ -111,11 +117,18 @@ export default function ShopPage() {
             >
               <div className="mb-2 flex items-start justify-between gap-2">
                 <div className="text-3xl" aria-hidden="true">
-                  {item.icon}
+                  {shopItemIcon(item.id)}
                 </div>
-                <span className="rounded border border-zinc-800 px-2 py-0.5 text-xs uppercase tracking-wider text-zinc-400">
-                  {t(rarityKeys[item.rarity])}
-                </span>
+                <div className="flex flex-wrap justify-end gap-1">
+                  {!item.consumable && (
+                    <span className="rounded border border-zinc-800 px-2 py-0.5 text-xs uppercase tracking-wider text-zinc-400">
+                      {t("shop.permanent")}
+                    </span>
+                  )}
+                  <span className="rounded border border-zinc-800 px-2 py-0.5 text-xs uppercase tracking-wider text-zinc-400">
+                    {t(rarityKeys[item.rarity])}
+                  </span>
+                </div>
               </div>
               <h2 className="font-bold text-white">{name}</h2>
               <p className="mt-1 min-h-10 text-sm text-zinc-400">
@@ -135,10 +148,16 @@ export default function ShopPage() {
                 <button
                   type="button"
                   onClick={() => void handlePurchase(item.id, name, item.cost)}
-                  disabled={cantAfford || isPurchasing || selected === item.id}
+                  disabled={
+                    cantAfford || ownedForever || isPurchasing || selected === item.id
+                  }
                   className="inline-flex min-h-11 items-center rounded-lg bg-ritual-accent px-4 text-sm font-bold text-black hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-40"
                 >
-                  {selected === item.id ? t("shop.buying") : t("shop.buy")}
+                  {selected === item.id
+                    ? t("shop.buying")
+                    : ownedForever
+                      ? t("shop.owned")
+                      : t("shop.buy")}
                 </button>
               </div>
             </article>

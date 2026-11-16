@@ -6,6 +6,7 @@ interface SettingsRow {
   notifications_enabled: boolean;
   reminder_time: string;
   locale: string;
+  timezone: string;
 }
 
 function mapSettings(row: SettingsRow): UserSettings {
@@ -14,10 +15,35 @@ function mapSettings(row: SettingsRow): UserSettings {
     notificationsEnabled: row.notifications_enabled,
     reminderTime: row.reminder_time.slice(0, 5),
     locale: (row.locale === "en" ? "en" : "es") as Locale,
+    timezone: row.timezone,
   };
 }
 
+/** IANA time zone reported by the browser, e.g. "Europe/Madrid". */
+export function browserTimeZone(): string {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
+  } catch {
+    return "UTC";
+  }
+}
+
 export const settingsService = {
+  /**
+   * Keeps user_settings.timezone in line with the device so the server computes
+   * "today", streaks and reminders in the user's local day.
+   */
+  async syncTimezone(userId: string, current: string): Promise<boolean> {
+    const timezone = browserTimeZone();
+    if (timezone === current) return false;
+    const { error } = await supabase
+      .from("user_settings")
+      .update({ timezone })
+      .eq("user_id", userId);
+    if (error) throw error;
+    return true;
+  },
+
   async get(userId: string): Promise<UserSettings> {
     const { error: insertError } = await supabase
       .from("user_settings")
@@ -26,7 +52,7 @@ export const settingsService = {
 
     const { data, error } = await supabase
       .from("user_settings")
-      .select("user_id, notifications_enabled, reminder_time, locale")
+      .select("user_id, notifications_enabled, reminder_time, locale, timezone")
       .eq("user_id", userId)
       .single();
     if (error) throw error;

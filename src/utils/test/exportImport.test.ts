@@ -10,6 +10,7 @@ const ritual: Ritual = {
   difficulty: "adept",
   frequency: "daily",
   streak: 2,
+  bestStreak: 2,
   essenceReward: 25,
   created_at: "2026-01-01T00:00:00.000Z",
 };
@@ -20,6 +21,7 @@ const log: RitualLog = {
   user_id: "u1",
   date: "2026-11-13",
   essence_gained: 25,
+  protected: false,
 };
 
 describe("export/import helpers", () => {

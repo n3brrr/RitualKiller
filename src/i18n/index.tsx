@@ -192,13 +192,13 @@ const es = {
     "Otorga +50% de esencia durante 24 horas. El sabor es metálico y frío.",
   "item.potion_oblivion.name": "Poción del olvido",
   "item.potion_oblivion.description":
-    "Restaura una racha perdida si se consume antes del próximo amanecer. Borra el fallo.",
+    "Protege la racha: rellena el día de ayer en tus rituales diarios que lo dejaron sin completar (sin esencia).",
   "item.shadow_amulet.name": "Amuleto de sombra",
   "item.shadow_amulet.description":
-    "Un objeto cosmético que oscurece tu perfil. Los demás verán tu compromiso con el vacío.",
+    "Cosmético permanente: oscurece tu perfil público para que todos vean tu pacto con el vacío.",
   "item.binding_contract.name": "Contrato vinculante",
   "item.binding_contract.description":
-    "Desbloquea rituales de nivel maestro. Una vez firmado, no hay vuelta atrás.",
+    "Permanente: desbloquea la creación de rituales de dificultad maestro.",
   "social.title": "The Coven",
   "social.placeholder": "Comparte tu progreso con la comunidad...",
   "social.post": "Publicar",
@@ -323,9 +323,10 @@ const es = {
   "habits.emptyGrimoire": "Tu grimorio está vacío. Escribe el primer ritual.",
   "habits.markDone": "Completar",
   "habits.markUndone": "Desmarcar",
-  "habits.deleteTitle": "Eliminar ritual",
-  "habits.deletePrompt": "¿Eliminar",
-  "habits.deleteSuffix": "y su historial? No se puede deshacer.",
+  "habits.deleteTitle": "Archivar ritual",
+  "habits.deletePrompt": "¿Archivar",
+  "habits.deleteSuffix":
+    "? Dejará de aparecer, pero su historial se conserva en tus estadísticas.",
   "habits.errorTitle": "No se pudieron cargar tus rituales",
   "difficulty.novice": "Novato",
   "difficulty.adept": "Intermedio",
@@ -374,6 +375,17 @@ const es = {
   "achievements.category.social": "Comunidad",
   "achievements.category.special": "Especiales",
   "habits.masterLocked": "requiere el Contrato Vinculante",
+  "habits.archive": "Archivar",
+  "habits.invalidDate": "Solo puedes registrar hoy o ayer.",
+  "habits.essenceSpent": "No puedes deshacerlo: ya gastaste la esencia que te dio.",
+  "habits.bestStreak": "Mejor racha",
+  "shop.alreadyOwned": "Ya posees este artefacto permanente.",
+  "shop.permanent": "Permanente",
+  "shop.loading": "Cargando el mercado...",
+  "inventory.passive": "Activo mientras lo poseas",
+  "inventory.nothingToRestore":
+    "No hay rachas que proteger: ningún ritual diario quedó pendiente ayer tras completarse anteayer.",
+  "inventory.restored": "Rachas protegidas",
 } as const;
 
 export type TranslationKey = keyof typeof es;
@@ -597,13 +609,13 @@ const en: Record<TranslationKey, string> = {
     "Grants +50% Essence gained for 24 hours. The taste is metallic and cold.",
   "item.potion_oblivion.name": "Potion of Oblivion",
   "item.potion_oblivion.description":
-    "Restores a lost streak if consumed before the next dawn. Erases failure.",
+    "Protects your streak: fills yesterday for daily rituals you missed (no essence).",
   "item.shadow_amulet.name": "Shadow Amulet",
   "item.shadow_amulet.description":
-    "A cosmetic item that darkens your profile. Others will see your commitment to the void.",
+    "Permanent cosmetic: darkens your public profile so everyone sees your pact with the void.",
   "item.binding_contract.name": "Binding Contract",
   "item.binding_contract.description":
-    "Unlocks master-level rituals. Once signed, there is no turning back.",
+    "Permanent: unlocks creating master-difficulty rituals.",
   "social.title": "The Coven",
   "social.placeholder": "Share your progress with the community...",
   "social.post": "Post",
@@ -727,9 +739,10 @@ const en: Record<TranslationKey, string> = {
   "habits.emptyGrimoire": "Your grimoire is empty. Write the first ritual.",
   "habits.markDone": "Complete",
   "habits.markUndone": "Unmark",
-  "habits.deleteTitle": "Delete ritual",
-  "habits.deletePrompt": "Delete",
-  "habits.deleteSuffix": "and its history? This cannot be undone.",
+  "habits.deleteTitle": "Archive ritual",
+  "habits.deletePrompt": "Archive",
+  "habits.deleteSuffix":
+    "? It will no longer appear, but its history stays in your statistics.",
   "habits.errorTitle": "Could not load your rituals",
   "difficulty.novice": "Novice",
   "difficulty.adept": "Intermediate",
@@ -778,6 +791,17 @@ const en: Record<TranslationKey, string> = {
   "achievements.category.social": "Community",
   "achievements.category.special": "Special",
   "habits.masterLocked": "requires the Binding Contract",
+  "habits.archive": "Archive",
+  "habits.invalidDate": "You can only log today or yesterday.",
+  "habits.essenceSpent": "You cannot undo it: the essence it gave you was already spent.",
+  "habits.bestStreak": "Best streak",
+  "shop.alreadyOwned": "You already own this permanent artifact.",
+  "shop.permanent": "Permanent",
+  "shop.loading": "Loading the market...",
+  "inventory.passive": "Active while you own it",
+  "inventory.nothingToRestore":
+    "There is no streak to protect: no daily ritual was missed yesterday after being done the day before.",
+  "inventory.restored": "Streaks protected",
 };
 
 const dictionaries: Record<Locale, Record<TranslationKey, string>> = { es, en };

@@ -8,7 +8,6 @@ import { useRituals } from "@/hooks/useRituals";
 import { useI18n } from "@/i18n";
 import { DAILY_QUOTES } from "@/data/quotes";
 import { isRitualCompleted } from "@/utils/analytics";
-import { toDateKey } from "@/utils/dates";
 
 const RitualCalendar = lazy(() => import("@/components/calendar/RitualCalendar"));
 const ProductivityMetrics = lazy(
@@ -42,7 +41,6 @@ export default function DashboardPage() {
     );
   }
 
-  const todayKey = toDateKey();
   const pendingRituals = rituals.filter(
     (ritual) => !isRitualCompleted(ritual, logs, new Date()),
   );
@@ -137,7 +135,7 @@ export default function DashboardPage() {
                 </div>
                 <button
                   type="button"
-                  onClick={() => void completeRitual({ id: ritual.id, date: todayKey })}
+                  onClick={() => void completeRitual(ritual.id)}
                   disabled={isToggling}
                   aria-label={`${t("dashboard.complete")} ${ritual.title}`}
                   className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-zinc-700 text-zinc-400 hover:border-ritual-accent hover:text-ritual-accent disabled:opacity-50"
