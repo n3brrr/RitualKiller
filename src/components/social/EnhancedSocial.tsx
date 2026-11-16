@@ -1,5 +1,6 @@
 import { useState } from "react";
 import {
+  AlertCircle,
   Heart,
   MessageCircle,
   Send,
@@ -7,6 +8,7 @@ import {
   Trash2,
   UserCheck,
   UserPlus,
+  Users,
   Flag,
 } from "lucide-react";
 import { useAuth } from "@/features/auth/AuthProvider";
@@ -25,6 +27,7 @@ export function EnhancedSocial() {
     following,
     isLoading,
     error,
+    refetch,
     createPost,
     isPosting,
     toggleLike,
@@ -33,7 +36,7 @@ export function EnhancedSocial() {
     reportPost,
     deletePost,
   } = useSocial();
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
 
   const [content, setContent] = useState("");
   const [feedback, setFeedback] = useState<{ tone: "success" | "error"; text: string } | null>(null);
@@ -45,11 +48,30 @@ export function EnhancedSocial() {
 
   if (!user) return null;
   if (isLoading) return <Loading />;
+  if (error) {
+    return (
+      <div
+        role="alert"
+        className="rounded-xl border border-red-500/30 bg-red-500/5 p-6 text-center"
+      >
+        <AlertCircle className="mx-auto mb-2 text-red-500" size={24} aria-hidden="true" />
+        <h1 className="font-display text-lg font-bold text-white">{t("social.errorTitle")}</h1>
+        <p className="mt-1 text-sm text-red-400">{error.message}</p>
+        <button
+          type="button"
+          onClick={() => void refetch()}
+          className="mt-4 inline-flex min-h-11 items-center rounded-lg border border-zinc-700 px-4 text-sm text-zinc-200 transition-colors hover:border-ritual-accent hover:text-ritual-accent"
+        >
+          {t("common.retry")}
+        </button>
+      </div>
+    );
+  }
 
   const handleError = (actionError: unknown) => {
     setFeedback({
       tone: "error",
-      text: actionError instanceof Error ? actionError.message : "Algo salió mal",
+      text: actionError instanceof Error ? actionError.message : t("common.error"),
     });
   };
 
@@ -80,7 +102,7 @@ export function EnhancedSocial() {
     if (!reportTarget) return;
     await reportPost({ postId: reportTarget.id, reason });
     setReportTarget(null);
-    setFeedback({ tone: "success", text: "Reporte enviado a moderación." });
+    setFeedback({ tone: "success", text: t("social.reportSent") });
   };
 
   const confirmDelete = async () => {
@@ -101,19 +123,19 @@ export function EnhancedSocial() {
     <div className="space-y-4">
       <header>
         <h1 className="font-display text-2xl font-bold sm:text-3xl">{t("social.title")}</h1>
-        <p className="text-sm text-zinc-500">Comparte tu progreso y sigue a otros iniciados.</p>
+        <p className="text-sm text-zinc-400">{t("social.subtitle")}</p>
       </header>
 
-      {(feedback || error) && (
+      {feedback && (
         <p
-          role={feedback?.tone === "success" ? "status" : "alert"}
+          role={feedback.tone === "success" ? "status" : "alert"}
           className={`rounded-lg border p-3 text-sm ${
-            feedback?.tone === "success"
+            feedback.tone === "success"
               ? "border-ritual-accent/30 bg-ritual-accent/10 text-ritual-accent"
               : "border-red-500/30 bg-red-500/10 text-red-400"
           }`}
         >
-          {feedback?.text ?? error?.message}
+          {feedback.text}
         </p>
       )}
 
@@ -144,9 +166,10 @@ export function EnhancedSocial() {
       </form>
 
       {posts.length === 0 ? (
-        <p className="rounded-xl border border-dashed border-zinc-800 p-8 text-center text-sm text-zinc-500">
-          {t("social.empty")}
-        </p>
+        <div className="rounded-xl border border-dashed border-zinc-800 p-8 text-center text-sm text-zinc-400">
+          <Users className="mx-auto mb-3 text-ritual-accent/60" size={28} aria-hidden="true" />
+          <p>{t("social.empty")}</p>
+        </div>
       ) : (
         <ul className="space-y-3">
           {posts.map((post) => {
@@ -164,11 +187,13 @@ export function EnhancedSocial() {
                       <p className="truncate text-sm font-bold text-white">
                         {post.author}
                         {post.isSystem && (
-                          <span className="ml-2 text-xs uppercase text-zinc-500">sistema</span>
+                          <span className="ml-2 text-xs uppercase text-zinc-400">
+                            {t("social.system")}
+                          </span>
                         )}
                       </p>
                       <p className="text-xs uppercase tracking-wider text-zinc-400">
-                        {formatDateTime(post.createdAt)}
+                        {formatDateTime(post.createdAt, locale)}
                       </p>
                     </div>
                   </div>
@@ -204,9 +229,9 @@ export function EnhancedSocial() {
                     type="button"
                     onClick={() => void toggleLike({ postId: post.id, liked: post.likedByMe })}
                     aria-pressed={post.likedByMe}
-                    aria-label={`${post.likes} likes`}
+                    aria-label={`${post.likes} ${t("social.likes")}`}
                     className={`inline-flex min-h-11 items-center gap-1 rounded-lg px-3 text-xs ${
-                      post.likedByMe ? "text-red-400" : "text-zinc-500 hover:text-zinc-300"
+                      post.likedByMe ? "text-red-400" : "text-zinc-400 hover:text-zinc-200"
                     }`}
                   >
                     <Heart size={16} fill={post.likedByMe ? "currentColor" : "none"} aria-hidden="true" />
@@ -217,7 +242,8 @@ export function EnhancedSocial() {
                     type="button"
                     onClick={() => setOpenComments(openComments === post.id ? null : post.id)}
                     aria-expanded={openComments === post.id}
-                    className="inline-flex min-h-11 items-center gap-1 rounded-lg px-3 text-xs text-zinc-500 hover:text-zinc-300"
+                    aria-label={`${post.comments.length} ${t("social.comments")}`}
+                    className="inline-flex min-h-11 items-center gap-1 rounded-lg px-3 text-xs text-zinc-400 hover:text-zinc-200"
                   >
                     <MessageCircle size={16} aria-hidden="true" />
                     {post.comments.length}
@@ -241,17 +267,17 @@ export function EnhancedSocial() {
                             .then(() =>
                               setFeedback({
                                 tone: "success",
-                                text: "Enlace de perfil copiado.",
+                                text: t("social.copied"),
                               }),
                             )
                             .catch(() =>
                               setFeedback({
                                 tone: "error",
-                                text: "No se pudo copiar el enlace.",
+                                text: t("social.copyError"),
                               }),
                             );
                         }}
-                        aria-label="Copiar enlace del perfil"
+                        aria-label={t("social.copyLink")}
                         className="inline-flex h-11 w-11 items-center justify-center rounded-lg text-zinc-400 hover:text-zinc-300"
                       >
                         <Share2 size={16} aria-hidden="true" />
@@ -263,7 +289,7 @@ export function EnhancedSocial() {
                     <button
                       type="button"
                       onClick={() => setDeleteTarget(post)}
-                      aria-label="Eliminar publicación"
+                      aria-label={t("social.delete")}
                       className="inline-flex h-11 w-11 items-center justify-center rounded-lg text-zinc-400 hover:text-red-500"
                     >
                       <Trash2 size={16} aria-hidden="true" />
@@ -274,7 +300,7 @@ export function EnhancedSocial() {
                 {openComments === post.id && (
                   <div className="mt-2 space-y-2 border-t border-zinc-900 pt-2">
                     {post.comments.length === 0 && (
-                      <p className="text-xs text-zinc-400">Sin comentarios todavía.</p>
+                      <p className="text-xs text-zinc-400">{t("social.noComments")}</p>
                     )}
                     {post.comments.map((comment) => (
                       <div key={comment.id} className="rounded-lg bg-zinc-900/60 p-2 text-sm">
@@ -324,9 +350,9 @@ export function EnhancedSocial() {
 
       <ConfirmDialog
         open={Boolean(deleteTarget)}
-        title="Eliminar publicación"
-        description="¿Eliminar esta publicación y sus comentarios? No se puede deshacer."
-        confirmLabel="Eliminar"
+        title={t("social.deleteTitle")}
+        description={t("social.deleteDescription")}
+        confirmLabel={t("common.delete")}
         destructive
         busy={deleting}
         onConfirm={() => void confirmDelete()}

@@ -60,6 +60,7 @@ export function useSocial() {
     following: query.data?.following ?? [],
     isLoading: query.isLoading,
     error: (query.error as Error | null) ?? null,
+    refetch: query.refetch,
     createPost: postMutation.mutateAsync,
     isPosting: postMutation.isPending,
     toggleLike: likeMutation.mutateAsync,

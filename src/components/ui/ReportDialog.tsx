@@ -1,5 +1,6 @@
 import { useEffect, useId, useState, type FormEvent } from "react";
 import { Modal } from "./Modal";
+import { useI18n } from "@/i18n";
 
 interface ReportDialogProps {
   open: boolean;
@@ -9,6 +10,7 @@ interface ReportDialogProps {
 }
 
 export function ReportDialog({ open, onClose, onSubmit, busy = false }: ReportDialogProps) {
+  const { t } = useI18n();
   const formId = useId();
   const [reason, setReason] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -25,7 +27,7 @@ export function ReportDialog({ open, onClose, onSubmit, busy = false }: ReportDi
     event.preventDefault();
     const trimmed = reason.trim();
     if (trimmed.length < 3) {
-      setError("Escribe al menos 3 caracteres.");
+      setError(t("report.minLength"));
       return;
     }
 
@@ -35,7 +37,7 @@ export function ReportDialog({ open, onClose, onSubmit, busy = false }: ReportDi
       await onSubmit(trimmed);
     } catch (submitError) {
       setError(
-        submitError instanceof Error ? submitError.message : "No se pudo enviar el reporte.",
+        submitError instanceof Error ? submitError.message : t("report.error"),
       );
     } finally {
       setSubmitting(false);
@@ -49,7 +51,7 @@ export function ReportDialog({ open, onClose, onSubmit, busy = false }: ReportDi
     <Modal
       open={open}
       onClose={onClose}
-      title="Reportar publicación"
+      title={t("report.title")}
       footer={
         <>
           <button
@@ -58,7 +60,7 @@ export function ReportDialog({ open, onClose, onSubmit, busy = false }: ReportDi
             disabled={isBusy}
             className="inline-flex min-h-11 items-center justify-center rounded-lg border border-zinc-700 px-4 text-sm font-bold text-zinc-300 hover:border-zinc-500 disabled:opacity-50"
           >
-            Cancelar
+            {t("common.cancel")}
           </button>
           <button
             type="submit"
@@ -66,14 +68,14 @@ export function ReportDialog({ open, onClose, onSubmit, busy = false }: ReportDi
             disabled={isBusy}
             className="inline-flex min-h-11 items-center justify-center rounded-lg bg-red-500 px-4 text-sm font-bold text-white hover:bg-red-400 disabled:opacity-50"
           >
-            {isBusy ? "Enviando..." : "Enviar reporte"}
+            {isBusy ? t("report.sending") : t("report.submit")}
           </button>
         </>
       }
     >
       <form id={formId} onSubmit={handleSubmit}>
         <label htmlFor={`${formId}-reason`} className="mb-1 block text-xs font-bold uppercase tracking-wider text-zinc-400">
-          Motivo
+          {t("report.reason")}
         </label>
         <textarea
           id={`${formId}-reason`}
@@ -84,10 +86,10 @@ export function ReportDialog({ open, onClose, onSubmit, busy = false }: ReportDi
           data-autofocus
           aria-invalid={Boolean(error)}
           aria-describedby={error ? errorId : undefined}
-          placeholder="Cuéntanos qué incumple las normas."
+          placeholder={t("report.placeholder")}
           className="w-full rounded-lg border border-zinc-700 bg-black px-3 py-2 text-sm text-white outline-none focus:border-ritual-accent"
         />
-        <p className="mt-1 text-xs text-zinc-500">Mínimo 3 caracteres. El equipo revisará el reporte.</p>
+        <p className="mt-1 text-xs text-zinc-400">{t("report.hint")}</p>
         {error && (
           <p id={errorId} role="alert" className="mt-2 text-sm text-red-400">
             {error}
