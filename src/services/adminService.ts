@@ -37,8 +37,8 @@ export interface AdminErrorLog {
 export const ADMIN_USERS_PAGE = 25;
 
 /** Escapes LIKE wildcards so a search for "a_b" does not match "axb". */
-function likePattern(search: string): string {
-  return `%${search.replace(/[\%_]/g, (char) => `\${char}`)}%`;
+export function likePattern(search: string): string {
+  return `%${search.replace(/[\\%_]/g, (char) => `\\${char}`)}%`;
 }
 
 export const adminService = {
