@@ -17,9 +17,3 @@ export function getRank(essence: number): Rank {
   const rank = [...RANKS].reverse().find((entry) => essence >= entry.min) ?? RANKS[0]!;
   return { title: rank.title, current: rank.min, next: rank.next };
 }
-
-export function rankProgress(essence: number): number {
-  const rank = getRank(essence);
-  const span = Math.max(rank.next - rank.current, 1);
-  return Math.min(100, Math.max(0, ((essence - rank.current) / span) * 100));
-}
