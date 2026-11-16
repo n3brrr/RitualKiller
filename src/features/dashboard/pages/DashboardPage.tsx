@@ -79,7 +79,7 @@ export default function DashboardPage() {
         <section className="rounded-2xl border border-zinc-900 bg-zinc-950/50 p-4 sm:p-6 lg:col-span-2">
           <h2 className="mb-4 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-zinc-400">
             <Flame size={16} className="text-ritual-blood" aria-hidden="true" />
-            Consistencia (último año)
+            {t("dashboard.consistency")}
           </h2>
           <Heatmap logs={logs} />
         </section>
@@ -118,13 +118,15 @@ export default function DashboardPage() {
               >
                 <div className="min-w-0">
                   <div className="truncate text-sm font-medium text-zinc-200">{ritual.title}</div>
-                  <div className="text-xs text-zinc-400">+{ritual.essenceReward} essence</div>
+                  <div className="text-xs text-zinc-400">
+                    +{ritual.essenceReward} {t("dashboard.essenceUnit")}
+                  </div>
                 </div>
                 <button
                   type="button"
                   onClick={() => void completeRitual({ id: ritual.id, date: todayKey })}
                   disabled={isToggling}
-                  aria-label={`Completar ${ritual.title}`}
+                  aria-label={`${t("dashboard.complete")} ${ritual.title}`}
                   className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-zinc-700 text-zinc-500 hover:border-ritual-accent hover:text-ritual-accent disabled:opacity-50"
                 >
                   <Zap size={18} aria-hidden="true" />
@@ -135,7 +137,7 @@ export default function DashboardPage() {
 
           {completedCount > 0 && (
             <p className="mt-3 text-xs uppercase tracking-wider text-zinc-400">
-              {completedCount} completados hoy
+              {completedCount} {t("dashboard.completedToday")}
             </p>
           )}
         </section>

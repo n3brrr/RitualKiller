@@ -23,8 +23,6 @@ const DIFFICULTY_LABELS: Record<Difficulty, string> = {
   master: "Master",
 };
 
-const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-
 export function filterLogsByDays(
   logs: RitualLog[],
   days: number,
@@ -52,7 +50,7 @@ export function buildDailySeries(
   }));
 }
 
-export function buildWeekdaySeries(logs: RitualLog[]): WeekdayPoint[] {
+export function buildWeekdaySeries(logs: RitualLog[], locale = "es"): WeekdayPoint[] {
   const counts = new Map<number, number>();
   for (const log of logs) {
     const [year, month, day] = log.date.slice(0, 10).split("-").map(Number);
@@ -60,10 +58,15 @@ export function buildWeekdaySeries(logs: RitualLog[]): WeekdayPoint[] {
     const weekday = new Date(year, month - 1, day).getDay();
     counts.set(weekday, (counts.get(weekday) ?? 0) + 1);
   }
-  return WEEKDAYS.map((name, index) => ({
-    name,
-    Completions: counts.get(index) ?? 0,
-  }));
+  return Array.from({ length: 7 }, (_, index) => {
+    const name = new Date(2024, 0, 7 + index).toLocaleDateString(locale, {
+      weekday: "short",
+    });
+    return {
+      name: name.charAt(0).toUpperCase() + name.slice(1),
+      Completions: counts.get(index) ?? 0,
+    };
+  });
 }
 
 export function buildDifficultySeries(

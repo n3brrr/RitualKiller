@@ -7,6 +7,7 @@ import {
   filterLogsByDays,
   isRitualCompleted,
 } from "@/utils/analytics";
+import { useI18n } from "@/i18n";
 import { toDateKey } from "@/utils/dates";
 
 interface ProductivityMetricsProps {
@@ -19,6 +20,7 @@ function percent(value: number): number {
 }
 
 export function ProductivityMetrics({ rituals, logs }: ProductivityMetricsProps) {
+  const { t, locale } = useI18n();
   const metrics = useMemo(() => {
     const todayKey = toDateKey();
     const completedToday = rituals.filter((ritual) =>
@@ -31,7 +33,7 @@ export function ProductivityMetrics({ rituals, logs }: ProductivityMetricsProps)
     const last30 = filterLogsByDays(logs, 30);
     const averageCompletionRate = calculateCompletionRate(rituals, last30, 30);
 
-    const weekday = buildWeekdaySeries(logs).reduce(
+    const weekday = buildWeekdaySeries(logs, locale).reduce(
       (best, item) => (item.Completions > best.Completions ? item : best),
       { name: "—", Completions: 0 },
     );
@@ -48,51 +50,51 @@ export function ProductivityMetrics({ rituals, logs }: ProductivityMetricsProps)
       totalCompletions: logs.length,
       bestStreak,
     };
-  }, [rituals, logs]);
+  }, [rituals, logs, locale]);
 
   const cards = [
     {
-      label: "Eficiencia hoy",
+      label: t("productivity.today"),
       value: `${percent(metrics.dailyEfficiency)}%`,
-      detail: `${metrics.completionsToday} completados`,
+      detail: `${metrics.completionsToday} ${t("productivity.completed")}`,
       icon: <Target size={18} className="text-ritual-accent" aria-hidden="true" />,
     },
     {
-      label: "Eficiencia semanal",
+      label: t("productivity.weekly"),
       value: `${percent(metrics.weeklyEfficiency)}%`,
-      detail: "últimos 7 días",
+      detail: t("productivity.last7"),
       icon: <TrendingUp size={18} className="text-ritual-accent" aria-hidden="true" />,
     },
     {
-      label: "Media 30 días",
+      label: t("productivity.average30"),
       value: `${percent(metrics.averageCompletionRate)}%`,
-      detail: "tasa de completitud",
+      detail: t("productivity.completionRate"),
       icon: <BarChart3 size={18} className="text-ritual-accent" aria-hidden="true" />,
     },
     {
-      label: "Mejor día",
+      label: t("productivity.bestDay"),
       value: metrics.bestDay,
-      detail: "por completados",
+      detail: t("productivity.byCompletions"),
       icon: <Clock size={18} className="text-ritual-accent" aria-hidden="true" />,
     },
     {
-      label: "Completados",
+      label: t("productivity.completedTotal"),
       value: String(metrics.totalCompletions),
-      detail: "en total",
+      detail: t("productivity.inTotal"),
       icon: <Flame size={18} className="text-ritual-accent" aria-hidden="true" />,
     },
     {
-      label: "Mejor racha",
+      label: t("productivity.bestStreak"),
       value: String(metrics.bestStreak),
-      detail: "días",
+      detail: t("productivity.days"),
       icon: <Flame size={18} className="text-orange-500" aria-hidden="true" />,
     },
   ];
 
   return (
-    <section aria-label="Métricas de productividad">
+    <section aria-label={t("productivity.label")}>
       <h3 className="mb-3 font-display text-sm font-bold uppercase tracking-wider text-zinc-300">
-        Productividad
+        {t("productivity.title")}
       </h3>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
         {cards.map((card) => (

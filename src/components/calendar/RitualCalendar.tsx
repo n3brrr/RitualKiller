@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import type { Ritual, RitualLog } from "@/types";
+import type { Locale, Ritual, RitualLog } from "@/types";
+import { useI18n } from "@/i18n";
 import { toDateKey } from "@/utils/dates";
 
 interface RitualCalendarProps {
@@ -8,9 +9,13 @@ interface RitualCalendarProps {
   logs: RitualLog[];
 }
 
-const WEEKDAYS = ["L", "M", "X", "J", "V", "S", "D"];
+const WEEKDAYS: Record<Locale, string[]> = {
+  es: ["L", "M", "X", "J", "V", "S", "D"],
+  en: ["M", "T", "W", "T", "F", "S", "S"],
+};
 
 export function RitualCalendar({ rituals, logs }: RitualCalendarProps) {
+  const { t, locale } = useI18n();
   const [cursor, setCursor] = useState(() => new Date());
   const year = cursor.getFullYear();
   const month = cursor.getMonth();
@@ -31,23 +36,23 @@ export function RitualCalendar({ rituals, logs }: RitualCalendarProps) {
   const leadingBlanks = (firstDay.getDay() + 6) % 7;
   const todayKey = toDateKey();
 
-  const monthLabel = cursor.toLocaleDateString("es", { month: "long", year: "numeric" });
+  const monthLabel = cursor.toLocaleDateString(locale, { month: "long", year: "numeric" });
 
   const shiftMonth = (delta: number) => {
     setCursor(new Date(year, month + delta, 1));
   };
 
   return (
-    <section aria-label="Calendario de rituales">
+    <section aria-label={t("calendar.label")}>
       <div className="mb-4 flex items-center justify-between">
         <h3 className="font-display text-sm font-bold uppercase tracking-wider text-zinc-300">
-          Calendario
+          {t("calendar.title")}
         </h3>
         <div className="flex items-center gap-1">
           <button
             type="button"
             onClick={() => shiftMonth(-1)}
-            aria-label="Mes anterior"
+            aria-label={t("calendar.previous")}
             className="inline-flex h-11 w-11 items-center justify-center rounded-lg text-zinc-400 hover:bg-zinc-900 hover:text-white"
           >
             <ChevronLeft size={18} />
@@ -58,7 +63,7 @@ export function RitualCalendar({ rituals, logs }: RitualCalendarProps) {
           <button
             type="button"
             onClick={() => shiftMonth(1)}
-            aria-label="Mes siguiente"
+            aria-label={t("calendar.next")}
             className="inline-flex h-11 w-11 items-center justify-center rounded-lg text-zinc-400 hover:bg-zinc-900 hover:text-white"
           >
             <ChevronRight size={18} />
@@ -67,8 +72,8 @@ export function RitualCalendar({ rituals, logs }: RitualCalendarProps) {
       </div>
 
       <div className="grid grid-cols-7 gap-1 text-center">
-        {WEEKDAYS.map((day) => (
-          <span key={day} className="pb-1 text-xs font-bold uppercase text-zinc-400">
+        {WEEKDAYS[locale].map((day, index) => (
+          <span key={index} className="pb-1 text-xs font-bold uppercase text-zinc-400">
             {day}
           </span>
         ))}
@@ -87,7 +92,7 @@ export function RitualCalendar({ rituals, logs }: RitualCalendarProps) {
           return (
             <div
               key={dateKey}
-              aria-label={`${dateKey}: ${completed} de ${rituals.length} rituales`}
+              aria-label={`${dateKey}: ${completed} ${t("calendar.of")} ${rituals.length} ${t("heatmap.rituals")}`}
               className={`relative flex aspect-square flex-col items-center justify-center rounded-md border text-xs ${
                 isToday ? "border-ritual-accent/60" : "border-zinc-900"
               } ${completed > 0 ? "bg-ritual-accent/10 text-zinc-100" : "text-zinc-400"}`}

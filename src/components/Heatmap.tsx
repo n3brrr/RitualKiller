@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import type { RitualLog } from "@/types";
+import { useI18n } from "@/i18n";
 import { lastNDays } from "@/utils/dates";
 
 const INTENSITY = [
@@ -11,6 +12,7 @@ const INTENSITY = [
 ] as const;
 
 export function Heatmap({ logs }: { logs: RitualLog[] }) {
+  const { t } = useI18n();
   const cells = useMemo(() => {
     const counts = new Map<string, number>();
     for (const log of logs) {
@@ -31,7 +33,7 @@ export function Heatmap({ logs }: { logs: RitualLog[] }) {
       <div
         className="grid grid-flow-col grid-rows-7 gap-1 overflow-x-auto pb-1"
         role="img"
-        aria-label="Actividad de rituales en el último año"
+        aria-label={t("heatmap.label")}
       >
         {cells.map((cell) => {
           const level =
@@ -39,18 +41,18 @@ export function Heatmap({ logs }: { logs: RitualLog[] }) {
           return (
             <span
               key={cell.date}
-              title={`${cell.date}: ${cell.count} rituales`}
+              title={`${cell.date}: ${cell.count} ${t("heatmap.rituals")}`}
               className={`h-2.5 w-2.5 rounded-sm sm:h-3 sm:w-3 ${INTENSITY[level]}`}
             />
           );
         })}
       </div>
       <div className="flex items-center justify-end gap-1 text-xs uppercase tracking-wider text-zinc-400">
-        <span>Menos</span>
+        <span>{t("heatmap.less")}</span>
         {INTENSITY.map((className, index) => (
           <span key={index} className={`h-2.5 w-2.5 rounded-sm ${className}`} />
         ))}
-        <span>Más</span>
+        <span>{t("heatmap.more")}</span>
       </div>
     </div>
   );
