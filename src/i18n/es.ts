@@ -504,4 +504,57 @@ export const es = {
   "admin.suspendedUntilDate": "suspendido hasta {date}",
   "goals.linkedRituals.one": "{count} ritual vinculado",
   "goals.linkedRituals.other": "{count} rituales vinculados",
+  "library.lib-health-1.title": "Hidratación matinal",
+  "library.lib-health-1.description":
+    "Bebe 500 ml de agua al despertar, antes de cualquier otra bebida.",
+  "library.lib-health-2.title": "Protocolo de ducha fría",
+  "library.lib-health-2.description":
+    "Ducha fría de al menos 2 minutos para fortalecer la voluntad.",
+  "library.lib-health-3.title": "10.000 pasos diarios",
+  "library.lib-health-3.description":
+    "Camina al menos 10.000 pasos cada día, sin excepción.",
+  "library.lib-prod-1.title": "Sesión de trabajo profundo",
+  "library.lib-prod-1.description":
+    "90 minutos de trabajo profundo sin distracciones ni interrupciones.",
+  "library.lib-prod-2.title": "Protocolo de las 5 AM",
+  "library.lib-prod-2.description": "Levántate a las 5:00 sin usar el botón de posponer.",
+  "library.lib-prod-3.title": "Sin redes antes del mediodía",
+  "library.lib-prod-3.description": "Evita todas las redes sociales hasta el mediodía.",
+  "library.lib-mental-1.title": "Meditación matinal",
+  "library.lib-mental-1.description":
+    "10 minutos de meditación al despertar para ganar claridad mental.",
+  "library.lib-mental-2.title": "Diario de gratitud",
+  "library.lib-mental-2.description":
+    "Escribe cada noche 3 cosas por las que estés agradecido.",
+  "library.lib-mental-3.title": "Atardecer digital",
+  "library.lib-mental-3.description":
+    "Apaga todos los dispositivos electrónicos 2 horas antes de dormir.",
+  "library.lib-physical-1.title": "Flexiones diarias",
+  "library.lib-physical-1.description":
+    "Completa 50 flexiones repartidas a lo largo del día.",
+  "library.lib-physical-2.title": "Reto de plancha",
+  "library.lib-physical-2.description": "Mantén la plancha 2 minutos sin interrupciones.",
+  "library.lib-learning-1.title": "Lee 20 páginas",
+  "library.lib-learning-1.description":
+    "Lee al menos 20 páginas de un libro formativo cada día.",
+  "library.lib-learning-2.title": "Programa 1 hora",
+  "library.lib-learning-2.description":
+    "Dedica 1 hora completa a programar o aprender programación.",
+  "library.lib-creativity-1.title": "Producción creativa diaria",
+  "library.lib-creativity-1.description":
+    "Crea algo nuevo cada día: dibujo, escritura, música...",
+  "library.lib-spiritual-1.title": "Reflexión nocturna",
+  "library.lib-spiritual-1.description":
+    "Reflexiona sobre el día durante 15 minutos antes de dormir.",
+  "library.alreadyAdded": "Ya en tus rituales",
+  "quote.0": "La disciplina es el puente entre las metas y los logros.",
+  "quote.1": "No cuentes los días: haz que los días cuenten.",
+  "quote.2": "El dolor de la disciplina pesa gramos; el del arrepentimiento, toneladas.",
+  "quote.3": "Tu futuro se crea con lo que haces hoy, no mañana.",
+  "quote.4": "Domina tus rituales y dominarás tu vida.",
+  "quote.5": "La excelencia no es un acto, sino un hábito.",
+  "quote.6": "Sufre el dolor de la disciplina o sufre el del arrepentimiento.",
+  "quote.7": "La única forma de hacer un gran trabajo es amar lo que haces.",
+  "quote.8": "Somos lo que hacemos repetidamente.",
+  "quote.9": "La motivación te pone en marcha; el hábito te mantiene en movimiento.",
 } as const;

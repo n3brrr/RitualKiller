@@ -1,12 +1,6 @@
-/*
- * ritualLibrary.ts
- *
- * Define la biblioteca de rituales sugeridos (plantillas) y utilidades asociadas.
- * Permite acceder rápidamente a rituales predefinidos, filtrarlos por categoría, popularidad o buscar,
- * y convertir una plantilla en un ritual concreto de usuario.
- */
+import type { TranslationKey } from "@/i18n";
+import type { Difficulty, Frequency } from "@/types";
 
-// Categorías posibles de rituales sugeridos
 export type RitualCategory =
   | "health"
   | "productivity"
@@ -17,198 +11,76 @@ export type RitualCategory =
   | "creativity"
   | "spiritual";
 
-// Plantilla base para sugerir un ritual
+/**
+ * Suggested ritual. Title and description are translated
+ * (library.<id>.title / .description); the reward is computed from the
+ * difficulty and frequency exactly like the database does.
+ */
 export interface RitualTemplate {
   id: string;
-  title: string;
-  description: string;
-  difficulty: "novice" | "adept" | "master";
+  difficulty: Difficulty;
   category: RitualCategory;
-  frequency: "daily" | "weekly";
-  essenceReward: number;
+  frequency: Frequency;
   tags: string[];
   popular?: boolean;
 }
 
-// Lista estática de rituales sugeridos
+// prettier-ignore
 export const RITUAL_LIBRARY: RitualTemplate[] = [
-  // Salud
-  {
-    id: "lib-health-1",
-    title: "Morning Hydration",
-    description: "Drink 500ml of water upon waking up before any other beverage.",
-    difficulty: "novice",
-    category: "health",
-    frequency: "daily",
-    essenceReward: 10,
-    tags: ["health", "hydration", "morning"],
-    popular: true,
-  },
-  {
-    id: "lib-health-2",
-    title: "Cold Shower Protocol",
-    description: "Cold shower for at least 2 minutes to strengthen willpower.",
-    difficulty: "adept",
-    category: "health",
-    frequency: "daily",
-    essenceReward: 25,
-    tags: ["health", "discipline", "cold"],
-    popular: true,
-  },
-  {
-    id: "lib-health-3",
-    title: "10K Daily Steps",
-    description: "Walk at least 10,000 steps every day without exception.",
-    difficulty: "adept",
-    category: "health",
-    frequency: "daily",
-    essenceReward: 25,
-    tags: ["health", "exercise", "walking"],
-  },
-  // Productividad
-  {
-    id: "lib-prod-1",
-    title: "Deep Work Session",
-    description: "90 minutes of deep work without distractions or interruptions.",
-    difficulty: "adept",
-    category: "productivity",
-    frequency: "daily",
-    essenceReward: 30,
-    tags: ["productivity", "concentration", "work"],
-    popular: true,
-  },
-  {
-    id: "lib-prod-2",
-    title: "5 AM Wake-up Protocol",
-    description: "Wake up at 5:00 AM without using the snooze button.",
-    difficulty: "master",
-    category: "productivity",
-    frequency: "daily",
-    essenceReward: 50,
-    tags: ["productivity", "discipline", "morning"],
-    popular: true,
-  },
-  {
-    id: "lib-prod-3",
-    title: "No Social Media Before Noon",
-    description: "Avoid all social media until noon.",
-    difficulty: "adept",
-    category: "productivity",
-    frequency: "daily",
-    essenceReward: 25,
-    tags: ["productivity", "discipline", "digital"],
-  },
-  // Mental
-  {
-    id: "lib-mental-1",
-    title: "Morning Meditation",
-    description: "10-minute meditation upon waking up for mental clarity.",
-    difficulty: "novice",
-    category: "mental",
-    frequency: "daily",
-    essenceReward: 15,
-    tags: ["mental", "meditation", "mindfulness"],
-    popular: true,
-  },
-  {
-    id: "lib-mental-2",
-    title: "Gratitude Journal",
-    description: "Write 3 things you are grateful for every night.",
-    difficulty: "novice",
-    category: "mental",
-    frequency: "daily",
-    essenceReward: 10,
-    tags: ["mental", "gratitude", "writing"],
-  },
-  {
-    id: "lib-mental-3",
-    title: "Digital Sunset",
-    description: "Turn off all electronic devices 2 hours before sleeping.",
-    difficulty: "adept",
-    category: "mental",
-    frequency: "daily",
-    essenceReward: 20,
-    tags: ["mental", "sleep", "digital"],
-  },
-  // Físico
-  {
-    id: "lib-physical-1",
-    title: "Daily Push-ups",
-    description: "Complete 50 push-ups distributed throughout the day.",
-    difficulty: "adept",
-    category: "physical",
-    frequency: "daily",
-    essenceReward: 25,
-    tags: ["physical", "exercise", "strength"],
-  },
-  {
-    id: "lib-physical-2",
-    title: "Plank Challenge",
-    description: "Hold a plank for 2 minutes without interruptions.",
-    difficulty: "master",
-    category: "physical",
-    frequency: "daily",
-    essenceReward: 40,
-    tags: ["physical", "exercise", "core"],
-  },
-  // Aprendizaje
-  {
-    id: "lib-learning-1",
-    title: "Read 20 Pages",
-    description: "Read at least 20 pages of an educational book every day.",
-    difficulty: "novice",
-    category: "learning",
-    frequency: "daily",
-    essenceReward: 15,
-    tags: ["learning", "reading", "knowledge"],
-    popular: true,
-  },
-  {
-    id: "lib-learning-2",
-    title: "Code for 1 Hour",
-    description: "Dedicate 1 full hour to coding or learning programming.",
-    difficulty: "adept",
-    category: "learning",
-    frequency: "daily",
-    essenceReward: 30,
-    tags: ["learning", "programming", "skills"],
-  },
-  // Creatividad
-  {
-    id: "lib-creativity-1",
-    title: "Daily Creative Production",
-    description: "Create something new every day: drawing, writing, music, etc.",
-    difficulty: "novice",
-    category: "creativity",
-    frequency: "daily",
-    essenceReward: 20,
-    tags: ["creativity", "art", "expression"],
-  },
-  // Espiritual
-  {
-    id: "lib-spiritual-1",
-    title: "Evening Reflection",
-    description: "Reflect on the day for 15 minutes before sleeping.",
-    difficulty: "novice",
-    category: "spiritual",
-    frequency: "daily",
-    essenceReward: 15,
-    tags: ["spiritual", "reflection", "growth"],
-  },
+  { id: "lib-health-1", difficulty: "novice", category: "health", frequency: "daily", tags: ["health", "hydration", "morning"], popular: true },
+  { id: "lib-health-2", difficulty: "adept", category: "health", frequency: "daily", tags: ["health", "discipline", "cold"], popular: true },
+  { id: "lib-health-3", difficulty: "adept", category: "health", frequency: "daily", tags: ["health", "exercise", "walking"] },
+  { id: "lib-prod-1", difficulty: "adept", category: "productivity", frequency: "daily", tags: ["productivity", "concentration", "work"], popular: true },
+  { id: "lib-prod-2", difficulty: "master", category: "productivity", frequency: "daily", tags: ["productivity", "discipline", "morning"], popular: true },
+  { id: "lib-prod-3", difficulty: "adept", category: "productivity", frequency: "daily", tags: ["productivity", "discipline", "digital"] },
+  { id: "lib-mental-1", difficulty: "novice", category: "mental", frequency: "daily", tags: ["mental", "meditation", "mindfulness"], popular: true },
+  { id: "lib-mental-2", difficulty: "novice", category: "mental", frequency: "daily", tags: ["mental", "gratitude", "writing"] },
+  { id: "lib-mental-3", difficulty: "adept", category: "mental", frequency: "daily", tags: ["mental", "sleep", "digital"] },
+  { id: "lib-physical-1", difficulty: "adept", category: "physical", frequency: "daily", tags: ["physical", "exercise", "strength"] },
+  { id: "lib-physical-2", difficulty: "master", category: "physical", frequency: "daily", tags: ["physical", "exercise", "core"] },
+  { id: "lib-learning-1", difficulty: "novice", category: "learning", frequency: "daily", tags: ["learning", "reading", "knowledge"], popular: true },
+  { id: "lib-learning-2", difficulty: "adept", category: "learning", frequency: "daily", tags: ["learning", "programming", "skills"] },
+  { id: "lib-creativity-1", difficulty: "novice", category: "creativity", frequency: "daily", tags: ["creativity", "art", "expression"] },
+  { id: "lib-spiritual-1", difficulty: "novice", category: "spiritual", frequency: "daily", tags: ["spiritual", "reflection", "growth"] },
 ];
 
-// Obtiene rituales marcados como populares
-export const getPopularRituals = (): RitualTemplate[] => {
-  return RITUAL_LIBRARY.filter((r) => r.popular);
-};
+type Translate = (key: TranslationKey) => string;
 
-// Busca rituales por palabra clave en título, descripción o tags
-export const searchRituals = (query: string): RitualTemplate[] => {
-  const lowerQuery = query.toLowerCase();
-  return RITUAL_LIBRARY.filter(
-    (r) =>
-      r.title.toLowerCase().includes(lowerQuery) ||
-      r.description.toLowerCase().includes(lowerQuery) ||
-      r.tags.some((tag) => tag.toLowerCase().includes(lowerQuery)),
-  );
-};
+export function templateText(
+  template: Pick<RitualTemplate, "id">,
+  t: Translate,
+): { title: string; description: string } {
+  return {
+    title: t(`library.${template.id}.title` as TranslationKey),
+    description: t(`library.${template.id}.description` as TranslationKey),
+  };
+}
+
+export interface LibraryFilters {
+  query: string;
+  popularOnly: boolean;
+  category: RitualCategory | "all";
+  difficulty: Difficulty | "all";
+}
+
+/** All filters combine (searching no longer ignores "popular only"). */
+export function filterTemplates(
+  templates: RitualTemplate[],
+  filters: LibraryFilters,
+  t: Translate,
+): RitualTemplate[] {
+  const query = filters.query.trim().toLowerCase();
+  return templates.filter((template) => {
+    if (filters.popularOnly && !template.popular) return false;
+    if (filters.category !== "all" && template.category !== filters.category)
+      return false;
+    if (filters.difficulty !== "all" && template.difficulty !== filters.difficulty) {
+      return false;
+    }
+    if (!query) return true;
+    const { title, description } = templateText(template, t);
+    return [title, description, ...template.tags].some((text) =>
+      text.toLowerCase().includes(query),
+    );
+  });
+}

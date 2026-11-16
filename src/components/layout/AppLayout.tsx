@@ -240,7 +240,7 @@ export const AppLayout: React.FC = () => {
                 <span className="truncate">{user.username}</span>
                 {user.isAdmin && (
                   <span className="flex items-center gap-1 rounded border border-yellow-500/30 bg-yellow-500/20 px-1.5 py-0.5 text-xs text-yellow-500">
-                    <Shield size={10} /> ADMIN
+                    <Shield size={10} aria-hidden="true" /> {t("admin.roleAdmin")}
                   </span>
                 )}
               </div>

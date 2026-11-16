@@ -504,4 +504,57 @@ export const en: Record<TranslationKey, string> = {
   "admin.suspendedUntilDate": "suspended until {date}",
   "goals.linkedRituals.one": "{count} linked ritual",
   "goals.linkedRituals.other": "{count} linked rituals",
+  "library.lib-health-1.title": "Morning Hydration",
+  "library.lib-health-1.description":
+    "Drink 500ml of water upon waking up before any other beverage.",
+  "library.lib-health-2.title": "Cold Shower Protocol",
+  "library.lib-health-2.description":
+    "Cold shower for at least 2 minutes to strengthen willpower.",
+  "library.lib-health-3.title": "10K Daily Steps",
+  "library.lib-health-3.description":
+    "Walk at least 10,000 steps every day without exception.",
+  "library.lib-prod-1.title": "Deep Work Session",
+  "library.lib-prod-1.description":
+    "90 minutes of deep work without distractions or interruptions.",
+  "library.lib-prod-2.title": "5 AM Wake-up Protocol",
+  "library.lib-prod-2.description": "Wake up at 5:00 AM without using the snooze button.",
+  "library.lib-prod-3.title": "No Social Media Before Noon",
+  "library.lib-prod-3.description": "Avoid all social media until noon.",
+  "library.lib-mental-1.title": "Morning Meditation",
+  "library.lib-mental-1.description":
+    "10-minute meditation upon waking up for mental clarity.",
+  "library.lib-mental-2.title": "Gratitude Journal",
+  "library.lib-mental-2.description": "Write 3 things you are grateful for every night.",
+  "library.lib-mental-3.title": "Digital Sunset",
+  "library.lib-mental-3.description":
+    "Turn off all electronic devices 2 hours before sleeping.",
+  "library.lib-physical-1.title": "Daily Push-ups",
+  "library.lib-physical-1.description":
+    "Complete 50 push-ups distributed throughout the day.",
+  "library.lib-physical-2.title": "Plank Challenge",
+  "library.lib-physical-2.description":
+    "Hold a plank for 2 minutes without interruptions.",
+  "library.lib-learning-1.title": "Read 20 Pages",
+  "library.lib-learning-1.description":
+    "Read at least 20 pages of an educational book every day.",
+  "library.lib-learning-2.title": "Code for 1 Hour",
+  "library.lib-learning-2.description":
+    "Dedicate 1 full hour to coding or learning programming.",
+  "library.lib-creativity-1.title": "Daily Creative Production",
+  "library.lib-creativity-1.description":
+    "Create something new every day: drawing, writing, music, etc.",
+  "library.lib-spiritual-1.title": "Evening Reflection",
+  "library.lib-spiritual-1.description":
+    "Reflect on the day for 15 minutes before sleeping.",
+  "library.alreadyAdded": "Already in your rituals",
+  "quote.0": "Discipline is the bridge between goals and accomplishments.",
+  "quote.1": "Don't count the days, make the days count.",
+  "quote.2": "The pain of discipline weighs ounces, the pain of regret weighs tons.",
+  "quote.3": "Your future is created by what you do today, not tomorrow.",
+  "quote.4": "Master your rituals, master your life.",
+  "quote.5": "Excellence is not an act, but a habit.",
+  "quote.6": "Suffer the pain of discipline or suffer the pain of regret.",
+  "quote.7": "The only way to do great work is to love what you do.",
+  "quote.8": "We are what we repeatedly do.",
+  "quote.9": "Motivation is what gets you started. Habit is what keeps you going.",
 };

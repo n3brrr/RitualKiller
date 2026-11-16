@@ -6,7 +6,7 @@ import { ErrorState } from "@/components/ui/ErrorState";
 import { useAuth } from "@/features/auth/useAuth";
 import { useRituals } from "@/hooks/useRituals";
 import { useI18n } from "@/i18n";
-import { DAILY_QUOTES } from "@/data/quotes";
+import { quoteKeyFor } from "@/data/quotes";
 import { isRitualCompleted } from "@/utils/analytics";
 
 const RitualCalendar = lazy(() => import("@/components/calendar/RitualCalendar"));
@@ -20,12 +20,7 @@ export default function DashboardPage() {
     useRituals();
   const { t, tn } = useI18n();
 
-  const dailyQuote = useMemo(() => {
-    const now = new Date();
-    const start = new Date(now.getFullYear(), 0, 0);
-    const dayOfYear = Math.floor((now.getTime() - start.getTime()) / 86_400_000);
-    return DAILY_QUOTES[dayOfYear % DAILY_QUOTES.length] ?? DAILY_QUOTES[0];
-  }, []);
+  const quoteKey = useMemo(() => quoteKeyFor(), []);
 
   if (isLoading) return <Loading />;
 
@@ -54,7 +49,7 @@ export default function DashboardPage() {
           <h1 className="mb-2 font-display text-2xl font-bold text-white sm:text-3xl">
             {t("dashboard.title")}
           </h1>
-          <p className="text-sm italic text-ritual-accent/80">"{dailyQuote}"</p>
+          <p className="text-sm italic text-ritual-accent/80">"{t(quoteKey)}"</p>
         </div>
         <div className="text-left sm:text-right">
           <div className="flex items-center gap-2 font-display text-3xl font-bold text-zinc-200 sm:justify-end sm:text-4xl">

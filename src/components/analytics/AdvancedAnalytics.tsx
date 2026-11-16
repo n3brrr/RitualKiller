@@ -16,7 +16,7 @@ import {
 } from "recharts";
 import { Calendar, Download, TrendingUp, Target } from "lucide-react";
 import { useRituals } from "@/hooks/useRituals";
-import { useI18n } from "@/i18n";
+import { difficultyKeys, useI18n } from "@/i18n";
 import {
   buildDailySeries,
   buildDifficultySeries,
@@ -43,8 +43,13 @@ export function AdvancedAnalytics() {
     [logs, range, locale],
   );
   const difficultySeries = useMemo(
-    () => buildDifficultySeries(rituals, filteredLogs, locale),
-    [rituals, filteredLogs, locale],
+    () =>
+      buildDifficultySeries(
+        [...rituals, ...archivedRituals],
+        filteredLogs,
+        (difficulty) => t(difficultyKeys[difficulty]),
+      ),
+    [rituals, archivedRituals, filteredLogs, t],
   );
   const weekdaySeries = useMemo(
     () => buildWeekdaySeries(filteredLogs, locale),

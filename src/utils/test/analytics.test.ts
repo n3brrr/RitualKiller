@@ -67,11 +67,15 @@ describe("analytics helpers", () => {
       ritual({ id: "r1", difficulty: "novice" }),
       ritual({ id: "r2", difficulty: "master" }),
     ];
-    const series = buildDifficultySeries(rituals, [
-      log({ id: "l1", ritualId: "r1" }),
-      log({ id: "l2", ritualId: "r2" }),
-      log({ id: "l3", ritualId: "r2" }),
-    ]);
+    const series = buildDifficultySeries(
+      rituals,
+      [
+        log({ id: "l1", ritualId: "r1" }),
+        log({ id: "l2", ritualId: "r2" }),
+        log({ id: "l3", ritualId: "r2" }),
+      ],
+      (difficulty) => difficulty.charAt(0).toUpperCase() + difficulty.slice(1),
+    );
     expect(series).toEqual([
       { name: "Novice", Completions: 1 },
       { name: "Master", Completions: 2 },

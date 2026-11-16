@@ -9,12 +9,12 @@ import { useAuth } from "@/features/auth/useAuth";
 import { useRituals } from "@/hooks/useRituals";
 import { difficultyKeys, frequencyKeys, useI18n } from "@/i18n";
 import type { Difficulty, Frequency, Ritual } from "@/types";
-import type { RitualTemplate } from "@/data/ritualLibrary";
+import { templateText, type RitualTemplate } from "@/data/ritualLibrary";
+import { ritualReward } from "@/utils/rewards";
 import { isRitualCompleted } from "@/utils/analytics";
 import { completionReasonKey } from "@/utils/ritualMessages";
 import { validateRitual } from "@/utils/validation";
 
-const BASE_REWARD: Record<Difficulty, number> = { novice: 10, adept: 25, master: 50 };
 const DIFFICULTIES: Difficulty[] = ["novice", "adept", "master"];
 const FREQUENCIES: Frequency[] = ["daily", "weekly"];
 
@@ -63,7 +63,8 @@ export default function HabitsPage() {
 
   // Master rituals require the Binding Contract (enforced again by the database).
   const canUseMaster = user.isAdmin || user.inventory.includes("binding_contract");
-  const reward = BASE_REWARD[form.difficulty] * (form.frequency === "weekly" ? 3 : 1);
+  const reward = ritualReward(form.difficulty, form.frequency);
+  const existingTitles = new Set(rituals.map((ritual) => ritual.title.toLowerCase()));
   const pending = rituals.filter(
     (ritual) => !isRitualCompleted(ritual, logs, new Date()),
   );
@@ -102,8 +103,7 @@ export default function HabitsPage() {
     setMessage(null);
     try {
       await createRitual({
-        title: template.title,
-        description: template.description,
+        ...templateText(template, t),
         difficulty: template.difficulty,
         frequency: template.frequency,
       });
@@ -199,7 +199,9 @@ export default function HabitsPage() {
         </p>
       )}
 
-      {showLibrary && <RitualLibrary onImport={handleImport} />}
+      {showLibrary && (
+        <RitualLibrary onImport={handleImport} existingTitles={existingTitles} />
+      )}
 
       {showCreator && (
         <section className="rounded-xl border border-zinc-800 bg-zinc-900 p-4 shadow-xl sm:p-6">

@@ -1,4 +1,4 @@
-import type { Difficulty, Locale, Ritual, RitualLog } from "../types";
+import type { Difficulty, Ritual, RitualLog } from "../types";
 import { formatDateKey, isSameWeek, lastNDays, toDateKey } from "./dates";
 
 export interface DailyPoint {
@@ -16,11 +16,6 @@ export interface DifficultyPoint {
   name: string;
   Completions: number;
 }
-
-const DIFFICULTY_LABELS: Record<Locale, Record<Difficulty, string>> = {
-  es: { novice: "Novato", adept: "Intermedio", master: "Maestro" },
-  en: { novice: "Novice", adept: "Intermediate", master: "Master" },
-};
 
 export function filterLogsByDays(
   logs: RitualLog[],
@@ -71,7 +66,7 @@ export function buildWeekdaySeries(logs: RitualLog[], locale = "es"): WeekdayPoi
 export function buildDifficultySeries(
   rituals: Ritual[],
   logs: RitualLog[],
-  locale: Locale = "en",
+  label: (difficulty: Difficulty) => string = (difficulty) => difficulty,
 ): DifficultyPoint[] {
   const difficultyByRitual = new Map(
     rituals.map((ritual) => [ritual.id, ritual.difficulty]),
@@ -86,7 +81,7 @@ export function buildDifficultySeries(
   return (Object.keys(counts) as Difficulty[])
     .filter((difficulty) => counts[difficulty] > 0)
     .map((difficulty) => ({
-      name: DIFFICULTY_LABELS[locale][difficulty],
+      name: label(difficulty),
       Completions: counts[difficulty],
     }));
 }
