@@ -83,10 +83,9 @@ export interface Comment {
   createdAt: string;
 }
 
+/** Name and description are translated with achievementKey(id, field). */
 export interface Achievement {
   id: string;
-  name: string;
-  description: string;
   icon: string;
   rarity: Rarity;
   unlockedAt?: string;
@@ -112,6 +111,7 @@ export interface Notification {
   type: string;
   title: string;
   message: string;
+  data: Record<string, unknown>;
   read: boolean;
   createdAt: string;
 }

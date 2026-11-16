@@ -4,6 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useFocusTrap } from "@/hooks/useFocusTrap";
 import { useI18n } from "@/i18n";
+import { notificationText } from "@/utils/notificationText";
 import { formatDateTime } from "@/utils/dates";
 
 export function NotificationBell() {
@@ -99,13 +100,15 @@ export function NotificationBell() {
               >
                 <div className="flex items-start justify-between gap-2">
                   <span className="text-sm font-bold text-white">
-                    {notification.title}
+                    {notificationText(notification, t).title}
                   </span>
                   {!notification.read && (
                     <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-ritual-accent" />
                   )}
                 </div>
-                <p className="mt-1 text-sm text-zinc-400">{notification.message}</p>
+                <p className="mt-1 text-sm text-zinc-400">
+                  {notificationText(notification, t).message}
+                </p>
                 <span className="mt-1 block text-xs text-zinc-400">
                   {formatDateTime(notification.createdAt, locale)}
                 </span>

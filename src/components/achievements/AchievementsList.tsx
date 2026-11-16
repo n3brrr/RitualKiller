@@ -1,6 +1,6 @@
 import { Lock, Trophy, Unlock } from "lucide-react";
 import { useAchievements } from "@/hooks/useAchievements";
-import { useI18n, type TranslationKey } from "@/i18n";
+import { achievementKey, useI18n, type TranslationKey } from "@/i18n";
 import { formatDateTime } from "@/utils/dates";
 import type { Achievement } from "@/types";
 import Loading from "@/components/animations/Loading";
@@ -75,7 +75,9 @@ export function AchievementsList() {
                       </span>
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center justify-between gap-2">
-                          <h3 className="font-bold text-white">{achievement.name}</h3>
+                          <h3 className="font-bold text-white">
+                            {t(achievementKey(achievement.id, "name"))}
+                          </h3>
                           {unlocked ? (
                             <Unlock
                               size={16}
@@ -91,7 +93,7 @@ export function AchievementsList() {
                           )}
                         </div>
                         <p className="mt-1 text-sm text-zinc-400">
-                          {achievement.description}
+                          {t(achievementKey(achievement.id, "description"))}
                         </p>
                       </div>
                     </div>

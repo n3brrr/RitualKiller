@@ -386,6 +386,48 @@ const es = {
   "inventory.nothingToRestore":
     "No hay rachas que proteger: ningún ritual diario quedó pendiente ayer tras completarse anteayer.",
   "inventory.restored": "Rachas protegidas",
+  "achievement.ach-streak-7.name": "Primera semana",
+  "achievement.ach-streak-7.description": "Alcanza una racha de 7 en un ritual",
+  "achievement.ach-streak-30.name": "Señor del mes",
+  "achievement.ach-streak-30.description": "Mantén una racha de 30 sin romperla",
+  "achievement.ach-streak-100.name": "Invencible",
+  "achievement.ach-streak-100.description": "Alcanza una racha de 100",
+  "achievement.ach-essence-1000.name": "Acaparador",
+  "achievement.ach-essence-1000.description": "Acumula 1.000 de esencia en total",
+  "achievement.ach-essence-10000.name": "Ascendido",
+  "achievement.ach-essence-10000.description": "Acumula 10.000 de esencia en total",
+  "achievement.ach-essence-50000.name": "Eterno",
+  "achievement.ach-essence-50000.description": "Acumula 50.000 de esencia en total",
+  "achievement.ach-rituals-10.name": "Iniciado",
+  "achievement.ach-rituals-10.description": "Crea 10 rituales",
+  "achievement.ach-rituals-50.name": "Coleccionista",
+  "achievement.ach-rituals-50.description": "Crea 50 rituales",
+  "achievement.ach-complete-100.name": "Centurión",
+  "achievement.ach-complete-100.description": "Completa 100 rituales en total",
+  "achievement.ach-social-first.name": "Primera voz",
+  "achievement.ach-social-first.description": "Publica tu primer mensaje en la comunidad",
+  "achievement.ach-social-10.name": "Influyente",
+  "achievement.ach-social-10.description": "Publica 10 mensajes",
+  "achievement.ach-perfect-week.name": "Semana perfecta",
+  "achievement.ach-perfect-week.description":
+    "Completa todos tus rituales diarios 7 días seguidos",
+  "achievement.ach-all-difficulties.name": "Maestro completo",
+  "achievement.ach-all-difficulties.description":
+    "Completa rituales de las tres dificultades",
+  "notifications.achievementTitle": "Logro desbloqueado",
+  "notifications.reminderTitle": "Rituales pendientes",
+  "notifications.reminderMessage": "Aún te quedan rituales por completar hoy.",
+  "settings.backupTooLarge":
+    "El archivo es demasiado grande (máximo 2 MB, 200 rituales y 20.000 registros).",
+  "settings.importReused": "reutilizados",
+  "settings.importSkipped": "omitidos",
+  "goals.ritualsHint": "Si no eliges ninguno, cuentan todos tus rituales.",
+  "csv.date": "Fecha",
+  "csv.ritual": "Ritual",
+  "csv.difficulty": "Dificultad",
+  "csv.essence": "Esencia ganada",
+  "csv.unknown": "Desconocido",
+  "settings.exporting": "Preparando la exportación...",
 } as const;
 
 export type TranslationKey = keyof typeof es;
@@ -406,6 +448,11 @@ export const rarityKeys: Record<Rarity, TranslationKey> = {
   rare: "rarity.rare",
   legendary: "rarity.legendary",
 };
+
+export const achievementKey = (
+  id: string,
+  field: "name" | "description",
+): TranslationKey => `achievement.${id}.${field}` as TranslationKey;
 
 export const shopItemKey = (id: string, field: "name" | "description"): TranslationKey =>
   `item.${id}.${field}` as TranslationKey;
@@ -802,6 +849,48 @@ const en: Record<TranslationKey, string> = {
   "inventory.nothingToRestore":
     "There is no streak to protect: no daily ritual was missed yesterday after being done the day before.",
   "inventory.restored": "Streaks protected",
+  "achievement.ach-streak-7.name": "First Week",
+  "achievement.ach-streak-7.description": "Reach a 7-period streak on a ritual",
+  "achievement.ach-streak-30.name": "Master of the Month",
+  "achievement.ach-streak-30.description": "Keep a 30-period streak without breaking it",
+  "achievement.ach-streak-100.name": "Invincible",
+  "achievement.ach-streak-100.description": "Reach a 100-period streak",
+  "achievement.ach-essence-1000.name": "Hoarder",
+  "achievement.ach-essence-1000.description": "Earn 1,000 essence in total",
+  "achievement.ach-essence-10000.name": "Ascended",
+  "achievement.ach-essence-10000.description": "Earn 10,000 essence in total",
+  "achievement.ach-essence-50000.name": "Eternal",
+  "achievement.ach-essence-50000.description": "Earn 50,000 essence in total",
+  "achievement.ach-rituals-10.name": "Initiate",
+  "achievement.ach-rituals-10.description": "Create 10 rituals",
+  "achievement.ach-rituals-50.name": "Collector",
+  "achievement.ach-rituals-50.description": "Create 50 rituals",
+  "achievement.ach-complete-100.name": "Centurion",
+  "achievement.ach-complete-100.description": "Complete 100 rituals in total",
+  "achievement.ach-social-first.name": "First Voice",
+  "achievement.ach-social-first.description": "Publish your first post in the community",
+  "achievement.ach-social-10.name": "Influencer",
+  "achievement.ach-social-10.description": "Publish 10 posts",
+  "achievement.ach-perfect-week.name": "Perfect Week",
+  "achievement.ach-perfect-week.description":
+    "Complete all your daily rituals 7 days in a row",
+  "achievement.ach-all-difficulties.name": "Complete Master",
+  "achievement.ach-all-difficulties.description":
+    "Complete rituals of all three difficulties",
+  "notifications.achievementTitle": "Achievement unlocked",
+  "notifications.reminderTitle": "Rituals pending",
+  "notifications.reminderMessage": "You still have rituals to complete today.",
+  "settings.backupTooLarge":
+    "The file is too large (max 2 MB, 200 rituals and 20,000 logs).",
+  "settings.importReused": "reused",
+  "settings.importSkipped": "skipped",
+  "goals.ritualsHint": "If you pick none, all your rituals count.",
+  "csv.date": "Date",
+  "csv.ritual": "Ritual",
+  "csv.difficulty": "Difficulty",
+  "csv.essence": "Essence gained",
+  "csv.unknown": "Unknown",
+  "settings.exporting": "Preparing the export...",
 };
 
 const dictionaries: Record<Locale, Record<TranslationKey, string>> = { es, en };

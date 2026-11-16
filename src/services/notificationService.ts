@@ -6,6 +6,7 @@ interface NotificationRow {
   type: string;
   title: string;
   message: string;
+  data: Record<string, unknown> | null;
   read: boolean;
   created_at: string;
 }
@@ -16,6 +17,7 @@ function mapNotification(row: NotificationRow): Notification {
     type: row.type,
     title: row.title,
     message: row.message,
+    data: row.data ?? {},
     read: row.read,
     createdAt: row.created_at,
   };
@@ -25,7 +27,7 @@ export const notificationService = {
   async list(userId: string): Promise<Notification[]> {
     const { data, error } = await supabase
       .from("notifications")
-      .select("id, type, title, message, read, created_at")
+      .select("id, type, title, message, data, read, created_at")
       .eq("user_id", userId)
       .order("created_at", { ascending: false })
       .limit(50);

@@ -206,13 +206,4 @@ export const socialService = {
     });
     if (error) throw error;
   },
-
-  async countPosts(userId: string): Promise<number> {
-    const { count, error } = await supabase
-      .from("posts")
-      .select("id", { count: "exact", head: true })
-      .eq("user_id", userId);
-    if (error) throw error;
-    return count ?? 0;
-  },
 };

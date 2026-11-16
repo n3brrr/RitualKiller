@@ -1,6 +1,7 @@
 import { Bell, CheckCheck, Trash2 } from "lucide-react";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useI18n } from "@/i18n";
+import { notificationText } from "@/utils/notificationText";
 import { formatDateTime } from "@/utils/dates";
 import Loading from "@/components/animations/Loading";
 import { ErrorState } from "@/components/ui/ErrorState";
@@ -83,9 +84,13 @@ export default function NotificationsPage() {
                         aria-hidden="true"
                       />
                     )}
-                    <h2 className="font-bold text-white">{notification.title}</h2>
+                    <h2 className="font-bold text-white">
+                      {notificationText(notification, t).title}
+                    </h2>
                   </div>
-                  <p className="mt-1 text-sm text-zinc-400">{notification.message}</p>
+                  <p className="mt-1 text-sm text-zinc-400">
+                    {notificationText(notification, t).message}
+                  </p>
                   <p className="mt-1 text-xs uppercase tracking-wider text-zinc-400">
                     {formatDateTime(notification.createdAt, locale)}
                   </p>

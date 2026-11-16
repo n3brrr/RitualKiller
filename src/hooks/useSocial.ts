@@ -15,7 +15,7 @@ export function useSocial() {
 
   const invalidateFeed = () => {
     void queryClient.invalidateQueries({ queryKey: ["social", "feed", userId] });
-    void queryClient.invalidateQueries({ queryKey: ["social", "count", userId] });
+    void queryClient.invalidateQueries({ queryKey: ["stats", userId] });
     void queryClient.invalidateQueries({ queryKey: ["achievements", userId] });
     void queryClient.invalidateQueries({ queryKey: ["notifications", userId] });
   };
