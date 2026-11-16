@@ -1,5 +1,5 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
-import type { Difficulty, Frequency, Locale } from "../types";
+import type { Difficulty, Frequency, Locale, Rarity } from "../types";
 
 const es = {
   "nav.dashboard": "Altar",
@@ -85,6 +85,42 @@ const es = {
   "goals.deletePrompt": "¿Eliminar",
   "goals.deleteSuffix": "? No se puede deshacer.",
   "goals.errorTitle": "No se pudieron cargar tus objetivos",
+  "shop.subtitle": "Intercambia esencia por ventajas y artefactos.",
+  "shop.insufficient": "No tienes suficiente esencia.",
+  "shop.purchaseError": "No se pudo completar la compra.",
+  "shop.purchaseCatch": "No se pudo comprar.",
+  "shop.acquired": "Añadido al inventario",
+  "shop.owned": "tienes",
+  "shop.buying": "Comprando...",
+  "shop.buy": "Comprar",
+  "shop.errorTitle": "No se pudo cargar el mercado",
+  "rarity.common": "común",
+  "rarity.rare": "raro",
+  "rarity.legendary": "legendario",
+  "inventory.subtitle": "Tus artefactos y ventajas activas.",
+  "inventory.buffs": "Ventajas activas",
+  "inventory.empty": "Tu inventario está vacío. Visita el mercado.",
+  "inventory.visitMarket": "Visitar el mercado",
+  "inventory.until": "hasta",
+  "inventory.quantity": "Cantidad",
+  "inventory.use": "Usar",
+  "inventory.using": "Usando...",
+  "inventory.used": "Usado",
+  "inventory.notOwned": "Ya no tienes ese artefacto.",
+  "inventory.useError": "No se pudo usar el artefacto.",
+  "inventory.errorTitle": "No se pudo cargar el inventario",
+  "item.potion_discipline.name": "Elixir de disciplina",
+  "item.potion_discipline.description":
+    "Otorga +50% de esencia durante 24 horas. El sabor es metálico y frío.",
+  "item.potion_oblivion.name": "Poción del olvido",
+  "item.potion_oblivion.description":
+    "Restaura una racha perdida si se consume antes del próximo amanecer. Borra el fallo.",
+  "item.shadow_amulet.name": "Amuleto de sombra",
+  "item.shadow_amulet.description":
+    "Un objeto cosmético que oscurece tu perfil. Los demás verán tu compromiso con el vacío.",
+  "item.binding_contract.name": "Contrato vinculante",
+  "item.binding_contract.description":
+    "Desbloquea rituales de nivel maestro. Una vez firmado, no hay vuelta atrás.",
   "social.title": "The Coven",
   "social.placeholder": "Comparte tu progreso con la comunidad...",
   "social.post": "Publicar",
@@ -243,6 +279,17 @@ export const frequencyKeys: Record<Frequency, TranslationKey> = {
   weekly: "frequency.weekly",
 };
 
+export const rarityKeys: Record<Rarity, TranslationKey> = {
+  common: "rarity.common",
+  rare: "rarity.rare",
+  legendary: "rarity.legendary",
+};
+
+export const shopItemKey = (
+  id: string,
+  field: "name" | "description",
+): TranslationKey => `item.${id}.${field}` as TranslationKey;
+
 const en: Record<TranslationKey, string> = {
   "nav.dashboard": "Altar",
   "nav.habits": "Rituals",
@@ -327,6 +374,42 @@ const en: Record<TranslationKey, string> = {
   "goals.deletePrompt": "Delete",
   "goals.deleteSuffix": "? This cannot be undone.",
   "goals.errorTitle": "Could not load your goals",
+  "shop.subtitle": "Trade essence for advantages and artifacts.",
+  "shop.insufficient": "You do not have enough essence.",
+  "shop.purchaseError": "Could not complete the purchase.",
+  "shop.purchaseCatch": "Could not purchase.",
+  "shop.acquired": "Added to inventory",
+  "shop.owned": "you own",
+  "shop.buying": "Buying...",
+  "shop.buy": "Buy",
+  "shop.errorTitle": "Could not load the market",
+  "rarity.common": "common",
+  "rarity.rare": "rare",
+  "rarity.legendary": "legendary",
+  "inventory.subtitle": "Your artifacts and active advantages.",
+  "inventory.buffs": "Active advantages",
+  "inventory.empty": "Your inventory is empty. Visit the market.",
+  "inventory.visitMarket": "Visit the market",
+  "inventory.until": "until",
+  "inventory.quantity": "Quantity",
+  "inventory.use": "Use",
+  "inventory.using": "Using...",
+  "inventory.used": "Used",
+  "inventory.notOwned": "You no longer own that artifact.",
+  "inventory.useError": "Could not use the artifact.",
+  "inventory.errorTitle": "Could not load the inventory",
+  "item.potion_discipline.name": "Elixir of Discipline",
+  "item.potion_discipline.description":
+    "Grants +50% Essence gained for 24 hours. The taste is metallic and cold.",
+  "item.potion_oblivion.name": "Potion of Oblivion",
+  "item.potion_oblivion.description":
+    "Restores a lost streak if consumed before the next dawn. Erases failure.",
+  "item.shadow_amulet.name": "Shadow Amulet",
+  "item.shadow_amulet.description":
+    "A cosmetic item that darkens your profile. Others will see your commitment to the void.",
+  "item.binding_contract.name": "Binding Contract",
+  "item.binding_contract.description":
+    "Unlocks master-level rituals. Once signed, there is no turning back.",
   "social.title": "The Coven",
   "social.placeholder": "Share your progress with the community...",
   "social.post": "Post",

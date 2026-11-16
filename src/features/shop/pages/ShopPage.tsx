@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { ShoppingBag, Zap } from "lucide-react";
+import { AlertCircle, ShoppingBag, Zap } from "lucide-react";
 import { useAuth } from "@/features/auth/AuthProvider";
 import { useShop } from "@/hooks/useShop";
-import { useI18n } from "@/i18n";
+import { rarityKeys, shopItemKey, useI18n } from "@/i18n";
 import { SHOP_ITEMS } from "@/data/items";
 import type { Rarity } from "@/types";
 
@@ -14,23 +14,39 @@ const RARITY_STYLES: Record<Rarity, string> = {
 
 export default function ShopPage() {
   const { user } = useAuth();
-  const { quantities, purchase, isPurchasing, error } = useShop();
+  const { quantities, purchase, isPurchasing, error, refetch } = useShop();
   const { t } = useI18n();
   const [feedback, setFeedback] = useState<{ tone: "success" | "error"; text: string } | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
 
   if (!user) return null;
-  if (error && !feedback) {
+  if (error) {
     return (
-      <p role="alert" className="rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-400">
-        {error.message}
-      </p>
+      <div className="mx-auto max-w-4xl">
+        <div
+          role="alert"
+          className="rounded-xl border border-red-500/30 bg-red-500/5 p-6 text-center"
+        >
+          <AlertCircle className="mx-auto mb-2 text-red-500" size={24} aria-hidden="true" />
+          <h1 className="font-display text-lg font-bold text-white">
+            {t("shop.errorTitle")}
+          </h1>
+          <p className="mt-1 text-sm text-red-400">{error.message}</p>
+          <button
+            type="button"
+            onClick={() => void refetch()}
+            className="mt-4 inline-flex min-h-11 items-center rounded-lg border border-zinc-700 px-4 text-sm text-zinc-200 transition-colors hover:border-ritual-accent hover:text-ritual-accent"
+          >
+            {t("common.retry")}
+          </button>
+        </div>
+      </div>
     );
   }
 
   const handlePurchase = async (itemId: string, name: string, cost: number) => {
     if (user.essence < cost) {
-      setFeedback({ tone: "error", text: "No tienes suficiente esencia." });
+      setFeedback({ tone: "error", text: t("shop.insufficient") });
       return;
     }
     setFeedback(null);
@@ -42,16 +58,16 @@ export default function ShopPage() {
           tone: "error",
           text:
             result.reason === "insufficient_essence"
-              ? "No tienes suficiente esencia."
-              : "No se pudo completar la compra.",
+              ? t("shop.insufficient")
+              : t("shop.purchaseError"),
         });
       } else {
-        setFeedback({ tone: "success", text: `${name} adquirido.` });
+        setFeedback({ tone: "success", text: `${t("shop.acquired")}: ${name}` });
       }
     } catch (purchaseError) {
       setFeedback({
         tone: "error",
-        text: purchaseError instanceof Error ? purchaseError.message : "No se pudo comprar",
+        text: purchaseError instanceof Error ? purchaseError.message : t("shop.purchaseCatch"),
       });
     } finally {
       setSelected(null);
@@ -66,7 +82,7 @@ export default function ShopPage() {
             <ShoppingBag className="text-ritual-accent" aria-hidden="true" />
             {t("nav.shop")}
           </h1>
-          <p className="text-sm text-zinc-500">Intercambia esencia por ventajas y artefactos.</p>
+          <p className="text-sm text-zinc-400">{t("shop.subtitle")}</p>
         </div>
         <div className="flex items-center gap-2 rounded-lg border border-zinc-800 bg-zinc-950 px-4 py-2">
           <Zap size={16} className="text-ritual-accent" aria-hidden="true" />
@@ -91,6 +107,7 @@ export default function ShopPage() {
         {SHOP_ITEMS.map((item) => {
           const owned = quantities[item.id] ?? 0;
           const cantAfford = user.essence < item.cost;
+          const name = t(shopItemKey(item.id, "name"));
 
           return (
             <article
@@ -101,25 +118,32 @@ export default function ShopPage() {
                 <div className="text-3xl" aria-hidden="true">
                   {item.icon}
                 </div>
-                <span className="rounded border border-zinc-800 px-2 py-0.5 text-xs uppercase tracking-wider text-zinc-500">
-                  {item.rarity}
+                <span className="rounded border border-zinc-800 px-2 py-0.5 text-xs uppercase tracking-wider text-zinc-400">
+                  {t(rarityKeys[item.rarity])}
                 </span>
               </div>
-              <h2 className="font-bold text-white">{item.name}</h2>
-              <p className="mt-1 min-h-10 text-sm text-zinc-500">{item.description}</p>
+              <h2 className="font-bold text-white">{name}</h2>
+              <p className="mt-1 min-h-10 text-sm text-zinc-400">
+                {t(shopItemKey(item.id, "description"))}
+              </p>
 
               <div className="mt-3 flex items-center justify-between gap-2">
-                <div className="text-xs text-zinc-500">
-                  <span className="font-mono text-ritual-accent">{item.cost}</span> esencia
-                  {owned > 0 && <span className="ml-2 text-zinc-400">· tienes {owned}</span>}
+                <div className="text-xs text-zinc-400">
+                  <span className="font-mono text-ritual-accent">{item.cost}</span>{" "}
+                  {t("dashboard.essenceUnit")}
+                  {owned > 0 && (
+                    <span className="ml-2 text-zinc-400">
+                      · {t("shop.owned")} {owned}
+                    </span>
+                  )}
                 </div>
                 <button
                   type="button"
-                  onClick={() => void handlePurchase(item.id, item.name, item.cost)}
+                  onClick={() => void handlePurchase(item.id, name, item.cost)}
                   disabled={cantAfford || isPurchasing || selected === item.id}
                   className="inline-flex min-h-11 items-center rounded-lg bg-ritual-accent px-4 text-sm font-bold text-black hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-40"
                 >
-                  {selected === item.id ? "Comprando..." : "Comprar"}
+                  {selected === item.id ? t("shop.buying") : t("shop.buy")}
                 </button>
               </div>
             </article>

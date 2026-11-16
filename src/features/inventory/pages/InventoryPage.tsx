@@ -1,18 +1,42 @@
 import { useState } from "react";
-import { Package, Zap } from "lucide-react";
+import { Link } from "react-router-dom";
+import { AlertCircle, Package, ShoppingBag, Zap } from "lucide-react";
 import { useShop } from "@/hooks/useShop";
-import { useI18n } from "@/i18n";
+import { shopItemKey, useI18n } from "@/i18n";
 import { SHOP_ITEMS } from "@/data/items";
 import { formatDateTime } from "@/utils/dates";
 import Loading from "@/components/animations/Loading";
 
 export default function InventoryPage() {
-  const { quantities, buffs, isLoading, consume, error } = useShop();
-  const { t } = useI18n();
+  const { quantities, buffs, isLoading, consume, error, refetch } = useShop();
+  const { t, locale } = useI18n();
   const [feedback, setFeedback] = useState<{ tone: "success" | "error"; text: string } | null>(null);
   const [pendingId, setPendingId] = useState<string | null>(null);
 
   if (isLoading) return <Loading />;
+  if (error) {
+    return (
+      <div className="mx-auto max-w-3xl">
+        <div
+          role="alert"
+          className="rounded-xl border border-red-500/30 bg-red-500/5 p-6 text-center"
+        >
+          <AlertCircle className="mx-auto mb-2 text-red-500" size={24} aria-hidden="true" />
+          <h1 className="font-display text-lg font-bold text-white">
+            {t("inventory.errorTitle")}
+          </h1>
+          <p className="mt-1 text-sm text-red-400">{error.message}</p>
+          <button
+            type="button"
+            onClick={() => void refetch()}
+            className="mt-4 inline-flex min-h-11 items-center rounded-lg border border-zinc-700 px-4 text-sm text-zinc-200 transition-colors hover:border-ritual-accent hover:text-ritual-accent"
+          >
+            {t("common.retry")}
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   const handleConsume = async (itemId: string, name: string) => {
     setPendingId(itemId);
@@ -24,16 +48,16 @@ export default function InventoryPage() {
           tone: "error",
           text:
             result.reason === "not_owned"
-              ? "Ya no tienes ese artefacto."
-              : "No se pudo usar el artefacto.",
+              ? t("inventory.notOwned")
+              : t("inventory.useError"),
         });
       } else {
-        setFeedback({ tone: "success", text: `${name} usado.` });
+        setFeedback({ tone: "success", text: `${t("inventory.used")}: ${name}` });
       }
     } catch (consumeError) {
       setFeedback({
         tone: "error",
-        text: consumeError instanceof Error ? consumeError.message : "No se pudo usar el artefacto.",
+        text: consumeError instanceof Error ? consumeError.message : t("inventory.useError"),
       });
     } finally {
       setPendingId(null);
@@ -49,14 +73,8 @@ export default function InventoryPage() {
           <Package className="text-ritual-accent" aria-hidden="true" />
           {t("nav.inventory")}
         </h1>
-        <p className="text-sm text-zinc-500">Tus artefactos y ventajas activas.</p>
+        <p className="text-sm text-zinc-400">{t("inventory.subtitle")}</p>
       </header>
-
-      {error && (
-        <p role="alert" className="rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-400">
-          {error.message}
-        </p>
-      )}
 
       {feedback && (
         <p
@@ -73,8 +91,8 @@ export default function InventoryPage() {
 
       {buffs.length > 0 && (
         <section>
-          <h2 className="mb-2 text-xs font-bold uppercase tracking-widest text-zinc-500">
-            Ventajas activas
+          <h2 className="mb-2 text-xs font-bold uppercase tracking-widest text-zinc-400">
+            {t("inventory.buffs")}
           </h2>
           <ul className="space-y-2">
             {buffs.map((buff) => {
@@ -84,9 +102,14 @@ export default function InventoryPage() {
                   key={buff.id}
                   className="flex items-center justify-between gap-2 rounded-lg border border-ritual-accent/30 bg-ritual-accent/5 p-3"
                 >
-                  <span className="text-sm text-zinc-200">{item?.name ?? buff.itemId}</span>
+                  <span className="text-sm text-zinc-200">
+                    {item
+                      ? t(shopItemKey(item.id, "name"))
+                      : buff.itemId}
+                  </span>
                   <span className="text-xs text-ritual-accent">
-                    x{buff.multiplier} · hasta {formatDateTime(buff.expiresAt)}
+                    x{buff.multiplier} · {t("inventory.until")}{" "}
+                    {formatDateTime(buff.expiresAt, locale)}
                   </span>
                 </li>
               );
@@ -96,9 +119,16 @@ export default function InventoryPage() {
       )}
 
       {owned.length === 0 ? (
-        <p className="rounded-xl border border-dashed border-zinc-800 p-8 text-center text-sm text-zinc-500">
-          Tu inventario está vacío. Visita el mercado.
-        </p>
+        <div className="rounded-xl border border-dashed border-zinc-800 p-8 text-center text-sm text-zinc-400">
+          <Package className="mx-auto mb-3 text-ritual-accent/60" size={28} aria-hidden="true" />
+          <p>{t("inventory.empty")}</p>
+          <Link
+            to="/app/shop"
+            className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-lg bg-ritual-accent px-4 text-sm font-bold text-black transition-colors hover:bg-emerald-400"
+          >
+            <ShoppingBag size={16} aria-hidden="true" /> {t("inventory.visitMarket")}
+          </Link>
+        </div>
       ) : (
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           {owned.map((item) => (
@@ -108,20 +138,26 @@ export default function InventoryPage() {
                   {item.icon}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <h2 className="font-bold text-white">{item.name}</h2>
-                  <p className="text-xs text-zinc-500">{item.description}</p>
+                  <h2 className="font-bold text-white">{t(shopItemKey(item.id, "name"))}</h2>
+                  <p className="text-xs text-zinc-400">
+                    {t(shopItemKey(item.id, "description"))}
+                  </p>
                   <p className="mt-1 text-xs text-zinc-400">
-                    Cantidad: <strong className="text-ritual-accent">{quantities[item.id]}</strong>
+                    {t("inventory.quantity")}:{" "}
+                    <strong className="text-ritual-accent">{quantities[item.id]}</strong>
                   </p>
                 </div>
               </div>
               <button
                 type="button"
-                onClick={() => void handleConsume(item.id, item.name)}
+                onClick={() =>
+                  void handleConsume(item.id, t(shopItemKey(item.id, "name")))
+                }
                 disabled={pendingId === item.id}
                 className="mt-3 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg border border-zinc-700 text-sm font-bold text-zinc-200 hover:border-ritual-accent hover:text-ritual-accent disabled:cursor-not-allowed disabled:opacity-40"
               >
-                <Zap size={16} aria-hidden="true" /> {pendingId === item.id ? "Usando..." : "Usar"}
+                <Zap size={16} aria-hidden="true" />{" "}
+                {pendingId === item.id ? t("inventory.using") : t("inventory.use")}
               </button>
             </article>
           ))}

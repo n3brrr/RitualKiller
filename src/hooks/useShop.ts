@@ -33,6 +33,7 @@ export function useShop() {
     buffs: query.data?.buffs ?? [],
     isLoading: query.isLoading,
     error: (query.error as Error | null) ?? null,
+    refetch: query.refetch,
     purchase: purchaseMutation.mutateAsync,
     isPurchasing: purchaseMutation.isPending,
     consume: consumeMutation.mutateAsync,
