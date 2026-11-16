@@ -145,7 +145,12 @@ export default function SettingsPage() {
       const result = await importBackup(backup);
       setFeedback({
         tone: "success",
-        text: `${t("settings.imported")} ${result.rituals} ${t("settings.ritualsUnit")} (${result.reused} ${t("settings.importReused")}), ${result.logs} ${t("settings.logsUnit")}, ${result.skipped} ${t("settings.importSkipped")}.`,
+        text: t("settings.importSummary", {
+          rituals: result.rituals,
+          reused: result.reused,
+          logs: result.logs,
+          skipped: result.skipped,
+        }),
       });
     } catch (importError) {
       fail(importError);

@@ -23,7 +23,7 @@ export function RitualCard({
   onToggle,
   onDelete,
 }: RitualCardProps) {
-  const { t } = useI18n();
+  const { t, tn } = useI18n();
   return (
     <article
       className={`relative flex items-start justify-between gap-3 rounded-xl border p-4 transition-colors sm:p-5 ${
@@ -43,7 +43,7 @@ export function RitualCard({
           </h3>
           {ritual.streak > 1 && (
             <span
-              aria-label={`${ritual.streak} ${t("productivity.days")}`}
+              aria-label={tn("habits.streakLabel", ritual.streak)}
               className="inline-flex items-center gap-1 rounded border border-yellow-500/20 bg-yellow-500/10 px-2 py-0.5 font-mono text-xs text-yellow-500"
             >
               <Zap size={10} fill="currentColor" aria-hidden="true" />

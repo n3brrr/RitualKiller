@@ -9,7 +9,7 @@ import { formatDateTime } from "@/utils/dates";
 
 export function NotificationBell() {
   const { notifications, unreadCount, markRead, markAllRead } = useNotifications();
-  const { t, locale } = useI18n();
+  const { t, tn, locale } = useI18n();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const panelRef = useFocusTrap<HTMLDivElement>(open, () => setOpen(false));
@@ -31,7 +31,7 @@ export function NotificationBell() {
       <button
         type="button"
         onClick={() => setOpen((value) => !value)}
-        aria-label={`${t("notifications.title")}, ${unreadCount} ${t("notifications.unread")}`}
+        aria-label={tn("notifications.bellLabel", unreadCount)}
         aria-expanded={open}
         aria-haspopup="dialog"
         className="relative inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg text-zinc-400 hover:bg-zinc-900 hover:text-white"

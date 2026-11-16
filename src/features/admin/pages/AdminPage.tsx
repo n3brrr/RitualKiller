@@ -297,8 +297,9 @@ export default function AdminPage() {
                       )}
                       {suspended && (
                         <span className="ml-2 text-xs text-red-400">
-                          {t("admin.suspendedUntil")}{" "}
-                          {formatDateTime(item.suspendedUntil!, locale)}
+                          {t("admin.suspendedUntilDate", {
+                            date: formatDateTime(item.suspendedUntil!, locale),
+                          })}
                         </span>
                       )}
                     </td>

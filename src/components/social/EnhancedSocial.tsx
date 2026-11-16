@@ -30,7 +30,7 @@ type Feedback = { tone: "success" | "error"; text: string } | null;
 
 export function EnhancedSocial() {
   const { user } = useAuth();
-  const { t, locale } = useI18n();
+  const { t, tn, locale } = useI18n();
   const location = useLocation();
   const [scope, setScope] = useState<FeedScope>("all");
   const {
@@ -333,7 +333,7 @@ export function EnhancedSocial() {
                     }
                     disabled={pendingAction === `like-${post.id}`}
                     aria-pressed={post.likedByMe}
-                    aria-label={`${post.likes} ${t("social.likes")}`}
+                    aria-label={tn("social.likesLabel", post.likes)}
                     className={`inline-flex min-h-11 items-center gap-1 rounded-lg px-3 text-xs disabled:opacity-50 ${
                       post.likedByMe
                         ? "text-red-400"
@@ -355,7 +355,7 @@ export function EnhancedSocial() {
                     }
                     aria-expanded={openComments === post.id}
                     aria-controls={`comments-${post.id}`}
-                    aria-label={`${post.comments.length} ${t("social.comments")}`}
+                    aria-label={tn("social.commentsLabel", post.comments.length)}
                     className="inline-flex min-h-11 items-center gap-1 rounded-lg px-3 text-xs text-zinc-400 hover:text-zinc-200"
                   >
                     <MessageCircle size={16} aria-hidden="true" />

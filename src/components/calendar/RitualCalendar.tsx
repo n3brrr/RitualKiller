@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import type { Locale, Ritual, RitualLog } from "@/types";
 import { useI18n } from "@/i18n";
-import { toDateKey } from "@/utils/dates";
+import { formatDateKey, toDateKey } from "@/utils/dates";
 
 interface RitualCalendarProps {
   rituals: Ritual[];
@@ -99,7 +99,11 @@ export function RitualCalendar({ rituals, logs }: RitualCalendarProps) {
           return (
             <div
               key={dateKey}
-              aria-label={`${dateKey}: ${completed} ${t("calendar.of")} ${possible} ${t("heatmap.rituals")}`}
+              aria-label={t("calendar.dayLabel", {
+                date: formatDateKey(dateKey, locale),
+                done: completed,
+                total: possible,
+              })}
               className={`relative flex aspect-square flex-col items-center justify-center rounded-md border text-xs ${
                 isToday ? "border-ritual-accent/60" : "border-zinc-900"
               } ${completed > 0 ? "bg-ritual-accent/10 text-zinc-100" : "text-zinc-400"}`}

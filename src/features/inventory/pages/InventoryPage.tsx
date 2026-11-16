@@ -51,8 +51,8 @@ export default function InventoryPage() {
         setFeedback({
           tone: "success",
           text: result.restored
-            ? `${t("inventory.used")}: ${name} · ${t("inventory.restored")}: ${result.restored}`
-            : `${t("inventory.used")}: ${name}`,
+            ? t("inventory.usedWithRestored", { name, count: result.restored })
+            : t("inventory.usedItem", { name }),
         });
       }
     } catch (consumeError) {
@@ -108,8 +108,10 @@ export default function InventoryPage() {
                     {item ? t(shopItemKey(item.id, "name")) : buff.itemId}
                   </span>
                   <span className="text-xs text-ritual-accent">
-                    x{buff.multiplier} · {t("inventory.until")}{" "}
-                    {formatDateTime(buff.expiresAt, locale)}
+                    {t("inventory.buffUntil", {
+                      multiplier: buff.multiplier,
+                      date: formatDateTime(buff.expiresAt, locale),
+                    })}
                   </span>
                 </li>
               );

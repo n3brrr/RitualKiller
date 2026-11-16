@@ -34,7 +34,7 @@ const COLORS = ["#22c55e", "#eab308", "#ef4444"];
 
 export function AdvancedAnalytics() {
   const { rituals, archivedRituals, logs, isLoading, error, refetch } = useRituals();
-  const { t, locale } = useI18n();
+  const { t, tn, locale } = useI18n();
   const [range, setRange] = useState<(typeof RANGES)[number]>(7);
 
   const filteredLogs = useMemo(() => filterLogsByDays(logs, range), [logs, range]);
@@ -87,7 +87,7 @@ export function AdvancedAnalytics() {
                   : "border-zinc-800 bg-zinc-950 text-zinc-400 hover:text-white"
               }`}
             >
-              {value} {t("productivity.days")}
+              {tn("common.days", value)}
             </button>
           ))}
         </div>
@@ -119,9 +119,7 @@ export function AdvancedAnalytics() {
           <div className="mb-1 flex items-center gap-2 text-xs uppercase tracking-wider text-zinc-400">
             <Calendar size={14} aria-hidden="true" /> {t("analytics.range")}
           </div>
-          <div className="font-mono text-2xl text-white">
-            {range} {t("productivity.days")}
-          </div>
+          <div className="font-mono text-2xl text-white">{tn("common.days", range)}</div>
         </div>
       </div>
 

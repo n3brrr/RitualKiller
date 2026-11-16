@@ -299,14 +299,14 @@ export const AppLayout: React.FC = () => {
           </span>
           <span className="flex items-center gap-2 font-mono text-[11px]">
             <span
-              aria-label={`${user.essence} ${t("dashboard.essence")}`}
+              aria-label={t("shell.essenceLabel", { count: user.essence })}
               className="inline-flex items-center gap-1 text-ritual-accent"
             >
               <Zap size={11} aria-hidden="true" />
               {user.essence}
             </span>
             <span
-              aria-label={`${bestStreak} ${t("dashboard.bestStreak")}`}
+              aria-label={t("shell.streakLabel", { count: bestStreak })}
               className="inline-flex items-center gap-1 text-yellow-500"
             >
               <Flame size={11} aria-hidden="true" />

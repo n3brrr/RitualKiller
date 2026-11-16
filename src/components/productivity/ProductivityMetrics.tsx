@@ -20,7 +20,7 @@ function percent(value: number): number {
 }
 
 export function ProductivityMetrics({ rituals, logs }: ProductivityMetricsProps) {
-  const { t, locale } = useI18n();
+  const { t, tn, locale } = useI18n();
   // Totals come from the server: the client only holds a window of history.
   const { stats } = useStats();
   const metrics = useMemo(() => {
@@ -63,7 +63,7 @@ export function ProductivityMetrics({ rituals, logs }: ProductivityMetricsProps)
     {
       label: t("productivity.today"),
       value: `${percent(metrics.dailyEfficiency)}%`,
-      detail: `${metrics.completionsToday} ${t("productivity.completed")}`,
+      detail: tn("productivity.completedCount", metrics.completionsToday),
       icon: <Target size={18} className="text-ritual-accent" aria-hidden="true" />,
     },
     {

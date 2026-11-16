@@ -18,7 +18,7 @@ export default function DashboardPage() {
   const { user } = useAuth();
   const { rituals, logs, isLoading, error, refetch, completeRitual, isToggling } =
     useRituals();
-  const { t } = useI18n();
+  const { t, tn } = useI18n();
 
   const dailyQuote = useMemo(() => {
     const now = new Date();
@@ -148,7 +148,7 @@ export default function DashboardPage() {
 
           {completedCount > 0 && (
             <p className="mt-3 text-xs uppercase tracking-wider text-zinc-400">
-              {completedCount} {t("dashboard.completedToday")}
+              {tn("dashboard.completedTodayCount", completedCount)}
             </p>
           )}
         </section>

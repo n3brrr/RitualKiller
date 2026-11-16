@@ -12,7 +12,7 @@ const INTENSITY = [
 ] as const;
 
 export function Heatmap({ logs }: { logs: RitualLog[] }) {
-  const { t } = useI18n();
+  const { t, tn } = useI18n();
   const cells = useMemo(() => {
     const counts = new Map<string, number>();
     for (const log of logs) {
@@ -41,7 +41,7 @@ export function Heatmap({ logs }: { logs: RitualLog[] }) {
           return (
             <span
               key={cell.date}
-              title={`${cell.date}: ${cell.count} ${t("heatmap.rituals")}`}
+              title={tn("heatmap.cell", cell.count, { date: cell.date })}
               className={`h-2.5 w-2.5 rounded-sm sm:h-3 sm:w-3 ${INTENSITY[level]}`}
             />
           );

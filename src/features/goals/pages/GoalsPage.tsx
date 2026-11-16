@@ -11,7 +11,7 @@ import { ErrorState } from "@/components/ui/ErrorState";
 export default function GoalsPage() {
   const { goals, isLoading, error, refetch, saveGoal, isSaving, removeGoal } = useGoals();
   const { rituals } = useRituals();
-  const { t, locale } = useI18n();
+  const { t, tn, locale } = useI18n();
 
   const [showCreator, setShowCreator] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
@@ -315,12 +315,14 @@ export default function GoalsPage() {
                   </span>
                   <span className={remaining < 0 ? "text-red-400" : ""}>
                     {remaining >= 0
-                      ? `${remaining} ${t("goals.remaining")}`
-                      : `${Math.abs(remaining)} ${t("goals.overdueDays")}`}
+                      ? tn("goals.daysLeft", remaining)
+                      : tn("goals.daysOverdue", Math.abs(remaining))}
                   </span>
                   <span className="inline-flex items-center gap-1">
-                    <Target size={12} aria-hidden="true" /> {goal.ritual_ids.length}{" "}
-                    {t("goals.linkedCount")}
+                    <Target size={12} aria-hidden="true" />{" "}
+                    {goal.ritual_ids.length === 0
+                      ? t("goals.ritualsHint")
+                      : tn("goals.linkedRituals", goal.ritual_ids.length)}
                   </span>
                 </div>
               </article>
@@ -332,13 +334,7 @@ export default function GoalsPage() {
       <ConfirmDialog
         open={Boolean(deleteTarget)}
         title={t("goals.deleteTitle")}
-        description={
-          <>
-            {t("goals.deletePrompt")}{" "}
-            <strong className="text-zinc-200">{deleteTarget?.title}</strong>
-            {t("goals.deleteSuffix")}
-          </>
-        }
+        description={t("goals.deleteConfirm", { name: deleteTarget?.title ?? "" })}
         confirmLabel={t("common.delete")}
         destructive
         busy={deleting}

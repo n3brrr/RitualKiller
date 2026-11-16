@@ -153,8 +153,10 @@ export default function HabitsPage() {
             {t("habits.title")}
           </h1>
           <p className="text-sm text-zinc-400">
-            {pending.length} {t("habits.pendingCount")} · {completed.length}{" "}
-            {t("habits.completedCount")}
+            {t("habits.summary", {
+              pending: pending.length,
+              completed: completed.length,
+            })}
           </p>
         </div>
         <div className="flex gap-2">
@@ -331,13 +333,7 @@ export default function HabitsPage() {
       <ConfirmDialog
         open={Boolean(deleteTarget)}
         title={t("habits.deleteTitle")}
-        description={
-          <>
-            {t("habits.deletePrompt")}{" "}
-            <strong className="text-zinc-200">{deleteTarget?.title}</strong>{" "}
-            {t("habits.deleteSuffix")}
-          </>
-        }
+        description={t("habits.archivePrompt", { name: deleteTarget?.title ?? "" })}
         confirmLabel={t("habits.archive")}
         destructive
         busy={deleting}

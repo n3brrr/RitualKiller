@@ -17,7 +17,7 @@ export default function NotificationsPage() {
     markRead,
     removeNotification,
   } = useNotifications();
-  const { t, locale } = useI18n();
+  const { t, tn, locale } = useI18n();
 
   if (isLoading) return <Loading />;
   if (error) {
@@ -40,7 +40,7 @@ export default function NotificationsPage() {
             {t("notifications.title")}
           </h1>
           <p className="text-sm text-zinc-400">
-            {unreadCount} {t("notifications.unread")}
+            {tn("notifications.unreadCount", unreadCount)}
           </p>
         </div>
         {unreadCount > 0 && (

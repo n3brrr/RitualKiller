@@ -38,7 +38,10 @@ export function AchievementsList() {
   return (
     <div className="space-y-6">
       <p className="text-sm text-zinc-400">
-        {unlockedCount} / {achievements.length} {t("achievements.unlocked").toLowerCase()}
+        {t("achievements.summary", {
+          unlocked: unlockedCount,
+          total: achievements.length,
+        })}
       </p>
 
       {(Object.keys(CATEGORY_LABELS) as Achievement["category"][]).map((category) => {
