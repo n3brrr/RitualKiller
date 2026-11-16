@@ -4,10 +4,10 @@ import type { Ritual, RitualLog } from "@/types";
 import {
   buildWeekdaySeries,
   calculateCompletionRate,
-  filterLogsByDays,
   isRitualCompleted,
 } from "@/utils/analytics";
 import { useI18n } from "@/i18n";
+import { useStats } from "@/hooks/useStats";
 import { toDateKey } from "@/utils/dates";
 
 interface ProductivityMetricsProps {
@@ -21,6 +21,8 @@ function percent(value: number): number {
 
 export function ProductivityMetrics({ rituals, logs }: ProductivityMetricsProps) {
   const { t, locale } = useI18n();
+  // Totals come from the server: the client only holds a window of history.
+  const { stats } = useStats();
   const metrics = useMemo(() => {
     const todayKey = toDateKey();
     const completedToday = rituals.filter((ritual) =>
@@ -28,11 +30,9 @@ export function ProductivityMetrics({ rituals, logs }: ProductivityMetricsProps)
     ).length;
     const dailyEfficiency =
       rituals.length > 0 ? (completedToday / rituals.length) * 100 : 0;
-    const weeklyLogs = filterLogsByDays(logs, 7);
-    const weeklyEfficiency =
-      rituals.length > 0 ? (weeklyLogs.length / (rituals.length * 7)) * 100 : 0;
-    const last30 = filterLogsByDays(logs, 30);
-    const averageCompletionRate = calculateCompletionRate(rituals, last30, 30);
+    // Opportunities depend on each ritual's frequency and creation date.
+    const weeklyEfficiency = calculateCompletionRate(rituals, logs, 7);
+    const averageCompletionRate = calculateCompletionRate(rituals, logs, 30);
 
     const weekday = buildWeekdaySeries(logs, locale).reduce(
       (best, item) => (item.Completions > best.Completions ? item : best),
@@ -42,7 +42,11 @@ export function ProductivityMetrics({ rituals, logs }: ProductivityMetricsProps)
     const completionsToday = logs.filter(
       (log) => log.date.slice(0, 10) === todayKey,
     ).length;
-    const bestStreak = Math.max(...rituals.map((ritual) => ritual.streak), 0);
+    const bestStreak = Math.max(
+      stats?.best_streak ?? 0,
+      ...rituals.map((ritual) => ritual.bestStreak),
+      0,
+    );
 
     return {
       dailyEfficiency,
@@ -50,10 +54,10 @@ export function ProductivityMetrics({ rituals, logs }: ProductivityMetricsProps)
       averageCompletionRate,
       bestDay: weekday.Completions > 0 ? weekday.name : "—",
       completionsToday,
-      totalCompletions: logs.length,
+      totalCompletions: stats?.completions ?? logs.length,
       bestStreak,
     };
-  }, [rituals, logs, locale]);
+  }, [rituals, logs, locale, stats]);
 
   const cards = [
     {

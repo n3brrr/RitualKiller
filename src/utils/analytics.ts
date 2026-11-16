@@ -105,12 +105,46 @@ export function isRitualCompleted(
   });
 }
 
+/**
+ * How many completions were possible in the last `days` days: one per day for
+ * daily rituals and one per Monday-based week for weekly rituals, counted only
+ * from the day each ritual was created.
+ */
+export function countOpportunities(
+  rituals: Pick<Ritual, "frequency" | "created_at">[],
+  days: number,
+  now: Date = new Date(),
+): number {
+  const window = lastNDays(days, now);
+  if (window.length === 0) return 0;
+  let total = 0;
+  for (const ritual of rituals) {
+    const created = toDateKey(new Date(ritual.created_at));
+    const active = window.filter((day) => day >= created);
+    if (ritual.frequency === "weekly") {
+      total += new Set(active.map((day) => mondayOf(day))).size;
+    } else {
+      total += active.length;
+    }
+  }
+  return total;
+}
+
+function mondayOf(dateKey: string): string {
+  const [year, month, day] = dateKey.split("-").map(Number);
+  const date = new Date(year ?? 0, (month ?? 1) - 1, day ?? 1);
+  date.setDate(date.getDate() - ((date.getDay() + 6) % 7));
+  return toDateKey(date);
+}
+
+/** Completions in the window divided by the real number of opportunities. */
 export function calculateCompletionRate(
   rituals: Ritual[],
   logs: RitualLog[],
   days: number,
+  now: Date = new Date(),
 ): number {
-  if (rituals.length === 0 || days <= 0) return 0;
-  const possible = rituals.length * days;
-  return Math.min(100, (logs.length / possible) * 100);
+  const possible = countOpportunities(rituals, days, now);
+  if (possible === 0) return 0;
+  return Math.min(100, (filterLogsByDays(logs, days, now).length / possible) * 100);
 }

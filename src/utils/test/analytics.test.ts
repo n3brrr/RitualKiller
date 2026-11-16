@@ -4,6 +4,7 @@ import {
   buildDailySeries,
   buildDifficultySeries,
   calculateCompletionRate,
+  countOpportunities,
   filterLogsByDays,
   isRitualCompleted,
 } from "../analytics";
@@ -80,9 +81,18 @@ describe("analytics helpers", () => {
   it("calculates a capped completion rate and guards empty input", () => {
     const rituals = [ritual(), ritual({ id: "r2" })];
     const logs = [log(), log({ id: "l2" }), log({ id: "l3" })];
-    expect(calculateCompletionRate(rituals, logs, 2)).toBe(75);
-    expect(calculateCompletionRate([], logs, 7)).toBe(0);
-    expect(calculateCompletionRate(rituals, logs, 0)).toBe(0);
+    expect(calculateCompletionRate(rituals, logs, 2, NOW)).toBe(75);
+    expect(calculateCompletionRate([], logs, 7, NOW)).toBe(0);
+    expect(calculateCompletionRate(rituals, logs, 0, NOW)).toBe(0);
+  });
+
+  it("counts weekly rituals once per week and only since creation", () => {
+    const weekly = ritual({ frequency: "weekly" });
+    // 2026-11-13 is a Friday: the last 7 days touch two Monday-based weeks.
+    expect(countOpportunities([weekly], 7, NOW)).toBe(2);
+    const fresh = ritual({ created_at: new Date(2026, 10, 12, 9).toISOString() });
+    expect(countOpportunities([fresh], 30, NOW)).toBe(2);
+    expect(calculateCompletionRate([weekly], [log()], 7, NOW)).toBe(50);
   });
 
   it("detects daily completion only for the same day", () => {

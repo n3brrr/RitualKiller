@@ -89,13 +89,17 @@ export function RitualCalendar({ rituals, logs }: RitualCalendarProps) {
           const day = index + 1;
           const dateKey = toDateKey(new Date(year, month, day));
           const completed = logsByDate.get(dateKey)?.size ?? 0;
-          const ratio = rituals.length > 0 ? Math.min(1, completed / rituals.length) : 0;
+          // Only rituals that already existed that day could be completed.
+          const possible = rituals.filter(
+            (ritual) => toDateKey(new Date(ritual.created_at)) <= dateKey,
+          ).length;
+          const ratio = possible > 0 ? Math.min(1, completed / possible) : 0;
           const isToday = dateKey === todayKey;
 
           return (
             <div
               key={dateKey}
-              aria-label={`${dateKey}: ${completed} ${t("calendar.of")} ${rituals.length} ${t("heatmap.rituals")}`}
+              aria-label={`${dateKey}: ${completed} ${t("calendar.of")} ${possible} ${t("heatmap.rituals")}`}
               className={`relative flex aspect-square flex-col items-center justify-center rounded-md border text-xs ${
                 isToday ? "border-ritual-accent/60" : "border-zinc-900"
               } ${completed > 0 ? "bg-ritual-accent/10 text-zinc-100" : "text-zinc-400"}`}
