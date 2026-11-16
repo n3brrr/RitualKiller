@@ -21,7 +21,7 @@ const AchievementsPage = () => {
         <h2 className="text-3xl font-display font-bold text-white mb-1">
           Sala de Trofeos
         </h2>
-        <p className="text-zinc-500">
+        <p className="text-zinc-400">
           Tus hazañas inmortales en el camino a la ascensión.
         </p>
       </header>

@@ -64,7 +64,7 @@ export default function DashboardPage() {
               aria-hidden="true"
             />
           </div>
-          <div className="text-xs uppercase tracking-widest text-zinc-500">
+          <div className="text-xs uppercase tracking-widest text-zinc-400">
             {t("dashboard.bestStreak")}
           </div>
         </div>
@@ -100,14 +100,14 @@ export default function DashboardPage() {
 
           <div className="flex-1 space-y-2">
             {rituals.length === 0 && (
-              <div className="flex min-h-32 flex-col items-center justify-center rounded-lg border border-dashed border-zinc-800 p-4 text-center text-sm text-zinc-500">
+              <div className="flex min-h-32 flex-col items-center justify-center rounded-lg border border-dashed border-zinc-800 p-4 text-center text-sm text-zinc-400">
                 <AlertCircle size={24} className="mb-2" aria-hidden="true" />
                 {t("dashboard.noRituals")}
               </div>
             )}
 
             {rituals.length > 0 && pendingRituals.length === 0 && (
-              <div className="flex min-h-32 flex-col items-center justify-center rounded-lg border border-dashed border-zinc-800 p-4 text-center text-sm text-zinc-500">
+              <div className="flex min-h-32 flex-col items-center justify-center rounded-lg border border-dashed border-zinc-800 p-4 text-center text-sm text-zinc-400">
                 <Check size={24} className="mb-2 text-ritual-accent" aria-hidden="true" />
                 {t("dashboard.allDone")}
               </div>
@@ -129,7 +129,7 @@ export default function DashboardPage() {
                   onClick={() => void completeRitual({ id: ritual.id, date: todayKey })}
                   disabled={isToggling}
                   aria-label={`${t("dashboard.complete")} ${ritual.title}`}
-                  className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-zinc-700 text-zinc-500 hover:border-ritual-accent hover:text-ritual-accent disabled:opacity-50"
+                  className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-zinc-700 text-zinc-400 hover:border-ritual-accent hover:text-ritual-accent disabled:opacity-50"
                 >
                   <Zap size={18} aria-hidden="true" />
                 </button>
@@ -165,7 +165,7 @@ function Stat({
 }) {
   return (
     <div className="rounded-xl border border-zinc-800/50 bg-zinc-900/40 p-4">
-      <div className="mb-1 flex items-center justify-between gap-2 text-xs uppercase tracking-wider text-zinc-500">
+      <div className="mb-1 flex items-center justify-between gap-2 text-xs uppercase tracking-wider text-zinc-400">
         {label}
         {icon}
       </div>

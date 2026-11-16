@@ -117,7 +117,7 @@ export const AppLayout: React.FC = () => {
         href="#main-content"
         className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-lg focus:bg-ritual-accent focus:px-4 focus:py-2 focus:font-bold focus:text-black"
       >
-        Saltar al contenido
+        {t("shell.skipToContent")}
       </a>
 
       {/* Desktop sidebar */}
@@ -130,7 +130,7 @@ export const AppLayout: React.FC = () => {
           <NotificationBell />
         </div>
 
-        <nav className="flex-1 space-y-4 overflow-y-auto px-4 pb-2" aria-label="Principal">
+        <nav className="flex-1 space-y-4 overflow-y-auto px-4 pb-2" aria-label={t("shell.primaryNav")}>
           {NAV_GROUPS.map((group) => {
             const items = navItems.filter((item) => item.group === group.id);
             if (items.length === 0) return null;
@@ -184,7 +184,7 @@ export const AppLayout: React.FC = () => {
           </NavLink>
 
           <div className="mb-3">
-            <div className="mb-1 flex justify-between text-xs uppercase tracking-wider text-zinc-500">
+            <div className="mb-1 flex justify-between text-xs uppercase tracking-wider text-zinc-400">
               <span>{t("shell.progress")}</span>
               <span>
                 {user.essence} / {rank.next}
@@ -201,7 +201,7 @@ export const AppLayout: React.FC = () => {
           <button
             type="button"
             onClick={() => void handleLogout()}
-            className="flex min-h-11 w-full items-center gap-2 border-t border-zinc-800/50 pt-2 text-xs uppercase tracking-widest text-zinc-500 transition-colors hover:text-red-500"
+            className="flex min-h-11 w-full items-center gap-2 border-t border-zinc-800/50 pt-2 text-xs uppercase tracking-widest text-zinc-400 transition-colors hover:text-red-500"
           >
             <LogOut size={14} />
             <span>{t("auth.logout")}</span>

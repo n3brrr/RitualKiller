@@ -1,3 +1,5 @@
+import type { TranslationKey } from "@/i18n";
+
 const DIFFICULTIES = ["novice", "adept", "master"] as const;
 const FREQUENCIES = ["daily", "weekly"] as const;
 
@@ -8,9 +10,14 @@ export function validateEmail(email: string): boolean {
 export function validatePassword(password: string): {
   valid: boolean;
   message?: string;
+  messageKey?: TranslationKey;
 } {
   if (password.length < 6) {
-    return { valid: false, message: "La contraseña debe tener al menos 6 caracteres" };
+    return {
+      valid: false,
+      message: "La contraseña debe tener al menos 6 caracteres",
+      messageKey: "validation.passwordMin",
+    };
   }
   return { valid: true };
 }
@@ -18,12 +25,21 @@ export function validatePassword(password: string): {
 export function validateUsername(username: string): {
   valid: boolean;
   message?: string;
+  messageKey?: TranslationKey;
 } {
   if (username.trim().length < 2 || username.trim().length > 30) {
-    return { valid: false, message: "El usuario debe tener entre 2 y 30 caracteres" };
+    return {
+      valid: false,
+      message: "El usuario debe tener entre 2 y 30 caracteres",
+      messageKey: "validation.usernameLength",
+    };
   }
   if (!/^[a-zA-Z0-9_]+$/.test(username.trim())) {
-    return { valid: false, message: "Solo letras, números y guiones bajos" };
+    return {
+      valid: false,
+      message: "Solo letras, números y guiones bajos",
+      messageKey: "validation.usernameChars",
+    };
   }
   return { valid: true };
 }
@@ -32,28 +48,56 @@ export function validateRitual(ritual: {
   title: string;
   description: string;
   difficulty: string;
-}): { valid: boolean; message?: string } {
+}): { valid: boolean; message?: string; messageKey?: TranslationKey } {
   if (!ritual.title || ritual.title.trim().length === 0) {
-    return { valid: false, message: "El título del ritual es requerido" };
+    return {
+      valid: false,
+      message: "El título del ritual es requerido",
+      messageKey: "validation.ritualTitleRequired",
+    };
   }
   if (ritual.title.length > 100) {
-    return { valid: false, message: "El título no puede exceder 100 caracteres" };
+    return {
+      valid: false,
+      message: "El título no puede exceder 100 caracteres",
+      messageKey: "validation.ritualTitleMax",
+    };
   }
   if (ritual.description.length > 500) {
-    return { valid: false, message: "La descripción no puede exceder 500 caracteres" };
+    return {
+      valid: false,
+      message: "La descripción no puede exceder 500 caracteres",
+      messageKey: "validation.ritualDescriptionMax",
+    };
   }
   if (!DIFFICULTIES.includes(ritual.difficulty as (typeof DIFFICULTIES)[number])) {
-    return { valid: false, message: "Dificultad inválida" };
+    return {
+      valid: false,
+      message: "Dificultad inválida",
+      messageKey: "validation.difficulty",
+    };
   }
   return { valid: true };
 }
 
-export function validateGoal(goal: string): { valid: boolean; message?: string } {
+export function validateGoal(goal: string): {
+  valid: boolean;
+  message?: string;
+  messageKey?: TranslationKey;
+} {
   if (!goal || goal.trim().length === 0) {
-    return { valid: false, message: "El objetivo es requerido" };
+    return {
+      valid: false,
+      message: "El objetivo es requerido",
+      messageKey: "validation.goalRequired",
+    };
   }
   if (goal.length > 200) {
-    return { valid: false, message: "El objetivo no puede exceder 200 caracteres" };
+    return {
+      valid: false,
+      message: "El objetivo no puede exceder 200 caracteres",
+      messageKey: "validation.goalMax",
+    };
   }
   return { valid: true };
 }
@@ -61,11 +105,22 @@ export function validateGoal(goal: string): { valid: boolean; message?: string }
 export function validateContent(content: string, max = 500): {
   valid: boolean;
   message?: string;
+  messageKey?: TranslationKey;
 } {
   const clean = content.trim();
-  if (!clean) return { valid: false, message: "El contenido no puede estar vacío" };
+  if (!clean) {
+    return {
+      valid: false,
+      message: "El contenido no puede estar vacío",
+      messageKey: "validation.contentEmpty",
+    };
+  }
   if (clean.length > max) {
-    return { valid: false, message: `El contenido no puede exceder ${max} caracteres` };
+    return {
+      valid: false,
+      message: `El contenido no puede exceder ${max} caracteres`,
+      messageKey: "validation.contentMax",
+    };
   }
   return { valid: true };
 }

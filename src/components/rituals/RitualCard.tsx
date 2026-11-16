@@ -47,7 +47,7 @@ export function RitualCard({ ritual, isDone, busy = false, onToggle, onDelete }:
         </div>
 
         {ritual.description && (
-          <p className="mt-1 line-clamp-2 text-sm text-zinc-500">{ritual.description}</p>
+          <p className="mt-1 line-clamp-2 text-sm text-zinc-400">{ritual.description}</p>
         )}
 
         <div className="mt-2 flex flex-wrap gap-1.5 text-xs uppercase tracking-wider">

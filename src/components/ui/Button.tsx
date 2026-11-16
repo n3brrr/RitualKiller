@@ -27,7 +27,7 @@ export const Button = ({
     primary:
       "bg-transparent border border-ritual-accent text-ritual-accent hover:text-black",
     ghost:
-      "bg-transparent border border-zinc-800 text-zinc-500 hover:border-white hover:text-white",
+      "bg-transparent border border-zinc-800 text-zinc-400 hover:border-white hover:text-white",
   };
 
   const baseStyles = "px-4 py-2 rounded-lg";

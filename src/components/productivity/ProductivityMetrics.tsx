@@ -100,7 +100,7 @@ export function ProductivityMetrics({ rituals, logs }: ProductivityMetricsProps)
         {cards.map((card) => (
           <div key={card.label} className="rounded-xl border border-zinc-800 bg-zinc-950 p-4">
             <div className="mb-2 flex items-center justify-between gap-2">
-              <span className="text-xs uppercase tracking-wider text-zinc-500">
+              <span className="text-xs uppercase tracking-wider text-zinc-400">
                 {card.label}
               </span>
               {card.icon}

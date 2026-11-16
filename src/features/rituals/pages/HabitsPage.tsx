@@ -81,7 +81,7 @@ export default function HabitsPage() {
     setMessage(null);
     const validation = validateRitual(form);
     if (!validation.valid) {
-      setMessage(validation.message ?? t("habits.invalid"));
+      setMessage(validation.messageKey ? t(validation.messageKey) : t("habits.invalid"));
       return;
     }
 

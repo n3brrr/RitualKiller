@@ -37,7 +37,7 @@ export default function LoginPage() {
     if (mode === "signup") {
       const usernameValidation = validateUsername(username);
       if (!usernameValidation.valid) {
-        setError(usernameValidation.message ?? t("auth.invalidUsername"));
+        setError(usernameValidation.messageKey ? t(usernameValidation.messageKey) : t("auth.invalidUsername"));
         return;
       }
     }
@@ -45,7 +45,7 @@ export default function LoginPage() {
     if (mode !== "reset") {
       const passwordValidation = validatePassword(password);
       if (!passwordValidation.valid) {
-        setError(passwordValidation.message ?? t("auth.invalidPassword"));
+        setError(passwordValidation.messageKey ? t(passwordValidation.messageKey) : t("auth.invalidPassword"));
         return;
       }
     }

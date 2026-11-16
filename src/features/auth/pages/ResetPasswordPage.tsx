@@ -32,7 +32,7 @@ export default function ResetPasswordPage() {
     setError(null);
     const validation = validatePassword(password);
     if (!validation.valid) {
-      setError(validation.message ?? t("auth.invalidPassword"));
+      setError(validation.messageKey ? t(validation.messageKey) : t("auth.invalidPassword"));
       return;
     }
     if (password !== confirm) {

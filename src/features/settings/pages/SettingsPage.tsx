@@ -132,7 +132,7 @@ export default function SettingsPage() {
     event.preventDefault();
     const validation = validatePassword(newPassword);
     if (!validation.valid) {
-      setError(validation.message ?? t("settings.invalidPassword"));
+      setError(validation.messageKey ? t(validation.messageKey) : t("settings.invalidPassword"));
       return;
     }
 
