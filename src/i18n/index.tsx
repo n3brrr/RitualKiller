@@ -44,7 +44,7 @@ const es = {
   "common.processing": "Procesando...",
   "common.error": "Algo salió mal",
   "common.retry": "Reintentar",
-  "validation.passwordMin": "La contraseña debe tener al menos 6 caracteres",
+  "validation.passwordMin": "La contraseña debe tener al menos 8 caracteres",
   "validation.usernameLength": "El usuario debe tener entre 2 y 30 caracteres",
   "validation.usernameChars": "Solo letras, números y guiones bajos",
   "validation.ritualTitleRequired": "El título del ritual es requerido",
@@ -119,9 +119,9 @@ const es = {
   "settings.notifications": "Notificaciones",
   "settings.reminder": "Hora del recordatorio",
   "settings.avatar": "URL del avatar",
-  "settings.deleteData": "Borrar mis datos",
+  "settings.deleteData": "Eliminar cuenta",
   "settings.deleteWarning":
-    "Se borrarán tus rituales, logs, objetivos, inventario y perfil. Esta acción no se puede deshacer.",
+    "Se eliminará tu cuenta junto con tus rituales, historial, objetivos, inventario, publicaciones y perfil.",
   "settings.exportJson": "Exportar JSON",
   "settings.exportCsv": "Exportar CSV",
   "settings.importJson": "Importar JSON",
@@ -138,9 +138,9 @@ const es = {
   "settings.passwordUpdated": "Contraseña actualizada.",
   "settings.passwordError": "No se pudo actualizar la contraseña",
   "settings.deleteError": "No se pudieron borrar tus datos",
-  "settings.deleteConfirmTitle": "Borrar todos tus datos",
+  "settings.deleteConfirmTitle": "Eliminar tu cuenta",
   "settings.deleteIrreversible": "Esta acción es definitiva y no se puede deshacer.",
-  "settings.deleteConfirmLabel": "Borrar todo",
+  "settings.deleteConfirmLabel": "Eliminar cuenta",
   "settings.errorTitle": "No se pudieron cargar tus ajustes",
   "goals.title": "Objetivos",
   "goals.new": "Nuevo objetivo",
@@ -428,6 +428,39 @@ const es = {
   "csv.essence": "Esencia ganada",
   "csv.unknown": "Desconocido",
   "settings.exporting": "Preparando la exportación...",
+  "errors.bindingContract":
+    "Necesitas el Contrato Vinculante para crear rituales de dificultad maestro.",
+  "errors.rateLimited":
+    "Demasiadas acciones seguidas. Espera un momento e inténtalo de nuevo.",
+  "errors.invalidTimezone": "Zona horaria no válida.",
+  "errors.invalidRitual": "Uno de los rituales seleccionados ya no existe.",
+  "errors.invalidCredentials": "Email o contraseña incorrectos.",
+  "errors.emailNotConfirmed": "Confirma tu email antes de iniciar sesión.",
+  "errors.userExists": "Ya existe una cuenta con ese email.",
+  "errors.samePassword": "La nueva contraseña debe ser distinta de la actual.",
+  "errors.linkExpired": "El enlace ha caducado o ya se usó. Solicita uno nuevo.",
+  "errors.duplicate": "Ese valor ya está en uso.",
+  "errors.forbidden": "No tienes permiso para hacer esto.",
+  "errors.network": "No hay conexión con el servidor. Revisa tu red.",
+  "settings.avatarInvalid":
+    "La URL del avatar debe empezar por https:// y tener como máximo 500 caracteres.",
+  "settings.reminderInvalid": "Hora de recordatorio no válida.",
+  "settings.currentPassword": "Contraseña actual",
+  "settings.newPasswordHint": "Mínimo 8 caracteres.",
+  "settings.wrongCurrentPassword": "La contraseña actual no es correcta.",
+  "settings.reminderHint":
+    "El recordatorio aparece como notificación dentro de la app cuando la abres después de esa hora (en tu zona horaria). No se envían emails ni notificaciones push.",
+  "settings.saveProfile": "Guardar perfil",
+  "settings.preferencesSaved": "Preferencias guardadas",
+  "settings.timezone": "Zona horaria",
+  "profile.createError": "No se encontró tu perfil. Cierra sesión y vuelve a entrar.",
+  "auth.passwordLabel": "Contraseña",
+  "auth.emailLabel": "Email",
+  "auth.usernameLabel": "Nombre de usuario",
+  "auth.showPassword": "Mostrar contraseña",
+  "auth.hidePassword": "Ocultar contraseña",
+  "auth.passwordRequirements": "Mínimo 8 caracteres.",
+  "auth.callbackError": "No se pudo verificar el enlace",
 } as const;
 
 export type TranslationKey = keyof typeof es;
@@ -508,7 +541,7 @@ const en: Record<TranslationKey, string> = {
   "common.processing": "Processing...",
   "common.error": "Something went wrong",
   "common.retry": "Retry",
-  "validation.passwordMin": "Password must be at least 6 characters",
+  "validation.passwordMin": "Password must be at least 8 characters",
   "validation.usernameLength": "Username must be between 2 and 30 characters",
   "validation.usernameChars": "Only letters, numbers and underscores",
   "validation.ritualTitleRequired": "Ritual title is required",
@@ -583,9 +616,9 @@ const en: Record<TranslationKey, string> = {
   "settings.notifications": "Notifications",
   "settings.reminder": "Reminder time",
   "settings.avatar": "Avatar URL",
-  "settings.deleteData": "Delete my data",
+  "settings.deleteData": "Delete account",
   "settings.deleteWarning":
-    "Your rituals, logs, goals, inventory and profile will be deleted. This cannot be undone.",
+    "Your account will be deleted together with your rituals, history, goals, inventory, posts and profile.",
   "settings.exportJson": "Export JSON",
   "settings.exportCsv": "Export CSV",
   "settings.importJson": "Import JSON",
@@ -602,9 +635,9 @@ const en: Record<TranslationKey, string> = {
   "settings.passwordUpdated": "Password updated.",
   "settings.passwordError": "Could not update the password",
   "settings.deleteError": "Could not delete your data",
-  "settings.deleteConfirmTitle": "Delete all your data",
+  "settings.deleteConfirmTitle": "Delete your account",
   "settings.deleteIrreversible": "This action is final and cannot be undone.",
-  "settings.deleteConfirmLabel": "Delete everything",
+  "settings.deleteConfirmLabel": "Delete account",
   "settings.errorTitle": "Could not load your settings",
   "goals.title": "Goals",
   "goals.new": "New goal",
@@ -891,6 +924,38 @@ const en: Record<TranslationKey, string> = {
   "csv.essence": "Essence gained",
   "csv.unknown": "Unknown",
   "settings.exporting": "Preparing the export...",
+  "errors.bindingContract":
+    "You need the Binding Contract to create master-difficulty rituals.",
+  "errors.rateLimited": "Too many actions in a row. Wait a moment and try again.",
+  "errors.invalidTimezone": "Invalid time zone.",
+  "errors.invalidRitual": "One of the selected rituals no longer exists.",
+  "errors.invalidCredentials": "Incorrect email or password.",
+  "errors.emailNotConfirmed": "Confirm your email before signing in.",
+  "errors.userExists": "An account with that email already exists.",
+  "errors.samePassword": "The new password must be different from the current one.",
+  "errors.linkExpired": "The link has expired or was already used. Request a new one.",
+  "errors.duplicate": "That value is already in use.",
+  "errors.forbidden": "You are not allowed to do this.",
+  "errors.network": "Cannot reach the server. Check your connection.",
+  "settings.avatarInvalid":
+    "The avatar URL must start with https:// and be at most 500 characters.",
+  "settings.reminderInvalid": "Invalid reminder time.",
+  "settings.currentPassword": "Current password",
+  "settings.newPasswordHint": "At least 8 characters.",
+  "settings.wrongCurrentPassword": "The current password is incorrect.",
+  "settings.reminderHint":
+    "The reminder shows up as an in-app notification when you open the app after that time (in your time zone). No emails or push notifications are sent.",
+  "settings.saveProfile": "Save profile",
+  "settings.preferencesSaved": "Preferences saved",
+  "settings.timezone": "Time zone",
+  "profile.createError": "Your profile was not found. Sign out and sign in again.",
+  "auth.passwordLabel": "Password",
+  "auth.emailLabel": "Email",
+  "auth.usernameLabel": "Username",
+  "auth.showPassword": "Show password",
+  "auth.hidePassword": "Hide password",
+  "auth.passwordRequirements": "At least 8 characters.",
+  "auth.callbackError": "The link could not be verified",
 };
 
 const dictionaries: Record<Locale, Record<TranslationKey, string>> = { es, en };
@@ -903,9 +968,30 @@ interface I18nContextValue {
 
 const I18nContext = createContext<I18nContextValue | undefined>(undefined);
 
+const STORAGE_KEY = "rk_locale";
+
+/**
+ * Stored choice first, then the browser language. Storage can be missing or
+ * throw (private mode, blocked site data), so every access is guarded.
+ */
 function readInitialLocale(): Locale {
   if (typeof window === "undefined") return "es";
-  return window.localStorage.getItem("rk_locale") === "en" ? "en" : "es";
+  try {
+    const stored = window.localStorage.getItem(STORAGE_KEY);
+    if (stored === "en" || stored === "es") return stored;
+  } catch {
+    // Ignore: fall back to the browser language.
+  }
+  const preferred = window.navigator?.language?.toLowerCase() ?? "";
+  return preferred.startsWith("en") ? "en" : "es";
+}
+
+function storeLocale(locale: Locale): void {
+  try {
+    window.localStorage.setItem(STORAGE_KEY, locale);
+  } catch {
+    // Not persisted; the choice still applies to this session.
+  }
 }
 
 export const I18nProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -917,7 +1003,7 @@ export const I18nProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const setLocale = useCallback((next: Locale) => {
     setLocaleState(next);
-    window.localStorage.setItem("rk_locale", next);
+    storeLocale(next);
   }, []);
 
   const t = useCallback(

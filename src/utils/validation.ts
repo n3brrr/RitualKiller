@@ -7,15 +7,18 @@ export function validateEmail(email: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
+/** NIST SP 800-63B minimum; Supabase Auth must use the same value. */
+export const PASSWORD_MIN_LENGTH = 8;
+
 export function validatePassword(password: string): {
   valid: boolean;
   message?: string;
   messageKey?: TranslationKey;
 } {
-  if (password.length < 6) {
+  if (password.length < PASSWORD_MIN_LENGTH) {
     return {
       valid: false,
-      message: "La contraseña debe tener al menos 6 caracteres",
+      message: "La contraseña debe tener al menos 8 caracteres",
       messageKey: "validation.passwordMin",
     };
   }

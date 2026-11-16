@@ -2,13 +2,15 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Skull } from "lucide-react";
 import { updatePassword } from "@/services/authService";
-import { useAuth } from "@/features/auth/AuthProvider";
+import { useAuth } from "@/features/auth/useAuth";
 import { useI18n } from "@/i18n";
-import { validatePassword } from "@/utils/validation";
+import { errorMessage } from "@/lib/errors";
+import { PASSWORD_MIN_LENGTH, validatePassword } from "@/utils/validation";
 import Loading from "@/components/animations/Loading";
+import { PasswordField } from "@/components/ui/FormField";
 
 export default function ResetPasswordPage() {
-  const { session, loading } = useAuth();
+  const { session, loading, passwordRecovery, signOut } = useAuth();
   const { t } = useI18n();
   const navigate = useNavigate();
   const [password, setPassword] = useState("");
@@ -17,24 +19,28 @@ export default function ResetPasswordPage() {
   const [success, setSuccess] = useState(false);
   const [busy, setBusy] = useState(false);
 
+  // After resetting, end the recovery session so the user signs in with the
+  // new password instead of being bounced to the dashboard by /login.
   useEffect(() => {
-    if (success) {
-      const timer = window.setTimeout(() => navigate("/login", { replace: true }), 1500);
-      return () => window.clearTimeout(timer);
-    }
-    return undefined;
-  }, [success, navigate]);
+    if (!success) return undefined;
+    const timer = window.setTimeout(() => {
+      void signOut().finally(() => navigate("/login", { replace: true }));
+    }, 1500);
+    return () => window.clearTimeout(timer);
+  }, [success, navigate, signOut]);
 
   if (loading) return <Loading />;
+
+  // Only a session opened from a recovery link may set a password without the
+  // current one (signed-in users change it from Settings).
+  const canReset = Boolean(session) && passwordRecovery;
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     setError(null);
     const validation = validatePassword(password);
     if (!validation.valid) {
-      setError(
-        validation.messageKey ? t(validation.messageKey) : t("auth.invalidPassword"),
-      );
+      setError(t(validation.messageKey ?? "auth.invalidPassword"));
       return;
     }
     if (password !== confirm) {
@@ -48,7 +54,7 @@ export default function ResetPasswordPage() {
       if (updateError) throw updateError;
       setSuccess(true);
     } catch (resetError) {
-      setError(resetError instanceof Error ? resetError.message : t("auth.resetError"));
+      setError(errorMessage(resetError, t));
     } finally {
       setBusy(false);
     }
@@ -66,7 +72,7 @@ export default function ResetPasswordPage() {
 
         <h1 className="mb-2 font-display text-2xl font-bold">{t("auth.resetTitle")}</h1>
         <p className="mb-4 text-sm text-zinc-400">
-          {session ? t("auth.resetIntro") : t("auth.resetInvalidLink")}
+          {canReset ? t("auth.resetIntro") : t("auth.resetInvalidLink")}
         </p>
 
         {error && (
@@ -86,40 +92,39 @@ export default function ResetPasswordPage() {
             {t("auth.resetSuccess")}
           </p>
         ) : (
-          <form onSubmit={handleSubmit} className="space-y-3">
-            <input
-              type="password"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              minLength={6}
-              required
-              autoComplete="new-password"
-              placeholder={t("auth.newPassword")}
-              className="min-h-11 w-full rounded-lg border border-zinc-700 bg-black px-4 text-white outline-none focus:border-ritual-accent"
-            />
-            <input
-              type="password"
-              value={confirm}
-              onChange={(event) => setConfirm(event.target.value)}
-              minLength={6}
-              required
-              autoComplete="new-password"
-              placeholder={t("auth.confirmPassword")}
-              className="min-h-11 w-full rounded-lg border border-zinc-700 bg-black px-4 text-white outline-none focus:border-ritual-accent"
-            />
-            <button
-              type="submit"
-              disabled={busy || !session}
-              className="inline-flex min-h-11 w-full items-center justify-center rounded-lg bg-ritual-accent font-bold text-black hover:bg-emerald-400 disabled:opacity-50"
-            >
-              {busy ? t("common.saving") : t("auth.updatePassword")}
-            </button>
-          </form>
+          canReset && (
+            <form onSubmit={handleSubmit} className="space-y-3" noValidate>
+              <PasswordField
+                label={t("auth.newPassword")}
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                minLength={PASSWORD_MIN_LENGTH}
+                required
+                autoComplete="new-password"
+                hint={t("auth.passwordRequirements")}
+              />
+              <PasswordField
+                label={t("auth.confirmPassword")}
+                value={confirm}
+                onChange={(event) => setConfirm(event.target.value)}
+                minLength={PASSWORD_MIN_LENGTH}
+                required
+                autoComplete="new-password"
+              />
+              <button
+                type="submit"
+                disabled={busy}
+                className="inline-flex min-h-11 w-full items-center justify-center rounded-lg bg-ritual-accent font-bold text-black hover:bg-emerald-400 disabled:opacity-50"
+              >
+                {busy ? t("common.saving") : t("auth.updatePassword")}
+              </button>
+            </form>
+          )
         )}
 
         <Link
           to="/login"
-          className="mt-4 block text-center text-xs text-zinc-400 hover:text-ritual-accent"
+          className="mt-4 block min-h-11 text-center text-sm text-zinc-400 hover:text-ritual-accent"
         >
           {t("auth.backToLogin")}
         </Link>

@@ -1,32 +1,54 @@
 import { useState } from "react";
-import { Link, Navigate, useNavigate } from "react-router-dom";
+import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { Skull } from "lucide-react";
-import { useAuth } from "@/features/auth/AuthProvider";
+import { useAuth } from "@/features/auth/useAuth";
 import {
   requestPasswordReset,
   signInWithEmail,
   signUpWithEmail,
 } from "@/services/authService";
-import { useI18n } from "@/i18n";
-import { validateEmail, validatePassword, validateUsername } from "@/utils/validation";
+import { useI18n, type TranslationKey } from "@/i18n";
+import { errorMessage } from "@/lib/errors";
+import {
+  PASSWORD_MIN_LENGTH,
+  validateEmail,
+  validatePassword,
+  validateUsername,
+} from "@/utils/validation";
 import Loading from "@/components/animations/Loading";
+import { PasswordField, TextField } from "@/components/ui/FormField";
 
 type Mode = "login" | "signup" | "reset";
+
+interface LoginLocationState {
+  /** Set by AuthCallbackPage when a confirmation/recovery link failed. */
+  authError?: TranslationKey;
+}
 
 export default function LoginPage() {
   const { session, loading } = useAuth();
   const { t } = useI18n();
   const navigate = useNavigate();
+  const location = useLocation();
+  const initialError = (location.state as LoginLocationState | null)?.authError;
   const [mode, setMode] = useState<Mode>("login");
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(
+    initialError ? t(initialError) : null,
+  );
   const [message, setMessage] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
   if (loading) return <Loading />;
   if (session) return <Navigate to="/app/dashboard" replace />;
+
+  const switchMode = (next: Mode) => {
+    setMode(next);
+    setError(null);
+    setMessage(null);
+  };
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -41,11 +63,7 @@ export default function LoginPage() {
     if (mode === "signup") {
       const usernameValidation = validateUsername(username);
       if (!usernameValidation.valid) {
-        setError(
-          usernameValidation.messageKey
-            ? t(usernameValidation.messageKey)
-            : t("auth.invalidUsername"),
-        );
+        setError(t(usernameValidation.messageKey ?? "auth.invalidUsername"));
         return;
       }
     }
@@ -53,11 +71,7 @@ export default function LoginPage() {
     if (mode !== "reset") {
       const passwordValidation = validatePassword(password);
       if (!passwordValidation.valid) {
-        setError(
-          passwordValidation.messageKey
-            ? t(passwordValidation.messageKey)
-            : t("auth.invalidPassword"),
-        );
+        setError(t(passwordValidation.messageKey ?? "auth.invalidPassword"));
         return;
       }
     }
@@ -86,7 +100,7 @@ export default function LoginPage() {
         navigate("/app/dashboard", { replace: true });
       }
     } catch (authError) {
-      setError(authError instanceof Error ? authError.message : t("auth.error"));
+      setError(errorMessage(authError, t));
     } finally {
       setBusy(false);
     }
@@ -127,9 +141,10 @@ export default function LoginPage() {
             </p>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-3">
+          <form onSubmit={handleSubmit} className="space-y-3" noValidate>
             {mode === "signup" && (
-              <input
+              <TextField
+                label={t("auth.usernameLabel")}
                 type="text"
                 value={username}
                 onChange={(event) => setUsername(event.target.value)}
@@ -137,31 +152,27 @@ export default function LoginPage() {
                 maxLength={30}
                 required
                 autoComplete="username"
-                placeholder={t("auth.username")}
-                className="min-h-11 w-full rounded-lg border border-zinc-700 bg-black px-4 text-white outline-none focus:border-ritual-accent"
               />
             )}
 
-            <input
+            <TextField
+              label={t("auth.emailLabel")}
               type="email"
               value={email}
               onChange={(event) => setEmail(event.target.value)}
               required
               autoComplete="email"
-              placeholder={t("auth.email")}
-              className="min-h-11 w-full rounded-lg border border-zinc-700 bg-black px-4 text-white outline-none focus:border-ritual-accent"
             />
 
             {mode !== "reset" && (
-              <input
-                type="password"
+              <PasswordField
+                label={t("auth.passwordLabel")}
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
-                minLength={6}
+                minLength={PASSWORD_MIN_LENGTH}
                 required
                 autoComplete={mode === "signup" ? "new-password" : "current-password"}
-                placeholder={t("auth.password")}
-                className="min-h-11 w-full rounded-lg border border-zinc-700 bg-black px-4 text-white outline-none focus:border-ritual-accent"
+                hint={mode === "signup" ? t("auth.passwordRequirements") : undefined}
               />
             )}
 
@@ -180,32 +191,28 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <div className="mt-4 flex flex-col items-center gap-2 text-xs text-zinc-400">
+          <div className="mt-4 flex flex-col items-center gap-1 text-sm text-zinc-400">
             {mode === "login" && (
               <button
                 type="button"
-                onClick={() => setMode("reset")}
-                className="hover:text-ritual-accent"
+                onClick={() => switchMode("reset")}
+                className="min-h-11 hover:text-ritual-accent"
               >
                 {t("auth.forgot")}
               </button>
             )}
             <button
               type="button"
-              onClick={() => {
-                setMode(mode === "signup" ? "login" : "signup");
-                setError(null);
-                setMessage(null);
-              }}
-              className="hover:text-ritual-accent"
+              onClick={() => switchMode(mode === "signup" ? "login" : "signup")}
+              className="min-h-11 hover:text-ritual-accent"
             >
               {mode === "signup" ? t("auth.hasAccount") : t("auth.noAccount")}
             </button>
             {mode === "reset" && (
               <button
                 type="button"
-                onClick={() => setMode("login")}
-                className="hover:text-ritual-accent"
+                onClick={() => switchMode("login")}
+                className="min-h-11 hover:text-ritual-accent"
               >
                 {t("common.back")}
               </button>
@@ -215,7 +222,7 @@ export default function LoginPage() {
 
         <Link
           to="/"
-          className="mt-6 block text-center text-xs text-zinc-400 hover:text-ritual-accent"
+          className="mt-6 block min-h-11 text-center text-sm text-zinc-400 hover:text-ritual-accent"
         >
           {t("common.back")}
         </Link>
