@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/features/auth/AuthProvider";
-import { goalService, type CreateGoalInput } from "@/services/goalService";
+import { goalService, type GoalInput } from "@/services/goalService";
 
 export function useGoals() {
   const { user } = useAuth();
@@ -13,8 +13,9 @@ export function useGoals() {
     enabled: Boolean(userId),
   });
 
-  const createMutation = useMutation({
-    mutationFn: (input: CreateGoalInput) => goalService.create(userId!, input),
+  const saveMutation = useMutation({
+    mutationFn: ({ id, input }: { id: string | null; input: GoalInput }) =>
+      goalService.save(id, input),
     onSuccess: () => void queryClient.invalidateQueries({ queryKey: ["goals", userId] }),
   });
 
@@ -28,8 +29,8 @@ export function useGoals() {
     isLoading: query.isLoading,
     error: (query.error as Error | null) ?? null,
     refetch: query.refetch,
-    createGoal: createMutation.mutateAsync,
-    isCreating: createMutation.isPending,
+    saveGoal: saveMutation.mutateAsync,
+    isSaving: saveMutation.isPending,
     removeGoal: removeMutation.mutateAsync,
   };
 }

@@ -9,9 +9,8 @@ import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { ErrorState } from "@/components/ui/ErrorState";
 
 export default function GoalsPage() {
-  const { goals, isLoading, error, refetch, createGoal, isCreating, removeGoal } =
-    useGoals();
-  const { rituals, logs } = useRituals();
+  const { goals, isLoading, error, refetch, saveGoal, isSaving, removeGoal } = useGoals();
+  const { rituals } = useRituals();
   const { t, locale } = useI18n();
 
   const [showCreator, setShowCreator] = useState(false);
@@ -54,12 +53,15 @@ export default function GoalsPage() {
     }
 
     try {
-      await createGoal({
-        title: form.title,
-        description: form.description,
-        targetDate: form.targetDate,
-        targetValue: Math.max(1, form.targetValue),
-        ritualIds: form.ritualIds,
+      await saveGoal({
+        id: null,
+        input: {
+          title: form.title,
+          description: form.description,
+          targetDate: form.targetDate,
+          targetValue: Math.max(1, form.targetValue),
+          ritualIds: form.ritualIds,
+        },
       });
       setForm({
         title: "",
@@ -83,14 +85,6 @@ export default function GoalsPage() {
         ? current.ritualIds.filter((item) => item !== id)
         : [...current.ritualIds, id],
     }));
-  };
-
-  const progressFor = (goal: (typeof goals)[number]) => {
-    const relevant =
-      goal.ritual_ids.length > 0
-        ? logs.filter((log) => goal.ritual_ids.includes(log.ritualId))
-        : logs;
-    return Math.min(relevant.length, goal.target_value);
   };
 
   const handleDelete = (id: string, title: string) => {
@@ -213,6 +207,7 @@ export default function GoalsPage() {
             <legend className="mb-2 text-xs font-bold uppercase tracking-wider text-zinc-400">
               {t("goals.linked")}
             </legend>
+            <p className="mb-2 text-xs text-zinc-400">{t("goals.ritualsHint")}</p>
             <div className="max-h-48 space-y-1 overflow-y-auto rounded-lg border border-zinc-800 p-2">
               {rituals.length === 0 && (
                 <p className="p-2 text-sm text-zinc-400">{t("goals.noRituals")}</p>
@@ -236,10 +231,10 @@ export default function GoalsPage() {
 
           <button
             type="submit"
-            disabled={isCreating}
+            disabled={isSaving}
             className="inline-flex min-h-11 w-full items-center justify-center rounded-lg bg-ritual-accent px-5 font-bold text-black hover:bg-emerald-400 disabled:opacity-50 sm:w-auto"
           >
-            {isCreating ? t("common.saving") : t("common.create")}
+            {isSaving ? t("common.saving") : t("common.create")}
           </button>
         </form>
       )}
@@ -265,7 +260,7 @@ export default function GoalsPage() {
       ) : (
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           {goals.map((goal) => {
-            const progress = progressFor(goal);
+            const progress = Math.min(goal.progress, goal.target_value);
             const percent = Math.min(
               100,
               Math.round((progress / goal.target_value) * 100),

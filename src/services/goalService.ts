@@ -9,7 +9,7 @@ interface GoalRow {
   target_date: string;
   target_value: number;
   progress: number;
-  ritual_ids: string[];
+  ritual_ids: string[] | null;
   created_at: string;
 }
 
@@ -27,7 +27,7 @@ function mapGoal(row: GoalRow): Goal {
   };
 }
 
-export interface CreateGoalInput {
+export interface GoalInput {
   title: string;
   description: string;
   targetDate: string;
@@ -36,9 +36,10 @@ export interface CreateGoalInput {
 }
 
 export const goalService = {
+  /** Progress is computed by the goals_with_progress view. */
   async list(userId: string): Promise<Goal[]> {
     const { data, error } = await supabase
-      .from("goals")
+      .from("goals_with_progress")
       .select("*")
       .eq("user_id", userId)
       .order("created_at", { ascending: false });
@@ -46,21 +47,18 @@ export const goalService = {
     return ((data ?? []) as GoalRow[]).map(mapGoal);
   },
 
-  async create(userId: string, input: CreateGoalInput): Promise<Goal> {
-    const { data, error } = await supabase
-      .from("goals")
-      .insert({
-        user_id: userId,
-        title: input.title.trim().slice(0, 120),
-        description: input.description.trim().slice(0, 500),
-        target_date: input.targetDate,
-        target_value: Math.max(1, Math.floor(input.targetValue)),
-        ritual_ids: input.ritualIds,
-      })
-      .select("*")
-      .single();
+  /** Creates (id null) or updates a goal and its linked rituals atomically. */
+  async save(id: string | null, input: GoalInput): Promise<string> {
+    const { data, error } = await supabase.rpc("save_goal", {
+      p_goal_id: id,
+      p_title: input.title.trim().slice(0, 120),
+      p_description: input.description.trim().slice(0, 500),
+      p_target_date: input.targetDate,
+      p_target_value: Math.max(1, Math.floor(input.targetValue)),
+      p_ritual_ids: input.ritualIds,
+    });
     if (error) throw error;
-    return mapGoal(data as GoalRow);
+    return data as string;
   },
 
   async remove(id: string): Promise<void> {
