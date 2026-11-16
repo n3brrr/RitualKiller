@@ -14,6 +14,24 @@ export interface User {
   created_at: string;
   isAdmin: boolean;
   active_buffs: ActiveBuff[];
+  /** While in the future the user cannot post, comment, report or follow. */
+  suspendedUntil: string | null;
+}
+
+/** What other users can see (public_profiles view). */
+export interface PublicProfile {
+  id: string;
+  username: string;
+  avatarUrl: string | null;
+  essence: number;
+  rank: string;
+  createdAt: string;
+  shadowAmulet: boolean;
+  bestStreak: number;
+  activeRituals: number;
+  achievements: number;
+  followers: number;
+  following: number;
 }
 
 export interface ActiveBuff {
@@ -141,6 +159,11 @@ export interface Report {
   reason: string;
   status: "pending" | "resolved" | "dismissed";
   createdAt: string;
+  /** Content and people involved, so moderators can act without guessing. */
+  postContent: string | null;
+  reportedUserId: string | null;
+  reportedUserName: string | null;
+  reportedSuspendedUntil: string | null;
 }
 
 export interface AdminMetrics {
@@ -157,4 +180,5 @@ export interface AdminUser {
   essence: number;
   isAdmin: boolean;
   createdAt: string;
+  suspendedUntil: string | null;
 }

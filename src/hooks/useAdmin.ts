@@ -1,8 +1,13 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { useAuth } from "@/features/auth/useAuth";
 import { adminService } from "@/services/adminService";
 
-export function useAdmin() {
+export function useAdmin(userSearch = "", userPage = 0) {
   const { user } = useAuth();
   const enabled = Boolean(user?.isAdmin);
   const queryClient = useQueryClient();
@@ -14,9 +19,10 @@ export function useAdmin() {
   });
 
   const usersQuery = useQuery({
-    queryKey: ["admin", "users"],
-    queryFn: () => adminService.getUsers(),
+    queryKey: ["admin", "users", userSearch, userPage],
+    queryFn: () => adminService.getUsers(userSearch, userPage),
     enabled,
+    placeholderData: keepPreviousData,
   });
 
   const reportsQuery = useQuery({
@@ -33,6 +39,7 @@ export function useAdmin() {
 
   const invalidate = () => {
     void queryClient.invalidateQueries({ queryKey: ["admin"] });
+    void queryClient.invalidateQueries({ queryKey: ["social"] });
   };
 
   const resolveMutation = useMutation({
@@ -47,20 +54,43 @@ export function useAdmin() {
     onSuccess: invalidate,
   });
 
+  const deletePostMutation = useMutation({
+    mutationFn: ({ postId, reportId }: { postId: string; reportId: string | null }) =>
+      adminService.deletePost(postId, reportId),
+    onSuccess: invalidate,
+  });
+
+  const deleteCommentMutation = useMutation({
+    mutationFn: (commentId: string) => adminService.deleteComment(commentId),
+    onSuccess: invalidate,
+  });
+
+  const suspendMutation = useMutation({
+    mutationFn: ({
+      userId,
+      days,
+      reportId,
+    }: {
+      userId: string;
+      days: number;
+      reportId: string | null;
+    }) => adminService.suspendUser(userId, days, reportId),
+    onSuccess: invalidate,
+  });
+
   return {
     metrics: metricsQuery.data ?? null,
-    users: usersQuery.data ?? [],
+    users: usersQuery.data?.users ?? [],
+    usersTotal: usersQuery.data?.total ?? 0,
+    usersFetching: usersQuery.isFetching,
     reports: reportsQuery.data ?? [],
     errorLogs: errorsQuery.data ?? [],
-    isLoading:
-      metricsQuery.isLoading ||
-      usersQuery.isLoading ||
-      reportsQuery.isLoading ||
-      errorsQuery.isLoading,
+    isLoading: metricsQuery.isLoading || reportsQuery.isLoading || errorsQuery.isLoading,
     error:
       (metricsQuery.error as Error | null) ??
       (usersQuery.error as Error | null) ??
       (reportsQuery.error as Error | null) ??
+      (errorsQuery.error as Error | null) ??
       null,
     refetch: () => {
       void metricsQuery.refetch();
@@ -70,5 +100,8 @@ export function useAdmin() {
     },
     resolveReport: resolveMutation.mutateAsync,
     setAdmin: adminMutation.mutateAsync,
+    deletePost: deletePostMutation.mutateAsync,
+    deleteComment: deleteCommentMutation.mutateAsync,
+    suspendUser: suspendMutation.mutateAsync,
   };
 }
