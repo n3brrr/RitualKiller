@@ -1,10 +1,5 @@
 import { describe, it, expect } from "vitest";
-import {
-  validateEmail,
-  validatePassword,
-  validateRitual,
-  validateGoal,
-} from "../utils/validation";
+import { validateEmail, validatePassword, validateRitual } from "../utils/validation";
 
 describe("Validation Utils", () => {
   describe("validateEmail", () => {
@@ -45,18 +40,6 @@ describe("Validation Utils", () => {
         description: "Test",
         difficulty: "novice",
       });
-      expect(result.valid).toBe(false);
-    });
-  });
-
-  describe("validateGoal", () => {
-    it("should validate correct goal", () => {
-      const result = validateGoal("Learn to code");
-      expect(result.valid).toBe(true);
-    });
-
-    it("should reject empty goal", () => {
-      const result = validateGoal("");
       expect(result.valid).toBe(false);
     });
   });

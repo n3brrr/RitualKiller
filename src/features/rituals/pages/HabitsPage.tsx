@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { BookOpen, Check, PenTool, Plus, Sparkles, X } from "lucide-react";
+import { BookOpen, Check, Plus, Sparkles, X } from "lucide-react";
 import RitualCard from "@/components/rituals/RitualCard";
 import RitualLibrary from "@/components/rituals/RitualLibrary";
 import Loading from "@/components/animations/Loading";
@@ -8,14 +8,11 @@ import { ErrorState } from "@/components/ui/ErrorState";
 import { useAuth } from "@/features/auth/AuthProvider";
 import { useRituals } from "@/hooks/useRituals";
 import { difficultyKeys, frequencyKeys, useI18n } from "@/i18n";
-import { generateRitualSuggestions } from "@/services/ai/ollamaService";
 import type { Difficulty, Frequency, Ritual } from "@/types";
 import type { RitualTemplate } from "@/data/ritualLibrary";
 import { isRitualCompleted } from "@/utils/analytics";
 import { toDateKey } from "@/utils/dates";
 import { validateRitual } from "@/utils/validation";
-
-type CreateMode = "manual" | "ai";
 
 const BASE_REWARD: Record<Difficulty, number> = { novice: 10, adept: 25, master: 50 };
 const DIFFICULTIES: Difficulty[] = ["novice", "adept", "master"];
@@ -40,9 +37,6 @@ export default function HabitsPage() {
 
   const [showCreator, setShowCreator] = useState(false);
   const [showLibrary, setShowLibrary] = useState(false);
-  const [mode, setMode] = useState<CreateMode>("manual");
-  const [goalInput, setGoalInput] = useState("");
-  const [isGenerating, setIsGenerating] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Ritual | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -101,32 +95,6 @@ export default function HabitsPage() {
       setShowCreator(false);
     } catch (error) {
       handleError(error);
-    }
-  };
-
-  const handleAiCreate = async (event: React.FormEvent) => {
-    event.preventDefault();
-    setMessage(null);
-    if (!goalInput.trim()) return;
-
-    setIsGenerating(true);
-    try {
-      const suggestions = await generateRitualSuggestions(goalInput);
-      for (const suggestion of suggestions) {
-        await createRitual({
-          title: suggestion.title,
-          description: suggestion.description,
-          difficulty: suggestion.difficulty,
-          frequency: "daily",
-          essenceReward: BASE_REWARD[suggestion.difficulty],
-        });
-      }
-      setGoalInput("");
-      setShowCreator(false);
-    } catch (error) {
-      handleError(error);
-    } finally {
-      setIsGenerating(false);
     }
   };
 
@@ -232,129 +200,83 @@ export default function HabitsPage() {
 
       {showCreator && (
         <section className="rounded-xl border border-zinc-800 bg-zinc-900 p-4 shadow-xl sm:p-6">
-          <div className="mb-5 flex gap-4 border-b border-zinc-800 pb-3">
-            <button
-              type="button"
-              onClick={() => setMode("manual")}
-              className={`flex min-h-11 items-center gap-2 border-b-2 text-xs font-bold uppercase tracking-wider ${
-                mode === "manual"
-                  ? "border-ritual-accent text-ritual-accent"
-                  : "border-transparent text-zinc-400"
-              }`}
-            >
-              <PenTool size={14} aria-hidden="true" /> {t("habits.manual")}
-            </button>
-            <button
-              type="button"
-              onClick={() => setMode("ai")}
-              className={`flex min-h-11 items-center gap-2 border-b-2 text-xs font-bold uppercase tracking-wider ${
-                mode === "ai"
-                  ? "border-ritual-accent text-ritual-accent"
-                  : "border-transparent text-zinc-400"
-              }`}
-            >
-              <Sparkles size={14} aria-hidden="true" /> {t("habits.ai")}
-            </button>
-          </div>
+          <h2 className="mb-4 font-display text-lg font-bold text-white">
+            {t("habits.new")}
+          </h2>
+          <form onSubmit={handleManualCreate} className="space-y-4">
+            <Field label={t("habits.titleLabel")}>
+              <input
+                type="text"
+                value={form.title}
+                onChange={(event) => setForm({ ...form, title: event.target.value })}
+                maxLength={100}
+                required
+                placeholder={t("habits.titlePlaceholder")}
+                className="min-h-11 w-full rounded-lg border border-zinc-700 bg-black px-4 text-white outline-none focus:border-ritual-accent"
+              />
+            </Field>
 
-          {mode === "manual" ? (
-            <form onSubmit={handleManualCreate} className="space-y-4">
-              <Field label={t("habits.titleLabel")}>
-                <input
-                  type="text"
-                  value={form.title}
-                  onChange={(event) => setForm({ ...form, title: event.target.value })}
-                  maxLength={100}
-                  required
-                  placeholder={t("habits.titlePlaceholder")}
-                  className="min-h-11 w-full rounded-lg border border-zinc-700 bg-black px-4 text-white outline-none focus:border-ritual-accent"
-                />
-              </Field>
+            <Field label={t("habits.description")}>
+              <textarea
+                value={form.description}
+                onChange={(event) =>
+                  setForm({ ...form, description: event.target.value })
+                }
+                maxLength={500}
+                rows={2}
+                placeholder={t("habits.descriptionPlaceholder")}
+                className="w-full rounded-lg border border-zinc-700 bg-black px-4 py-2 text-white outline-none focus:border-ritual-accent"
+              />
+            </Field>
 
-              <Field label={t("habits.description")}>
-                <textarea
-                  value={form.description}
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <Field label={t("habits.difficulty")}>
+                <select
+                  value={form.difficulty}
                   onChange={(event) =>
-                    setForm({ ...form, description: event.target.value })
+                    setForm({ ...form, difficulty: event.target.value as Difficulty })
                   }
-                  maxLength={500}
-                  rows={2}
-                  placeholder={t("habits.descriptionPlaceholder")}
-                  className="w-full rounded-lg border border-zinc-700 bg-black px-4 py-2 text-white outline-none focus:border-ritual-accent"
-                />
+                  className="min-h-11 w-full rounded-lg border border-zinc-700 bg-black px-4 text-white outline-none focus:border-ritual-accent"
+                >
+                  {DIFFICULTIES.map((value) => (
+                    <option key={value} value={value}>
+                      {t(difficultyKeys[value])}
+                    </option>
+                  ))}
+                </select>
               </Field>
 
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <Field label={t("habits.difficulty")}>
-                  <select
-                    value={form.difficulty}
-                    onChange={(event) =>
-                      setForm({ ...form, difficulty: event.target.value as Difficulty })
-                    }
-                    className="min-h-11 w-full rounded-lg border border-zinc-700 bg-black px-4 text-white outline-none focus:border-ritual-accent"
-                  >
-                    {DIFFICULTIES.map((value) => (
-                      <option key={value} value={value}>
-                        {t(difficultyKeys[value])}
-                      </option>
-                    ))}
-                  </select>
-                </Field>
-
-                <Field label={t("habits.frequency")}>
-                  <select
-                    value={form.frequency}
-                    onChange={(event) =>
-                      setForm({ ...form, frequency: event.target.value as Frequency })
-                    }
-                    className="min-h-11 w-full rounded-lg border border-zinc-700 bg-black px-4 text-white outline-none focus:border-ritual-accent"
-                  >
-                    {FREQUENCIES.map((value) => (
-                      <option key={value} value={value}>
-                        {t(frequencyKeys[value])}
-                      </option>
-                    ))}
-                  </select>
-                </Field>
-              </div>
-
-              <div className="flex items-center justify-between gap-3 border-t border-zinc-800 pt-3">
-                <span className="text-sm text-zinc-400">
-                  {t("habits.reward")}:{" "}
-                  <strong className="font-mono text-ritual-accent">+{reward}</strong>
-                </span>
-                <button
-                  type="submit"
-                  disabled={isCreating}
-                  className="inline-flex min-h-11 items-center justify-center rounded-lg bg-ritual-accent px-5 font-bold text-black transition-colors hover:bg-emerald-400 disabled:opacity-50"
+              <Field label={t("habits.frequency")}>
+                <select
+                  value={form.frequency}
+                  onChange={(event) =>
+                    setForm({ ...form, frequency: event.target.value as Frequency })
+                  }
+                  className="min-h-11 w-full rounded-lg border border-zinc-700 bg-black px-4 text-white outline-none focus:border-ritual-accent"
                 >
-                  {isCreating ? t("common.saving") : t("habits.create")}
-                </button>
-              </div>
-            </form>
-          ) : (
-            <form onSubmit={handleAiCreate} className="space-y-3">
-              <p className="text-sm text-zinc-400">{t("habits.aiHelp")}</p>
-              <div className="flex flex-col gap-2 sm:flex-row">
-                <input
-                  type="text"
-                  value={goalInput}
-                  onChange={(event) => setGoalInput(event.target.value)}
-                  maxLength={200}
-                  required
-                  placeholder={t("habits.goalPlaceholder")}
-                  className="min-h-11 flex-1 rounded-lg border border-zinc-700 bg-black px-4 text-white outline-none focus:border-ritual-accent"
-                />
-                <button
-                  type="submit"
-                  disabled={isGenerating || isCreating}
-                  className="inline-flex min-h-11 items-center justify-center rounded-lg bg-ritual-accent px-5 font-bold text-black transition-colors hover:bg-emerald-400 disabled:opacity-50"
-                >
-                  {isGenerating ? t("habits.invoking") : t("habits.invoke")}
-                </button>
-              </div>
-            </form>
-          )}
+                  {FREQUENCIES.map((value) => (
+                    <option key={value} value={value}>
+                      {t(frequencyKeys[value])}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+            </div>
+
+            <div className="flex items-center justify-between gap-3 border-t border-zinc-800 pt-3">
+              <span className="text-sm text-zinc-400">
+                {t("habits.reward")}:{" "}
+                <strong className="font-mono text-ritual-accent">+{reward}</strong>
+              </span>
+              <button
+                type="submit"
+                disabled={isCreating}
+                className="inline-flex min-h-11 items-center justify-center rounded-lg bg-ritual-accent px-5 font-bold text-black transition-colors hover:bg-emerald-400 disabled:opacity-50"
+              >
+                {isCreating ? t("common.saving") : t("habits.create")}
+              </button>
+            </div>
+          </form>
         </section>
       )}
 

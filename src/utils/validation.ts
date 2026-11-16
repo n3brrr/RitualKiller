@@ -80,28 +80,6 @@ export function validateRitual(ritual: {
   return { valid: true };
 }
 
-export function validateGoal(goal: string): {
-  valid: boolean;
-  message?: string;
-  messageKey?: TranslationKey;
-} {
-  if (!goal || goal.trim().length === 0) {
-    return {
-      valid: false,
-      message: "El objetivo es requerido",
-      messageKey: "validation.goalRequired",
-    };
-  }
-  if (goal.length > 200) {
-    return {
-      valid: false,
-      message: "El objetivo no puede exceder 200 caracteres",
-      messageKey: "validation.goalMax",
-    };
-  }
-  return { valid: true };
-}
-
 export function validateContent(
   content: string,
   max = 500,
