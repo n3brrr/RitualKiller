@@ -39,7 +39,10 @@ export function EnhancedSocial() {
   const { t, locale } = useI18n();
 
   const [content, setContent] = useState("");
-  const [feedback, setFeedback] = useState<{ tone: "success" | "error"; text: string } | null>(null);
+  const [feedback, setFeedback] = useState<{
+    tone: "success" | "error";
+    text: string;
+  } | null>(null);
   const [openComments, setOpenComments] = useState<string | null>(null);
   const [drafts, setDrafts] = useState<Record<string, string>>({});
   const [reportTarget, setReportTarget] = useState<SocialPost | null>(null);
@@ -112,7 +115,9 @@ export function EnhancedSocial() {
   return (
     <div className="space-y-4">
       <header>
-        <h1 className="font-display text-2xl font-bold sm:text-3xl">{t("social.title")}</h1>
+        <h1 className="font-display text-2xl font-bold sm:text-3xl">
+          {t("social.title")}
+        </h1>
         <p className="text-sm text-zinc-400">{t("social.subtitle")}</p>
       </header>
 
@@ -129,7 +134,10 @@ export function EnhancedSocial() {
         </p>
       )}
 
-      <form onSubmit={handlePublish} className="rounded-xl border border-zinc-800 bg-zinc-950 p-4">
+      <form
+        onSubmit={handlePublish}
+        className="rounded-xl border border-zinc-800 bg-zinc-950 p-4"
+      >
         <label htmlFor="post-content" className="sr-only">
           {t("social.placeholder")}
         </label>
@@ -157,7 +165,11 @@ export function EnhancedSocial() {
 
       {posts.length === 0 ? (
         <div className="rounded-xl border border-dashed border-zinc-800 p-8 text-center text-sm text-zinc-400">
-          <Users className="mx-auto mb-3 text-ritual-accent/60" size={28} aria-hidden="true" />
+          <Users
+            className="mx-auto mb-3 text-ritual-accent/60"
+            size={28}
+            aria-hidden="true"
+          />
           <p>{t("social.empty")}</p>
         </div>
       ) : (
@@ -167,7 +179,10 @@ export function EnhancedSocial() {
             const isFollowing = following.includes(post.authorId);
 
             return (
-              <li key={post.id} className="rounded-xl border border-zinc-800 bg-zinc-950 p-4">
+              <li
+                key={post.id}
+                className="rounded-xl border border-zinc-800 bg-zinc-950 p-4"
+              >
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex min-w-0 items-center gap-2">
                     <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-zinc-700 bg-zinc-900 font-display text-sm font-bold text-ritual-accent">
@@ -192,7 +207,10 @@ export function EnhancedSocial() {
                     <button
                       type="button"
                       onClick={() =>
-                        void toggleFollow({ targetId: post.authorId, following: isFollowing })
+                        void toggleFollow({
+                          targetId: post.authorId,
+                          following: isFollowing,
+                        })
                       }
                       className={`inline-flex min-h-11 items-center gap-1 rounded-lg border px-2 text-xs ${
                         isFollowing
@@ -217,20 +235,30 @@ export function EnhancedSocial() {
                 <div className="mt-3 flex flex-wrap items-center gap-1 border-t border-zinc-900 pt-2">
                   <button
                     type="button"
-                    onClick={() => void toggleLike({ postId: post.id, liked: post.likedByMe })}
+                    onClick={() =>
+                      void toggleLike({ postId: post.id, liked: post.likedByMe })
+                    }
                     aria-pressed={post.likedByMe}
                     aria-label={`${post.likes} ${t("social.likes")}`}
                     className={`inline-flex min-h-11 items-center gap-1 rounded-lg px-3 text-xs ${
-                      post.likedByMe ? "text-red-400" : "text-zinc-400 hover:text-zinc-200"
+                      post.likedByMe
+                        ? "text-red-400"
+                        : "text-zinc-400 hover:text-zinc-200"
                     }`}
                   >
-                    <Heart size={16} fill={post.likedByMe ? "currentColor" : "none"} aria-hidden="true" />
+                    <Heart
+                      size={16}
+                      fill={post.likedByMe ? "currentColor" : "none"}
+                      aria-hidden="true"
+                    />
                     {post.likes}
                   </button>
 
                   <button
                     type="button"
-                    onClick={() => setOpenComments(openComments === post.id ? null : post.id)}
+                    onClick={() =>
+                      setOpenComments(openComments === post.id ? null : post.id)
+                    }
                     aria-expanded={openComments === post.id}
                     aria-label={`${post.comments.length} ${t("social.comments")}`}
                     className="inline-flex min-h-11 items-center gap-1 rounded-lg px-3 text-xs text-zinc-400 hover:text-zinc-200"
@@ -253,7 +281,9 @@ export function EnhancedSocial() {
                         type="button"
                         onClick={() => {
                           void navigator.clipboard
-                            ?.writeText(`${window.location.origin}/app/profile/${post.author}`)
+                            ?.writeText(
+                              `${window.location.origin}/app/profile/${post.author}`,
+                            )
                             .then(() =>
                               setFeedback({
                                 tone: "success",
@@ -293,9 +323,14 @@ export function EnhancedSocial() {
                       <p className="text-xs text-zinc-400">{t("social.noComments")}</p>
                     )}
                     {post.comments.map((comment) => (
-                      <div key={comment.id} className="rounded-lg bg-zinc-900/60 p-2 text-sm">
+                      <div
+                        key={comment.id}
+                        className="rounded-lg bg-zinc-900/60 p-2 text-sm"
+                      >
                         <span className="font-bold text-zinc-300">{comment.author}</span>
-                        <span className="ml-2 break-words text-zinc-400">{comment.content}</span>
+                        <span className="ml-2 break-words text-zinc-400">
+                          {comment.content}
+                        </span>
                       </div>
                     ))}
 
@@ -310,7 +345,10 @@ export function EnhancedSocial() {
                         type="text"
                         value={drafts[post.id] ?? ""}
                         onChange={(event) =>
-                          setDrafts((current) => ({ ...current, [post.id]: event.target.value }))
+                          setDrafts((current) => ({
+                            ...current,
+                            [post.id]: event.target.value,
+                          }))
                         }
                         maxLength={500}
                         placeholder={t("social.comment")}

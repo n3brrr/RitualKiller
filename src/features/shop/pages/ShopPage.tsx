@@ -17,7 +17,10 @@ export default function ShopPage() {
   const { user } = useAuth();
   const { quantities, purchase, isPurchasing, error, refetch } = useShop();
   const { t } = useI18n();
-  const [feedback, setFeedback] = useState<{ tone: "success" | "error"; text: string } | null>(null);
+  const [feedback, setFeedback] = useState<{
+    tone: "success" | "error";
+    text: string;
+  } | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
 
   if (!user) return null;
@@ -56,7 +59,10 @@ export default function ShopPage() {
     } catch (purchaseError) {
       setFeedback({
         tone: "error",
-        text: purchaseError instanceof Error ? purchaseError.message : t("shop.purchaseCatch"),
+        text:
+          purchaseError instanceof Error
+            ? purchaseError.message
+            : t("shop.purchaseCatch"),
       });
     } finally {
       setSelected(null);

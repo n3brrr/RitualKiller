@@ -69,8 +69,12 @@ export default function HabitsPage() {
 
   const todayKey = toDateKey();
   const reward = BASE_REWARD[form.difficulty] * (form.frequency === "weekly" ? 3 : 1);
-  const pending = rituals.filter((ritual) => !isRitualCompleted(ritual, logs, new Date()));
-  const completed = rituals.filter((ritual) => isRitualCompleted(ritual, logs, new Date()));
+  const pending = rituals.filter(
+    (ritual) => !isRitualCompleted(ritual, logs, new Date()),
+  );
+  const completed = rituals.filter((ritual) =>
+    isRitualCompleted(ritual, logs, new Date()),
+  );
 
   const handleError = (error: unknown) => {
     setMessage(error instanceof Error ? error.message : t("common.error"));
@@ -176,7 +180,9 @@ export default function HabitsPage() {
     <div className="mx-auto max-w-3xl space-y-6">
       <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="font-display text-2xl font-bold sm:text-3xl">{t("habits.title")}</h1>
+          <h1 className="font-display text-2xl font-bold sm:text-3xl">
+            {t("habits.title")}
+          </h1>
           <p className="text-sm text-zinc-400">
             {pending.length} {t("habits.pendingCount")} · {completed.length}{" "}
             {t("habits.completedCount")}
@@ -203,14 +209,21 @@ export default function HabitsPage() {
             aria-expanded={showCreator}
             className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-lg bg-ritual-accent px-3 text-sm font-bold text-black transition-colors hover:bg-emerald-400 sm:flex-none"
           >
-            {showCreator ? <X size={16} aria-hidden="true" /> : <Plus size={16} aria-hidden="true" />}
+            {showCreator ? (
+              <X size={16} aria-hidden="true" />
+            ) : (
+              <Plus size={16} aria-hidden="true" />
+            )}
             {showCreator ? t("common.close") : t("habits.new")}
           </button>
         </div>
       </header>
 
       {message && (
-        <p role="alert" className="rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-400">
+        <p
+          role="alert"
+          className="rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-400"
+        >
           {message}
         </p>
       )}
@@ -261,7 +274,9 @@ export default function HabitsPage() {
               <Field label={t("habits.description")}>
                 <textarea
                   value={form.description}
-                  onChange={(event) => setForm({ ...form, description: event.target.value })}
+                  onChange={(event) =>
+                    setForm({ ...form, description: event.target.value })
+                  }
                   maxLength={500}
                   rows={2}
                   placeholder={t("habits.descriptionPlaceholder")}

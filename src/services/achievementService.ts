@@ -13,7 +13,10 @@ export const achievementService = {
       .eq("user_id", userId);
     if (error) throw error;
     return Object.fromEntries(
-      ((data ?? []) as AchievementRow[]).map((row) => [row.achievement_id, row.unlocked_at]),
+      ((data ?? []) as AchievementRow[]).map((row) => [
+        row.achievement_id,
+        row.unlocked_at,
+      ]),
     );
   },
 

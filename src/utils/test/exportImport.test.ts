@@ -24,7 +24,7 @@ const log: RitualLog = {
 
 describe("export/import helpers", () => {
   it("escapes CSV formulas and quotes", () => {
-    expect(csvCell('=SUM(A1:A2)')).toBe('"\'=SUM(A1:A2)"');
+    expect(csvCell("=SUM(A1:A2)")).toBe('"\'=SUM(A1:A2)"');
     expect(csvCell('say "hi"')).toBe('"say ""hi"""');
     expect(csvCell(42)).toBe('"42"');
   });

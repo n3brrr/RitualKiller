@@ -73,7 +73,9 @@ export function buildDifficultySeries(
   logs: RitualLog[],
   locale: Locale = "en",
 ): DifficultyPoint[] {
-  const difficultyByRitual = new Map(rituals.map((ritual) => [ritual.id, ritual.difficulty]));
+  const difficultyByRitual = new Map(
+    rituals.map((ritual) => [ritual.id, ritual.difficulty]),
+  );
   const counts: Record<Difficulty, number> = { novice: 0, adept: 0, master: 0 };
 
   for (const log of logs) {

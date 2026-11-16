@@ -15,8 +15,14 @@ import { ErrorState } from "@/components/ui/ErrorState";
 
 export default function SettingsPage() {
   const { user, refreshProfile, signOut } = useAuth();
-  const { settings, isLoading, error: settingsError, refetch: refetchSettings, updateSettings, isUpdating } =
-    useSettings();
+  const {
+    settings,
+    isLoading,
+    error: settingsError,
+    refetch: refetchSettings,
+    updateSettings,
+    isUpdating,
+  } = useSettings();
   const { rituals, logs, importBackup } = useRituals();
   const { t, locale, setLocale } = useI18n();
   const navigate = useNavigate();
@@ -87,7 +93,11 @@ export default function SettingsPage() {
       await updateSettings({ locale: next });
       await refreshProfile();
     } catch (languageError) {
-      setError(languageError instanceof Error ? languageError.message : t("settings.languageError"));
+      setError(
+        languageError instanceof Error
+          ? languageError.message
+          : t("settings.languageError"),
+      );
     }
   };
 
@@ -121,7 +131,9 @@ export default function SettingsPage() {
         `${t("settings.imported")} ${result.rituals} ${t("settings.ritualsUnit")}, ${result.logs} ${t("settings.logsUnit")}.`,
       );
     } catch (importError) {
-      setError(importError instanceof Error ? importError.message : t("settings.importError"));
+      setError(
+        importError instanceof Error ? importError.message : t("settings.importError"),
+      );
     } finally {
       setBusy(false);
       if (fileInput.current) fileInput.current.value = "";
@@ -132,7 +144,9 @@ export default function SettingsPage() {
     event.preventDefault();
     const validation = validatePassword(newPassword);
     if (!validation.valid) {
-      setError(validation.messageKey ? t(validation.messageKey) : t("settings.invalidPassword"));
+      setError(
+        validation.messageKey ? t(validation.messageKey) : t("settings.invalidPassword"),
+      );
       return;
     }
 
@@ -145,7 +159,11 @@ export default function SettingsPage() {
       setNewPassword("");
       flash(t("settings.passwordUpdated"));
     } catch (passwordError) {
-      setError(passwordError instanceof Error ? passwordError.message : t("settings.passwordError"));
+      setError(
+        passwordError instanceof Error
+          ? passwordError.message
+          : t("settings.passwordError"),
+      );
     } finally {
       setBusy(false);
     }
@@ -160,7 +178,9 @@ export default function SettingsPage() {
       await signOut();
       navigate("/login", { replace: true });
     } catch (deleteError) {
-      setError(deleteError instanceof Error ? deleteError.message : t("settings.deleteError"));
+      setError(
+        deleteError instanceof Error ? deleteError.message : t("settings.deleteError"),
+      );
       setBusy(false);
     }
   };
@@ -173,7 +193,9 @@ export default function SettingsPage() {
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <header>
-        <h1 className="font-display text-2xl font-bold sm:text-3xl">{t("settings.title")}</h1>
+        <h1 className="font-display text-2xl font-bold sm:text-3xl">
+          {t("settings.title")}
+        </h1>
         <p className="text-sm text-zinc-400">{t("settings.subtitle")}</p>
       </header>
 

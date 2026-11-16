@@ -180,7 +180,9 @@ export function AdvancedAnalytics() {
             {t("analytics.byDifficulty")}
           </h2>
           {difficultySeries.length === 0 ? (
-            <p className="py-12 text-center text-sm text-zinc-400">{t("analytics.noData")}</p>
+            <p className="py-12 text-center text-sm text-zinc-400">
+              {t("analytics.noData")}
+            </p>
           ) : (
             <div className="h-56 w-full">
               <ResponsiveContainer width="100%" height="100%">

@@ -32,7 +32,9 @@ export function fallbackSuggestions(goal: string): RitualSuggestion[] {
 function sanitizeSuggestions(value: unknown): RitualSuggestion[] {
   const list = Array.isArray(value)
     ? value
-    : value && typeof value === "object" && Array.isArray((value as { rituals?: unknown }).rituals)
+    : value &&
+        typeof value === "object" &&
+        Array.isArray((value as { rituals?: unknown }).rituals)
       ? (value as { rituals: unknown[] }).rituals
       : [];
 
@@ -40,9 +42,12 @@ function sanitizeSuggestions(value: unknown): RitualSuggestion[] {
     .map((item) => {
       if (!item || typeof item !== "object") return null;
       const record = item as Record<string, unknown>;
-      const title = typeof record.title === "string" ? record.title.trim().slice(0, 100) : "";
+      const title =
+        typeof record.title === "string" ? record.title.trim().slice(0, 100) : "";
       const description =
-        typeof record.description === "string" ? record.description.trim().slice(0, 500) : "";
+        typeof record.description === "string"
+          ? record.description.trim().slice(0, 500)
+          : "";
       const difficulty = DIFFICULTIES.includes(record.difficulty as Difficulty)
         ? (record.difficulty as Difficulty)
         : "novice";
@@ -63,7 +68,9 @@ export function parseOllamaResponse(text: string): RitualSuggestion[] {
   }
 }
 
-export async function generateRitualSuggestions(goal: string): Promise<RitualSuggestion[]> {
+export async function generateRitualSuggestions(
+  goal: string,
+): Promise<RitualSuggestion[]> {
   const cleanGoal = goal.trim().slice(0, 200);
   if (!cleanGoal) return fallbackSuggestions("tu objetivo");
 
@@ -86,7 +93,8 @@ Return ONLY a valid JSON array with this exact structure:
     if (!response.ok) throw new Error(`Ollama respondió ${response.status}`);
 
     const payload = (await response.json()) as { response?: unknown };
-    if (typeof payload.response !== "string") throw new Error("Respuesta de Ollama inválida");
+    if (typeof payload.response !== "string")
+      throw new Error("Respuesta de Ollama inválida");
 
     const suggestions = parseOllamaResponse(payload.response);
     return suggestions.length > 0 ? suggestions : fallbackSuggestions(cleanGoal);

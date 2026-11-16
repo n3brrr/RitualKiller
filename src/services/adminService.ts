@@ -52,17 +52,20 @@ export const adminService = {
 
   async getReports(): Promise<Report[]> {
     const [reportsResult, profilesResult] = await Promise.all([
-      supabase.from("reports").select("*").order("created_at", { ascending: false }).limit(100),
+      supabase
+        .from("reports")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(100),
       supabase.from("profiles").select("id, username"),
     ]);
     if (reportsResult.error) throw reportsResult.error;
     if (profilesResult.error) throw profilesResult.error;
 
     const names = new Map(
-      ((profilesResult.data ?? []) as Array<{ id: string; username: string }>).map((row) => [
-        row.id,
-        row.username,
-      ]),
+      ((profilesResult.data ?? []) as Array<{ id: string; username: string }>).map(
+        (row) => [row.id, row.username],
+      ),
     );
 
     return ((reportsResult.data ?? []) as ReportRow[]).map((row) => ({
@@ -97,13 +100,15 @@ export const adminService = {
       .order("created_at", { ascending: false })
       .limit(25);
     if (error) throw error;
-    return ((data ?? []) as Array<{
-      id: string;
-      message: string;
-      stack: string | null;
-      created_at: string;
-      user_id: string | null;
-    }>).map((row) => ({
+    return (
+      (data ?? []) as Array<{
+        id: string;
+        message: string;
+        stack: string | null;
+        created_at: string;
+        user_id: string | null;
+      }>
+    ).map((row) => ({
       id: row.id,
       message: row.message,
       stack: row.stack,

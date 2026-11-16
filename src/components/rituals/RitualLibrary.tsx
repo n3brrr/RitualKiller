@@ -8,12 +8,7 @@ import {
   type RitualTemplate,
 } from "@/data/ritualLibrary";
 import type { Difficulty } from "@/types";
-import {
-  difficultyKeys,
-  frequencyKeys,
-  useI18n,
-  type TranslationKey,
-} from "@/i18n";
+import { difficultyKeys, frequencyKeys, useI18n, type TranslationKey } from "@/i18n";
 
 interface RitualLibraryProps {
   onImport: (template: RitualTemplate) => Promise<void> | void;
@@ -54,7 +49,8 @@ export function RitualLibrary({ onImport }: RitualLibraryProps) {
         : RITUAL_LIBRARY;
 
     if (category !== "all") list = list.filter((item) => item.category === category);
-    if (difficulty !== "all") list = list.filter((item) => item.difficulty === difficulty);
+    if (difficulty !== "all")
+      list = list.filter((item) => item.difficulty === difficulty);
     return list;
   }, [searchQuery, category, difficulty, popularOnly]);
 
@@ -107,7 +103,9 @@ export function RitualLibrary({ onImport }: RitualLibraryProps) {
 
           <select
             value={category}
-            onChange={(event) => setCategory(event.target.value as RitualCategory | "all")}
+            onChange={(event) =>
+              setCategory(event.target.value as RitualCategory | "all")
+            }
             aria-label={t("library.categoryLabel")}
             className="min-h-11 flex-1 rounded-lg border border-zinc-800 bg-zinc-900 px-3 text-sm text-white outline-none focus:border-ritual-accent"
           >
@@ -154,7 +152,9 @@ export function RitualLibrary({ onImport }: RitualLibraryProps) {
             <p className="mb-3 flex-1 text-sm text-zinc-400">{template.description}</p>
 
             <div className="mb-3 flex flex-wrap gap-1.5 text-xs uppercase tracking-wider">
-              <span className={`rounded border px-2 py-0.5 ${DIFFICULTY_STYLES[template.difficulty]}`}>
+              <span
+                className={`rounded border px-2 py-0.5 ${DIFFICULTY_STYLES[template.difficulty]}`}
+              >
                 {t(difficultyKeys[template.difficulty])}
               </span>
               <span className="rounded border border-zinc-800 px-2 py-0.5 text-zinc-400">

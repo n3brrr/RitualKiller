@@ -57,7 +57,9 @@ export default function ProfilePage() {
 
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-start">
-              <h1 className="font-display text-2xl font-bold text-white">{user.username}</h1>
+              <h1 className="font-display text-2xl font-bold text-white">
+                {user.username}
+              </h1>
               {user.isAdmin && (
                 <span className="inline-flex items-center gap-1 rounded border border-yellow-500/30 bg-yellow-500/10 px-2 py-0.5 text-xs uppercase text-yellow-500">
                   <Shield size={10} aria-hidden="true" /> Admin

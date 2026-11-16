@@ -54,8 +54,7 @@ export const SHOP_ITEMS: ShopItem[] = [
   {
     id: "binding_contract",
     name: "Binding Contract",
-    description:
-      "Unlocks master-level rituals. Once signed, there is no turning back.",
+    description: "Unlocks master-level rituals. Once signed, there is no turning back.",
     cost: 5000,
     rarity: "legendary",
     icon: React.createElement(Scroll, { size: 40, className: "text-red-500" }),

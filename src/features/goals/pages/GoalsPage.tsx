@@ -9,13 +9,16 @@ import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { ErrorState } from "@/components/ui/ErrorState";
 
 export default function GoalsPage() {
-  const { goals, isLoading, error, refetch, createGoal, isCreating, removeGoal } = useGoals();
+  const { goals, isLoading, error, refetch, createGoal, isCreating, removeGoal } =
+    useGoals();
   const { rituals, logs } = useRituals();
   const { t, locale } = useI18n();
 
   const [showCreator, setShowCreator] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<{ id: string; title: string } | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; title: string } | null>(
+    null,
+  );
   const [deleting, setDeleting] = useState(false);
   const [form, setForm] = useState({
     title: "",
@@ -67,7 +70,9 @@ export default function GoalsPage() {
       });
       setShowCreator(false);
     } catch (createError) {
-      setFormError(createError instanceof Error ? createError.message : t("goals.createError"));
+      setFormError(
+        createError instanceof Error ? createError.message : t("goals.createError"),
+      );
     }
   };
 
@@ -99,7 +104,9 @@ export default function GoalsPage() {
     try {
       await removeGoal(deleteTarget.id);
     } catch (deleteError) {
-      setFormError(deleteError instanceof Error ? deleteError.message : t("goals.deleteError"));
+      setFormError(
+        deleteError instanceof Error ? deleteError.message : t("goals.deleteError"),
+      );
     } finally {
       setDeleting(false);
       setDeleteTarget(null);
@@ -110,7 +117,9 @@ export default function GoalsPage() {
     <div className="mx-auto max-w-3xl space-y-6">
       <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="font-display text-2xl font-bold sm:text-3xl">{t("goals.title")}</h1>
+          <h1 className="font-display text-2xl font-bold sm:text-3xl">
+            {t("goals.title")}
+          </h1>
           <p className="text-sm text-zinc-400">{t("goals.subtitle")}</p>
         </div>
         <button
@@ -125,7 +134,10 @@ export default function GoalsPage() {
       </header>
 
       {formError && (
-        <p role="alert" className="rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-400">
+        <p
+          role="alert"
+          className="rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-400"
+        >
           {formError}
         </p>
       )}
@@ -187,7 +199,10 @@ export default function GoalsPage() {
                 max={10000}
                 value={form.targetValue}
                 onChange={(event) =>
-                  setForm({ ...form, targetValue: Math.max(1, Number(event.target.value)) })
+                  setForm({
+                    ...form,
+                    targetValue: Math.max(1, Number(event.target.value)),
+                  })
                 }
                 className="min-h-11 w-full rounded-lg border border-zinc-700 bg-black px-4 text-white outline-none focus:border-ritual-accent"
               />
@@ -231,7 +246,11 @@ export default function GoalsPage() {
 
       {goals.length === 0 ? (
         <div className="rounded-xl border border-dashed border-zinc-800 p-8 text-center text-sm text-zinc-400">
-          <Target className="mx-auto mb-3 text-ritual-accent/60" size={28} aria-hidden="true" />
+          <Target
+            className="mx-auto mb-3 text-ritual-accent/60"
+            size={28}
+            aria-hidden="true"
+          />
           <p>{t("goals.empty")}</p>
           {!showCreator && (
             <button
@@ -247,15 +266,24 @@ export default function GoalsPage() {
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           {goals.map((goal) => {
             const progress = progressFor(goal);
-            const percent = Math.min(100, Math.round((progress / goal.target_value) * 100));
-            const remaining = daysUntil(goal.target_date);
-            const targetDate = new Date(`${goal.target_date}T00:00:00`).toLocaleDateString(
-              locale,
-              { day: "numeric", month: "short", year: "numeric" },
+            const percent = Math.min(
+              100,
+              Math.round((progress / goal.target_value) * 100),
             );
+            const remaining = daysUntil(goal.target_date);
+            const targetDate = new Date(
+              `${goal.target_date}T00:00:00`,
+            ).toLocaleDateString(locale, {
+              day: "numeric",
+              month: "short",
+              year: "numeric",
+            });
 
             return (
-              <article key={goal.id} className="rounded-xl border border-zinc-800 bg-zinc-950 p-4">
+              <article
+                key={goal.id}
+                className="rounded-xl border border-zinc-800 bg-zinc-950 p-4"
+              >
                 <div className="mb-2 flex items-start justify-between gap-2">
                   <div>
                     <h2 className="font-bold text-white">{goal.title}</h2>
@@ -280,7 +308,10 @@ export default function GoalsPage() {
                   <span>{percent}%</span>
                 </div>
                 <div className="h-2 overflow-hidden rounded-full bg-zinc-900">
-                  <div className="h-full bg-ritual-accent" style={{ width: `${percent}%` }} />
+                  <div
+                    className="h-full bg-ritual-accent"
+                    style={{ width: `${percent}%` }}
+                  />
                 </div>
 
                 <div className="mt-3 flex flex-wrap gap-3 text-xs uppercase tracking-wider text-zinc-400">

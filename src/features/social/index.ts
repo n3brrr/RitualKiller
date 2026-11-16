@@ -1,1 +1,1 @@
-export { default as SocialPage } from './pages/SocialPage';
+export { default as SocialPage } from "./pages/SocialPage";

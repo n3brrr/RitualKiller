@@ -35,7 +35,9 @@ export default function NotificationsPage() {
     <div className="mx-auto max-w-2xl space-y-4">
       <header className="flex items-center justify-between gap-3">
         <div>
-          <h1 className="font-display text-2xl font-bold sm:text-3xl">{t("notifications.title")}</h1>
+          <h1 className="font-display text-2xl font-bold sm:text-3xl">
+            {t("notifications.title")}
+          </h1>
           <p className="text-sm text-zinc-400">
             {unreadCount} {t("notifications.unread")}
           </p>
@@ -54,7 +56,11 @@ export default function NotificationsPage() {
 
       {notifications.length === 0 ? (
         <div className="rounded-xl border border-dashed border-zinc-800 p-8 text-center text-sm text-zinc-400">
-          <Bell className="mx-auto mb-3 text-ritual-accent/60" size={28} aria-hidden="true" />
+          <Bell
+            className="mx-auto mb-3 text-ritual-accent/60"
+            size={28}
+            aria-hidden="true"
+          />
           <p>{t("notifications.empty")}</p>
         </div>
       ) : (
@@ -72,7 +78,10 @@ export default function NotificationsPage() {
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
                     {!notification.read && (
-                      <span className="h-2 w-2 shrink-0 rounded-full bg-ritual-accent" aria-hidden="true" />
+                      <span
+                        className="h-2 w-2 shrink-0 rounded-full bg-ritual-accent"
+                        aria-hidden="true"
+                      />
                     )}
                     <h2 className="font-bold text-white">{notification.title}</h2>
                   </div>

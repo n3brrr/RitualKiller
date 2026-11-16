@@ -2,7 +2,11 @@ import { useState } from "react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
 import { Skull } from "lucide-react";
 import { useAuth } from "@/features/auth/AuthProvider";
-import { requestPasswordReset, signInWithEmail, signUpWithEmail } from "@/services/authService";
+import {
+  requestPasswordReset,
+  signInWithEmail,
+  signUpWithEmail,
+} from "@/services/authService";
 import { useI18n } from "@/i18n";
 import { validateEmail, validatePassword, validateUsername } from "@/utils/validation";
 import Loading from "@/components/animations/Loading";
@@ -37,7 +41,11 @@ export default function LoginPage() {
     if (mode === "signup") {
       const usernameValidation = validateUsername(username);
       if (!usernameValidation.valid) {
-        setError(usernameValidation.messageKey ? t(usernameValidation.messageKey) : t("auth.invalidUsername"));
+        setError(
+          usernameValidation.messageKey
+            ? t(usernameValidation.messageKey)
+            : t("auth.invalidUsername"),
+        );
         return;
       }
     }
@@ -45,7 +53,11 @@ export default function LoginPage() {
     if (mode !== "reset") {
       const passwordValidation = validatePassword(password);
       if (!passwordValidation.valid) {
-        setError(passwordValidation.messageKey ? t(passwordValidation.messageKey) : t("auth.invalidPassword"));
+        setError(
+          passwordValidation.messageKey
+            ? t(passwordValidation.messageKey)
+            : t("auth.invalidPassword"),
+        );
         return;
       }
     }
@@ -57,7 +69,11 @@ export default function LoginPage() {
         if (resetError) throw resetError;
         setMessage(t("auth.resetSent"));
       } else if (mode === "signup") {
-        const { data, error: signUpError } = await signUpWithEmail(email, password, username);
+        const { data, error: signUpError } = await signUpWithEmail(
+          email,
+          password,
+          username,
+        );
         if (signUpError) throw signUpError;
         if (data.session) {
           navigate("/app/dashboard", { replace: true });
@@ -95,12 +111,18 @@ export default function LoginPage() {
 
         <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-5 sm:p-6">
           {error && (
-            <p role="alert" className="mb-4 rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-400">
+            <p
+              role="alert"
+              className="mb-4 rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-400"
+            >
               {error}
             </p>
           )}
           {message && (
-            <p role="status" className="mb-4 rounded-lg border border-ritual-accent/30 bg-ritual-accent/10 p-3 text-sm text-ritual-accent">
+            <p
+              role="status"
+              className="mb-4 rounded-lg border border-ritual-accent/30 bg-ritual-accent/10 p-3 text-sm text-ritual-accent"
+            >
               {message}
             </p>
           )}
@@ -160,7 +182,11 @@ export default function LoginPage() {
 
           <div className="mt-4 flex flex-col items-center gap-2 text-xs text-zinc-400">
             {mode === "login" && (
-              <button type="button" onClick={() => setMode("reset")} className="hover:text-ritual-accent">
+              <button
+                type="button"
+                onClick={() => setMode("reset")}
+                className="hover:text-ritual-accent"
+              >
                 {t("auth.forgot")}
               </button>
             )}
@@ -176,14 +202,21 @@ export default function LoginPage() {
               {mode === "signup" ? t("auth.hasAccount") : t("auth.noAccount")}
             </button>
             {mode === "reset" && (
-              <button type="button" onClick={() => setMode("login")} className="hover:text-ritual-accent">
+              <button
+                type="button"
+                onClick={() => setMode("login")}
+                className="hover:text-ritual-accent"
+              >
                 {t("common.back")}
               </button>
             )}
           </div>
         </div>
 
-        <Link to="/" className="mt-6 block text-center text-xs text-zinc-400 hover:text-ritual-accent">
+        <Link
+          to="/"
+          className="mt-6 block text-center text-xs text-zinc-400 hover:text-ritual-accent"
+        >
           {t("common.back")}
         </Link>
       </div>

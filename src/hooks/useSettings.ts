@@ -16,7 +16,9 @@ export function useSettings() {
 
   const updateMutation = useMutation({
     mutationFn: (
-      updates: Partial<Pick<UserSettings, "notificationsEnabled" | "reminderTime" | "locale">>,
+      updates: Partial<
+        Pick<UserSettings, "notificationsEnabled" | "reminderTime" | "locale">
+      >,
     ) => settingsService.update(userId!, updates),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["settings", userId] });

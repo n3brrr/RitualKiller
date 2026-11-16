@@ -26,7 +26,8 @@ export function ProductivityMetrics({ rituals, logs }: ProductivityMetricsProps)
     const completedToday = rituals.filter((ritual) =>
       isRitualCompleted(ritual, logs, new Date()),
     ).length;
-    const dailyEfficiency = rituals.length > 0 ? (completedToday / rituals.length) * 100 : 0;
+    const dailyEfficiency =
+      rituals.length > 0 ? (completedToday / rituals.length) * 100 : 0;
     const weeklyLogs = filterLogsByDays(logs, 7);
     const weeklyEfficiency =
       rituals.length > 0 ? (weeklyLogs.length / (rituals.length * 7)) * 100 : 0;
@@ -38,7 +39,9 @@ export function ProductivityMetrics({ rituals, logs }: ProductivityMetricsProps)
       { name: "—", Completions: 0 },
     );
 
-    const completionsToday = logs.filter((log) => log.date.slice(0, 10) === todayKey).length;
+    const completionsToday = logs.filter(
+      (log) => log.date.slice(0, 10) === todayKey,
+    ).length;
     const bestStreak = Math.max(...rituals.map((ritual) => ritual.streak), 0);
 
     return {
@@ -98,7 +101,10 @@ export function ProductivityMetrics({ rituals, logs }: ProductivityMetricsProps)
       </h3>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
         {cards.map((card) => (
-          <div key={card.label} className="rounded-xl border border-zinc-800 bg-zinc-950 p-4">
+          <div
+            key={card.label}
+            className="rounded-xl border border-zinc-800 bg-zinc-950 p-4"
+          >
             <div className="mb-2 flex items-center justify-between gap-2">
               <span className="text-xs uppercase tracking-wider text-zinc-400">
                 {card.label}

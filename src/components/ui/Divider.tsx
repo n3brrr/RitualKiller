@@ -1,6 +1,6 @@
 /*
  * Divider.tsx
- * 
+ *
  * Componente Divider reutilizable para separar secciones con una línea decorativa y un mensaje central.
  */
 
@@ -14,9 +14,7 @@ export const Divider = () => (
     {/* Línea izquierda */}
     <div className="h-[1px] w-full bg-gradient-to-r from-transparent via-zinc-800 to-transparent" />
     {/* Mensaje central */}
-    <div className="mx-4 text-zinc-800 italic font-ritual text-xs">
-      MEMENTO MORI
-    </div>
+    <div className="mx-4 text-zinc-800 italic font-ritual text-xs">MEMENTO MORI</div>
     {/* Línea derecha */}
     <div className="h-[1px] w-full bg-gradient-to-r from-transparent via-zinc-800 to-transparent" />
   </div>

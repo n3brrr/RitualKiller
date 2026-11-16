@@ -102,7 +102,10 @@ export function validateGoal(goal: string): {
   return { valid: true };
 }
 
-export function validateContent(content: string, max = 500): {
+export function validateContent(
+  content: string,
+  max = 500,
+): {
   valid: boolean;
   message?: string;
   messageKey?: TranslationKey;
@@ -145,9 +148,13 @@ export function validateImportData(data: unknown): {
     data.rituals.forEach((ritual, index) => {
       if (!isRecord(ritual) || typeof ritual.title !== "string") {
         errors.push(`Ritual ${index + 1}: título inválido`);
-      } else if (!DIFFICULTIES.includes(ritual.difficulty as (typeof DIFFICULTIES)[number])) {
+      } else if (
+        !DIFFICULTIES.includes(ritual.difficulty as (typeof DIFFICULTIES)[number])
+      ) {
         errors.push(`Ritual ${index + 1}: dificultad inválida`);
-      } else if (!FREQUENCIES.includes(ritual.frequency as (typeof FREQUENCIES)[number])) {
+      } else if (
+        !FREQUENCIES.includes(ritual.frequency as (typeof FREQUENCIES)[number])
+      ) {
         errors.push(`Ritual ${index + 1}: frecuencia inválida`);
       }
     });

@@ -40,7 +40,9 @@ function sanitizeUsername(value: string): string {
 
 async function createProfile(user: SupabaseUser): Promise<ProfileRow> {
   const base = sanitizeUsername(
-    (user.user_metadata?.username as string | undefined) ?? user.email?.split("@")[0] ?? "initiate",
+    (user.user_metadata?.username as string | undefined) ??
+      user.email?.split("@")[0] ??
+      "initiate",
   );
 
   for (let attempt = 0; attempt < 4; attempt += 1) {
@@ -80,15 +82,17 @@ export const profileService = {
 
     const profile = (existing as ProfileRow | null) ?? (await createProfile(user));
 
-    const [{ data: inventory, error: inventoryError }, { data: buffs, error: buffsError }] =
-      await Promise.all([
-        supabase.from("inventory").select("item_id, quantity").eq("user_id", user.id),
-        supabase
-          .from("active_buffs")
-          .select("id, item_id, multiplier, expires_at")
-          .eq("user_id", user.id)
-          .gt("expires_at", new Date().toISOString()),
-      ]);
+    const [
+      { data: inventory, error: inventoryError },
+      { data: buffs, error: buffsError },
+    ] = await Promise.all([
+      supabase.from("inventory").select("item_id, quantity").eq("user_id", user.id),
+      supabase
+        .from("active_buffs")
+        .select("id, item_id, multiplier, expires_at")
+        .eq("user_id", user.id)
+        .gt("expires_at", new Date().toISOString()),
+    ]);
 
     if (inventoryError) throw inventoryError;
     if (buffsError) throw buffsError;

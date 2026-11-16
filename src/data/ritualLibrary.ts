@@ -36,8 +36,7 @@ export const RITUAL_LIBRARY: RitualTemplate[] = [
   {
     id: "lib-health-1",
     title: "Morning Hydration",
-    description:
-      "Drink 500ml of water upon waking up before any other beverage.",
+    description: "Drink 500ml of water upon waking up before any other beverage.",
     difficulty: "novice",
     category: "health",
     frequency: "daily",
@@ -70,8 +69,7 @@ export const RITUAL_LIBRARY: RitualTemplate[] = [
   {
     id: "lib-prod-1",
     title: "Deep Work Session",
-    description:
-      "90 minutes of deep work without distractions or interruptions.",
+    description: "90 minutes of deep work without distractions or interruptions.",
     difficulty: "adept",
     category: "productivity",
     frequency: "daily",
@@ -179,8 +177,7 @@ export const RITUAL_LIBRARY: RitualTemplate[] = [
   {
     id: "lib-creativity-1",
     title: "Daily Creative Production",
-    description:
-      "Create something new every day: drawing, writing, music, etc.",
+    description: "Create something new every day: drawing, writing, music, etc.",
     difficulty: "novice",
     category: "creativity",
     frequency: "daily",
@@ -201,9 +198,7 @@ export const RITUAL_LIBRARY: RitualTemplate[] = [
 ];
 
 // Obtiene rituales según una categoría dada
-export const getRitualsByCategory = (
-  category: RitualCategory,
-): RitualTemplate[] => {
+export const getRitualsByCategory = (category: RitualCategory): RitualTemplate[] => {
   return RITUAL_LIBRARY.filter((r) => r.category === category);
 };
 

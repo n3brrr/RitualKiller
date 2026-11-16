@@ -1,4 +1,11 @@
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import type { Session } from "@supabase/supabase-js";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
@@ -39,7 +46,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (!nextSession) {
         queryClient.removeQueries({ queryKey: ["profile"] });
       } else {
-        void queryClient.invalidateQueries({ queryKey: ["profile", nextSession.user.id] });
+        void queryClient.invalidateQueries({
+          queryKey: ["profile", nextSession.user.id],
+        });
       }
     });
 
@@ -76,7 +85,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       refreshProfile,
       signOut,
     }),
-    [session, profileQuery.data, profileQuery.isLoading, profileQuery.error, initializing, refreshProfile, signOut],
+    [
+      session,
+      profileQuery.data,
+      profileQuery.isLoading,
+      profileQuery.error,
+      initializing,
+      refreshProfile,
+      signOut,
+    ],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

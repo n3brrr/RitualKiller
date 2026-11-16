@@ -15,7 +15,10 @@ function normalizeError(error: unknown): { message: string; stack?: string } {
 }
 
 /** Best-effort error reporting. Never throws or blocks the UI. */
-export function captureError(error: unknown, context: Record<string, unknown> = {}): void {
+export function captureError(
+  error: unknown,
+  context: Record<string, unknown> = {},
+): void {
   const normalized = normalizeError(error);
   console.error("[RitualKiller]", normalized.message, context);
 

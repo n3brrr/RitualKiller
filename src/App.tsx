@@ -26,9 +26,13 @@ const SocialPage = lazy(() => import("./features/social/pages/SocialPage"));
 const ShopPage = lazy(() => import("./features/shop/pages/ShopPage"));
 const InventoryPage = lazy(() => import("./features/inventory/pages/InventoryPage"));
 const AnalyticsPage = lazy(() => import("./features/analytics/pages/AnalyticsPage"));
-const AchievementsPage = lazy(() => import("./features/gamification/pages/AchievementsPage"));
+const AchievementsPage = lazy(
+  () => import("./features/gamification/pages/AchievementsPage"),
+);
 const SettingsPage = lazy(() => import("./features/settings/pages/SettingsPage"));
-const NotificationsPage = lazy(() => import("./features/notifications/pages/NotificationsPage"));
+const NotificationsPage = lazy(
+  () => import("./features/notifications/pages/NotificationsPage"),
+);
 const AdminPage = lazy(() => import("./features/admin/pages/AdminPage"));
 const ProfilePage = lazy(() => import("./features/users/pages/ProfilePage"));
 
@@ -104,9 +108,7 @@ const router = createBrowserRouter([
           { path: "notifications", element: page(<NotificationsPage />) },
           {
             path: "admin",
-            element: (
-              <AdminRoute>{page(<AdminPage />)}</AdminRoute>
-            ),
+            element: <AdminRoute>{page(<AdminPage />)}</AdminRoute>,
           },
           { path: "profile/:username", element: page(<ProfilePage />) },
         ],

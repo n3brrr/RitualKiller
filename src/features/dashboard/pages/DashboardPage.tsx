@@ -11,11 +11,14 @@ import { isRitualCompleted } from "@/utils/analytics";
 import { toDateKey } from "@/utils/dates";
 
 const RitualCalendar = lazy(() => import("@/components/calendar/RitualCalendar"));
-const ProductivityMetrics = lazy(() => import("@/components/productivity/ProductivityMetrics"));
+const ProductivityMetrics = lazy(
+  () => import("@/components/productivity/ProductivityMetrics"),
+);
 
 export default function DashboardPage() {
   const { user } = useAuth();
-  const { rituals, logs, isLoading, error, refetch, completeRitual, isToggling } = useRituals();
+  const { rituals, logs, isLoading, error, refetch, completeRitual, isToggling } =
+    useRituals();
   const { t } = useI18n();
 
   const dailyQuote = useMemo(() => {
@@ -60,7 +63,9 @@ export default function DashboardPage() {
             {bestStreak}
             <Flame
               size={28}
-              className={bestStreak > 0 ? "fill-orange-500/20 text-orange-500" : "text-zinc-700"}
+              className={
+                bestStreak > 0 ? "fill-orange-500/20 text-orange-500" : "text-zinc-700"
+              }
               aria-hidden="true"
             />
           </div>
@@ -74,7 +79,11 @@ export default function DashboardPage() {
         <Stat label={t("dashboard.essence")} value={user.essence} accent />
         <Stat label={t("dashboard.active")} value={rituals.length} />
         <Stat label={t("dashboard.pending")} value={pendingRituals.length} />
-        <Stat label={t("dashboard.inventory")} value={user.inventory.length} icon={<Package size={16} />} />
+        <Stat
+          label={t("dashboard.inventory")}
+          value={user.inventory.length}
+          icon={<Package size={16} />}
+        />
       </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
@@ -119,7 +128,9 @@ export default function DashboardPage() {
                 className="flex items-center justify-between gap-2 rounded-r-lg border-l-2 border-zinc-800 bg-zinc-900/30 p-3 transition-colors hover:border-ritual-accent/50"
               >
                 <div className="min-w-0">
-                  <div className="truncate text-sm font-medium text-zinc-200">{ritual.title}</div>
+                  <div className="truncate text-sm font-medium text-zinc-200">
+                    {ritual.title}
+                  </div>
                   <div className="text-xs text-zinc-400">
                     +{ritual.essenceReward} {t("dashboard.essenceUnit")}
                   </div>
@@ -169,7 +180,9 @@ function Stat({
         {label}
         {icon}
       </div>
-      <div className={`font-mono text-xl sm:text-2xl ${accent ? "text-ritual-accent" : "text-white"}`}>
+      <div
+        className={`font-mono text-xl sm:text-2xl ${accent ? "text-ritual-accent" : "text-white"}`}
+      >
         {value}
       </div>
     </div>

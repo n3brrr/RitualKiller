@@ -13,7 +13,14 @@ interface ModalProps {
   role?: "dialog" | "alertdialog";
 }
 
-export function Modal({ open, onClose, title, children, footer, role = "dialog" }: ModalProps) {
+export function Modal({
+  open,
+  onClose,
+  title,
+  children,
+  footer,
+  role = "dialog",
+}: ModalProps) {
   const titleId = useId();
   const panelRef = useFocusTrap<HTMLDivElement>(open, onClose);
   const { t } = useI18n();
@@ -55,7 +62,9 @@ export function Modal({ open, onClose, title, children, footer, role = "dialog" 
         <div className="text-sm text-zinc-400">{children}</div>
 
         {footer && (
-          <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">{footer}</div>
+          <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            {footer}
+          </div>
         )}
       </div>
     </div>,

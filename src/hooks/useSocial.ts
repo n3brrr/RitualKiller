@@ -28,13 +28,15 @@ export function useSocial() {
   const likeMutation = useMutation({
     mutationFn: ({ postId, liked }: { postId: string; liked: boolean }) =>
       socialService.toggleLike(postId, userId!, liked),
-    onSuccess: () => void queryClient.invalidateQueries({ queryKey: ["social", "feed", userId] }),
+    onSuccess: () =>
+      void queryClient.invalidateQueries({ queryKey: ["social", "feed", userId] }),
   });
 
   const commentMutation = useMutation({
     mutationFn: ({ postId, content }: { postId: string; content: string }) =>
       socialService.addComment(postId, userId!, content),
-    onSuccess: () => void queryClient.invalidateQueries({ queryKey: ["social", "feed", userId] }),
+    onSuccess: () =>
+      void queryClient.invalidateQueries({ queryKey: ["social", "feed", userId] }),
   });
 
   const followMutation = useMutation({
@@ -42,7 +44,8 @@ export function useSocial() {
       following
         ? socialService.unfollow(userId!, targetId)
         : socialService.follow(userId!, targetId),
-    onSuccess: () => void queryClient.invalidateQueries({ queryKey: ["social", "feed", userId] }),
+    onSuccess: () =>
+      void queryClient.invalidateQueries({ queryKey: ["social", "feed", userId] }),
   });
 
   const reportMutation = useMutation({

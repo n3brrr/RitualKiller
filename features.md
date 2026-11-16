@@ -6,12 +6,12 @@ Este documento recoge solo lo que hay que cambiar. Cada hallazgo indica qué hay
 
 **Escala de gravedad**
 
-| Gravedad | Criterio |
-| --- | --- |
-| Crítica | Explotable hoy por cualquier usuario registrado, o rompe la integridad del sistema de juego o de los datos. |
-| Alta | Fallo funcional visible o riesgo de seguridad importante con condiciones realistas. |
-| Media | Degrada la experiencia, la mantenibilidad o la seguridad, pero hay mitigación parcial. |
-| Baja | Mejora recomendable con impacto limitado. |
+| Gravedad | Criterio                                                                                                    |
+| -------- | ----------------------------------------------------------------------------------------------------------- |
+| Crítica  | Explotable hoy por cualquier usuario registrado, o rompe la integridad del sistema de juego o de los datos. |
+| Alta     | Fallo funcional visible o riesgo de seguridad importante con condiciones realistas.                         |
+| Media    | Degrada la experiencia, la mantenibilidad o la seguridad, pero hay mitigación parcial.                      |
+| Baja     | Mejora recomendable con impacto limitado.                                                                   |
 
 **Estado:** `Pendiente` = sin corregir · `Pendiente (a confirmar)` = depende de una decisión de producto que hay que confirmar · `Realizado` = corregido.
 
@@ -19,63 +19,63 @@ Este documento recoge solo lo que hay que cambiar. Cada hallazgo indica qué hay
 
 ## Resumen
 
-| ID | Área | Hallazgo | Gravedad | Estado |
-| --- | --- | --- | --- | --- |
-| SEC-01 | Seguridad | `complete_ritual` acepta cualquier fecha enviada por el cliente | Crítica | Pendiente |
-| SEC-02 | Seguridad | RLS permite escribir el inventario directamente | Crítica | Pendiente |
-| SEC-03 | Seguridad | RLS permite crear buffs con multiplicador arbitrario | Crítica | Pendiente |
-| SEC-04 | Seguridad | El cliente fija `essence_reward` y `streak` de los rituales | Alta | Pendiente |
-| SEC-05 | Seguridad | El cliente puede insertar, editar y borrar `ritual_logs` | Alta | Pendiente |
-| SEC-06 | Seguridad | Logros autoconcedidos desde el cliente | Alta | Pendiente |
-| SEC-07 | Seguridad | Proxy `/ollama` expone toda la API de Ollama sin autenticación | Alta | Pendiente |
-| SEC-08 | Seguridad | Un usuario puede publicar posts marcados como "sistema" | Media | Pendiente |
-| SEC-09 | Seguridad | "Borrar mis datos" no elimina la cuenta y el perfil se recrea | Media | Pendiente |
-| SEC-10 | Seguridad | Faltan cabeceras de seguridad (CSP, HSTS) y nginx pierde cabeceras en `/assets/` | Media | Pendiente |
-| SEC-11 | Seguridad | `avatar_url` admite cualquier URL externa y solo se valida en cliente | Media | Pendiente |
-| SEC-12 | Seguridad | Cambio de contraseña sin reautenticación | Media | Pendiente |
-| SEC-13 | Seguridad | Política de contraseñas débil (mínimo 6 caracteres) | Media | Pendiente |
-| SEC-14 | Seguridad | `error_logs` acepta inserciones anónimas y sin límites | Media | Pendiente |
-| SEC-15 | Seguridad | Sin límites de frecuencia en posts, comentarios y reportes | Baja | Pendiente |
-| SEC-16 | Seguridad | `profiles` expone `is_admin` y metadatos de cualquier usuario | Baja | Pendiente |
-| SEC-17 | Seguridad | Funciones `SECURITY DEFINER` ejecutables por `anon`/`PUBLIC` | Baja | Pendiente |
-| SEC-18 | Seguridad | `stats.html` del visualizador se publica en producción | Baja | Pendiente |
-| SEC-19 | Seguridad | Completar, gastar y deshacer conserva parte de lo comprado | Baja | Pendiente |
-| SEC-20 | Seguridad | Imágenes Docker sin versión fija y nginx como root | Baja | Pendiente |
-| COD-01 | Código | Truncamiento silencioso a 1000 filas (logs y perfiles) | Alta | Pendiente |
-| COD-02 | Código | Cálculo de rachas incorrecto (semanales, sin reinicio, deshacer) | Alta | Pendiente |
-| COD-03 | Código | Tres de los cuatro objetos de la tienda no tienen efecto | Alta | Pendiente |
-| COD-04 | Código | Catálogo de la tienda duplicado en cliente y BD | Media | Pendiente |
-| COD-05 | Código | Zona horaria inconsistente entre cliente y servidor | Media | Pendiente |
-| COD-06 | Código | Logros calculados en cliente y solo al visitar su página | Media | Pendiente |
-| COD-07 | Código | Progreso de objetivos mal calculado y columna `progress` sin uso | Media | Pendiente |
-| COD-08 | Código | Métricas tratan los rituales semanales como diarios | Media | Pendiente |
-| COD-09 | Código | Importación de backup no transaccional, duplica y valida poco | Media | Pendiente |
-| COD-10 | Código | Código muerto, dependencias sin uso y 7,8 MB de fuentes huérfanas | Media | Pendiente |
-| COD-11 | Código | `pnpm lint`/`verify` fallan en local y el formato no se comprueba en CI | Media | Pendiente |
-| COD-12 | Código | Cobertura de tests insuficiente en lo crítico | Media | Pendiente |
-| COD-13 | Código | Lógica de BD duplicada en cliente y `locale` en tres sitios | Media | Pendiente |
-| COD-14 | Código | Borrar un ritual elimina todo su historial | Media | Pendiente |
-| COD-15 | Código | Eliminar la integración de IA actual y dejar una base extensible | Media | Pendiente |
-| COD-16 | Código | Rendimiento: recorridos O(n) repetidos e invalidaciones excesivas | Baja | Pendiente |
-| COD-17 | Código | Tras un despliegue, los chunks antiguos fallan sin recuperación | Baja | Pendiente |
-| COD-18 | Código | `localStorage` sin `try/catch` puede romper el arranque | Baja | Pendiente |
-| COD-19 | Código | Configuración TS/ESLint con restos y sin reglas de a11y | Baja | Pendiente |
-| UX-01 | UI/UX | Landing, `index.html` y login sin traducir ni selector de idioma | Media | Pendiente |
-| UX-02 | UI/UX | Contraste insuficiente en la landing (`text-zinc-500/600`) | Media | Pendiente |
-| UX-03 | UI/UX | Contenido estático y textos de servicios/BD sin traducir | Media | Pendiente |
-| UX-04 | UI/UX | Formularios de autenticación sin `<label>` | Media | Pendiente |
-| UX-05 | UI/UX | Errores técnicos crudos mostrados al usuario | Media | Pendiente |
-| UX-06 | UI/UX | Acciones sin feedback de error ni actualización optimista | Media | Pendiente |
-| UX-07 | UI/UX | Acciones costosas o sensibles sin confirmación | Media | Pendiente |
-| UX-08 | UI/UX | Moderación incompleta en el panel de administración | Media | Pendiente |
-| UX-09 | UI/UX | Social: seguir no hace nada y el perfil no es descubrible | Media | Pendiente |
-| UX-10 | UI/UX | No se pueden editar rituales ni objetivos; la IA crea sin previsualizar | Media | Pendiente |
-| UX-11 | UI/UX | Perfil público con datos engañosos | Baja | Pendiente |
-| UX-12 | UI/UX | Problemas de accesibilidad en calendario, heatmap, progreso y pestañas | Baja | Pendiente |
-| UX-13 | UI/UX | Flujos de autenticación con casos mal resueltos | Baja | Pendiente |
-| UX-14 | UI/UX | i18n sin interpolación ni plurales | Baja | Pendiente |
-| UX-15 | UI/UX | Ajustes con modelo de guardado inconsistente | Baja | Pendiente |
-| UX-16 | UI/UX | Recordatorios solo in-app y solo al abrir la app | Baja | Pendiente (a confirmar) |
+| ID     | Área      | Hallazgo                                                                         | Gravedad | Estado                  |
+| ------ | --------- | -------------------------------------------------------------------------------- | -------- | ----------------------- |
+| SEC-01 | Seguridad | `complete_ritual` acepta cualquier fecha enviada por el cliente                  | Crítica  | Pendiente               |
+| SEC-02 | Seguridad | RLS permite escribir el inventario directamente                                  | Crítica  | Pendiente               |
+| SEC-03 | Seguridad | RLS permite crear buffs con multiplicador arbitrario                             | Crítica  | Pendiente               |
+| SEC-04 | Seguridad | El cliente fija `essence_reward` y `streak` de los rituales                      | Alta     | Pendiente               |
+| SEC-05 | Seguridad | El cliente puede insertar, editar y borrar `ritual_logs`                         | Alta     | Pendiente               |
+| SEC-06 | Seguridad | Logros autoconcedidos desde el cliente                                           | Alta     | Pendiente               |
+| SEC-07 | Seguridad | Proxy `/ollama` expone toda la API de Ollama sin autenticación                   | Alta     | Pendiente               |
+| SEC-08 | Seguridad | Un usuario puede publicar posts marcados como "sistema"                          | Media    | Pendiente               |
+| SEC-09 | Seguridad | "Borrar mis datos" no elimina la cuenta y el perfil se recrea                    | Media    | Pendiente               |
+| SEC-10 | Seguridad | Faltan cabeceras de seguridad (CSP, HSTS) y nginx pierde cabeceras en `/assets/` | Media    | Pendiente               |
+| SEC-11 | Seguridad | `avatar_url` admite cualquier URL externa y solo se valida en cliente            | Media    | Pendiente               |
+| SEC-12 | Seguridad | Cambio de contraseña sin reautenticación                                         | Media    | Pendiente               |
+| SEC-13 | Seguridad | Política de contraseñas débil (mínimo 6 caracteres)                              | Media    | Pendiente               |
+| SEC-14 | Seguridad | `error_logs` acepta inserciones anónimas y sin límites                           | Media    | Pendiente               |
+| SEC-15 | Seguridad | Sin límites de frecuencia en posts, comentarios y reportes                       | Baja     | Pendiente               |
+| SEC-16 | Seguridad | `profiles` expone `is_admin` y metadatos de cualquier usuario                    | Baja     | Pendiente               |
+| SEC-17 | Seguridad | Funciones `SECURITY DEFINER` ejecutables por `anon`/`PUBLIC`                     | Baja     | Pendiente               |
+| SEC-18 | Seguridad | `stats.html` del visualizador se publica en producción                           | Baja     | Pendiente               |
+| SEC-19 | Seguridad | Completar, gastar y deshacer conserva parte de lo comprado                       | Baja     | Pendiente               |
+| SEC-20 | Seguridad | Imágenes Docker sin versión fija y nginx como root                               | Baja     | Pendiente               |
+| COD-01 | Código    | Truncamiento silencioso a 1000 filas (logs y perfiles)                           | Alta     | Pendiente               |
+| COD-02 | Código    | Cálculo de rachas incorrecto (semanales, sin reinicio, deshacer)                 | Alta     | Pendiente               |
+| COD-03 | Código    | Tres de los cuatro objetos de la tienda no tienen efecto                         | Alta     | Pendiente               |
+| COD-04 | Código    | Catálogo de la tienda duplicado en cliente y BD                                  | Media    | Pendiente               |
+| COD-05 | Código    | Zona horaria inconsistente entre cliente y servidor                              | Media    | Pendiente               |
+| COD-06 | Código    | Logros calculados en cliente y solo al visitar su página                         | Media    | Pendiente               |
+| COD-07 | Código    | Progreso de objetivos mal calculado y columna `progress` sin uso                 | Media    | Pendiente               |
+| COD-08 | Código    | Métricas tratan los rituales semanales como diarios                              | Media    | Pendiente               |
+| COD-09 | Código    | Importación de backup no transaccional, duplica y valida poco                    | Media    | Pendiente               |
+| COD-10 | Código    | Código muerto, dependencias sin uso y 7,8 MB de fuentes huérfanas                | Media    | Pendiente               |
+| COD-11 | Código    | `pnpm lint`/`verify` fallan en local y el formato no se comprueba en CI          | Media    | Pendiente               |
+| COD-12 | Código    | Cobertura de tests insuficiente en lo crítico                                    | Media    | Pendiente               |
+| COD-13 | Código    | Lógica de BD duplicada en cliente y `locale` en tres sitios                      | Media    | Pendiente               |
+| COD-14 | Código    | Borrar un ritual elimina todo su historial                                       | Media    | Pendiente               |
+| COD-15 | Código    | Eliminar la integración de IA actual y dejar una base extensible                 | Media    | Pendiente               |
+| COD-16 | Código    | Rendimiento: recorridos O(n) repetidos e invalidaciones excesivas                | Baja     | Pendiente               |
+| COD-17 | Código    | Tras un despliegue, los chunks antiguos fallan sin recuperación                  | Baja     | Pendiente               |
+| COD-18 | Código    | `localStorage` sin `try/catch` puede romper el arranque                          | Baja     | Pendiente               |
+| COD-19 | Código    | Configuración TS/ESLint con restos y sin reglas de a11y                          | Baja     | Pendiente               |
+| UX-01  | UI/UX     | Landing, `index.html` y login sin traducir ni selector de idioma                 | Media    | Pendiente               |
+| UX-02  | UI/UX     | Contraste insuficiente en la landing (`text-zinc-500/600`)                       | Media    | Pendiente               |
+| UX-03  | UI/UX     | Contenido estático y textos de servicios/BD sin traducir                         | Media    | Pendiente               |
+| UX-04  | UI/UX     | Formularios de autenticación sin `<label>`                                       | Media    | Pendiente               |
+| UX-05  | UI/UX     | Errores técnicos crudos mostrados al usuario                                     | Media    | Pendiente               |
+| UX-06  | UI/UX     | Acciones sin feedback de error ni actualización optimista                        | Media    | Pendiente               |
+| UX-07  | UI/UX     | Acciones costosas o sensibles sin confirmación                                   | Media    | Pendiente               |
+| UX-08  | UI/UX     | Moderación incompleta en el panel de administración                              | Media    | Pendiente               |
+| UX-09  | UI/UX     | Social: seguir no hace nada y el perfil no es descubrible                        | Media    | Pendiente               |
+| UX-10  | UI/UX     | No se pueden editar rituales ni objetivos; la IA crea sin previsualizar          | Media    | Pendiente               |
+| UX-11  | UI/UX     | Perfil público con datos engañosos                                               | Baja     | Pendiente               |
+| UX-12  | UI/UX     | Problemas de accesibilidad en calendario, heatmap, progreso y pestañas           | Baja     | Pendiente               |
+| UX-13  | UI/UX     | Flujos de autenticación con casos mal resueltos                                  | Baja     | Pendiente               |
+| UX-14  | UI/UX     | i18n sin interpolación ni plurales                                               | Baja     | Pendiente               |
+| UX-15  | UI/UX     | Ajustes con modelo de guardado inconsistente                                     | Baja     | Pendiente               |
+| UX-16  | UI/UX     | Recordatorios solo in-app y solo al abrir la app                                 | Baja     | Pendiente (a confirmar) |
 
 ---
 
@@ -247,8 +247,9 @@ Este documento recoge solo lo que hay que cambiar. Cada hallazgo indica qué hay
   - pedir solo el rango necesario (por ejemplo, los últimos 365 días) con `order desc`;
   - mover los agregados (totales, logros, analítica) a RPC o vistas;
   - paginar la exportación.
-  
+
   El mismo problema afecta a `adminService.getReports` (`src/services/adminService.ts:56`), que carga **todos** los perfiles para resolver nombres; hay que usar un join (`reports(*, reporter:profiles(username))`).
+
 - **Impacto:** a partir de unos 1000 completados (≈ 3 rituales durante 1 año), hoy aparece como "no completado", el heatmap, el calendario, las analíticas y el progreso de objetivos son erróneos, y **el backup JSON/CSV queda incompleto sin aviso**. En admin, los reportes acaban mostrando "unknown" como autor.
 - **Gravedad:** Alta
 - **Estado:** Pendiente
@@ -259,8 +260,9 @@ Este documento recoge solo lo que hay que cambiar. Cada hallazgo indica qué hay
   - Para rituales **semanales** se comprueba `p_date - 1` (el día anterior), así que la racha semanal solo crece si se completa en días consecutivos. Debe comprobar la semana anterior.
   - La racha guardada en `rituals.streak` **nunca se reinicia** al saltarse días; solo se recalcula al completar. Dashboard, cabecera móvil y tarjetas (`DashboardPage.tsx:47`, `AppLayout.tsx:89`, `RitualCard.tsx:38`) muestran una racha "viva" que ya está rota.
   - `undo_ritual` (`functions.sql:115`) decrementa aunque la racha se hubiese reiniciado a 1 al completar.
-  
+
   Hay que calcular la racha a partir de los logs en el servidor (función o vista `ritual_streaks`) y que el cliente la lea de ahí.
+
 - **Impacto:** el dato central de la app ("sostén tu racha") es incorrecto, los rituales semanales nunca acumulan racha y los logros de racha son inconsistentes.
 - **Gravedad:** Alta
 - **Estado:** Pendiente
@@ -297,8 +299,9 @@ Este documento recoge solo lo que hay que cambiar. Cada hallazgo indica qué hay
   - "First Week" dice "completa todos tus rituales 7 días seguidos", pero se calcula con la racha máxima de un solo ritual (`achievements.ts:173`).
   - El logro "Demi-God" (50 000) choca con el rango "Demi-God" (5000, `src/utils/rank.ts:13`).
   - Los logros cumplidos pero aún no guardados muestran como fecha "ahora" (`useAchievements.ts:44-45`).
-  
+
   Hay que mover la evaluación al servidor (ver SEC-06), añadir `profiles.lifetime_essence` y alinear nombres y descripciones.
+
 - **Impacto:** notificaciones de logro tardías o inexistentes, descripciones que no cumplen lo que prometen y fechas falsas.
 - **Gravedad:** Media
 - **Estado:** Pendiente
@@ -309,8 +312,9 @@ Este documento recoge solo lo que hay que cambiar. Cada hallazgo indica qué hay
   - `progressFor` (`src/features/goals/pages/GoalsPage.tsx:83-89`) cuenta **todos** los logs históricos, incluidos los anteriores a la creación del objetivo, y si el objetivo no tiene rituales vinculados cuenta cualquier ritual.
   - La columna `goals.progress` y `goalService.updateProgress` (`src/services/goalService.ts:71`) no se usan.
   - `ritual_ids uuid[]` (`schema.sql:70`) no tiene integridad referencial: al borrar un ritual quedan ids huérfanos que siguen contando en "N rituales".
-  
+
   Hay que filtrar por `created_at ≤ date ≤ target_date`, usar una tabla `goal_rituals` con FK `on delete cascade` y eliminar o usar `progress`.
+
 - **Impacto:** un objetivo nuevo puede aparecer completado al crearlo y los datos de objetivos son engañosos.
 - **Gravedad:** Media
 - **Estado:** Pendiente
@@ -356,8 +360,9 @@ Este documento recoge solo lo que hay que cambiar. Cada hallazgo indica qué hay
 - **Qué cambiar:** solo hay tests de `utils`, `data` y `ollamaService` (34 tests). No hay tests de:
   - funciones SQL ni políticas RLS (donde están la economía y la seguridad, ver SEC-01 a SEC-06);
   - servicios, hooks ni componentes.
-  
+
   Además, `test:coverage` y `test:ui` (`package.json:17-18`) requieren `@vitest/coverage-v8` y `@vitest/ui`, que no están instalados. Hay que añadir tests de BD (pgTAP o `supabase test db`) para RLS y RPC, tests de servicios con el cliente simulado y tests de componentes con Testing Library para los flujos principales.
+
 - **Impacto:** las regresiones en la lógica de negocio y en la seguridad no se detectan; los fallos de SEC y COD de este informe habrían salido en tests básicos.
 - **Gravedad:** Media
 - **Estado:** Pendiente
@@ -368,8 +373,9 @@ Este documento recoge solo lo que hay que cambiar. Cada hallazgo indica qué hay
   - `profileService.createProfile` (`profileService.ts:41-70`) reimplementa `handle_new_user` con otra estrategia de sufijos (aleatoria frente a incremental).
   - `settingsService.get` (`src/services/settingsService.ts:21-25`) hace un `upsert` en **cada lectura**.
   - El idioma se guarda en `profiles.locale`, `user_settings.locale` y `localStorage`, y `SettingsPage` escribe en ambas tablas (`SettingsPage.tsx:64-73,86-87`).
-  
+
   Hay que confiar en el trigger (o usar una RPC `ensure_profile`), leer los ajustes sin escribir y dejar una única fuente de verdad para el idioma.
+
 - **Impacto:** escrituras innecesarias, comportamientos divergentes al crear perfiles y riesgo de que el idioma se desincronice.
 - **Gravedad:** Media
 - **Estado:** Pendiente
@@ -448,8 +454,9 @@ Este documento recoge solo lo que hay que cambiar. Cada hallazgo indica qué hay
   - **Landing:** `src/features/auth/pages/LandingPage.tsx` tiene todo el texto en español fijo (`CTA_LABEL` en línea 13, secciones, `RITUALS`, maquetas) y no usa `useI18n`.
   - **`index.html`:** el título, la descripción y las etiquetas OG/Twitter están solo en español (`lang="es"` fijo hasta que React lo cambia).
   - **Selector de idioma:** no existe fuera de Ajustes, así que un visitante en inglés no puede cambiarlo antes de registrarse.
-  
+
   Hay que pasar la landing a i18n y añadir un selector ES/EN en la landing y el login.
+
 - **Impacto:** la primera impresión, y la conversión, para usuarios en inglés es mala; además es incoherente con el resto de la app, ya traducida.
 - **Gravedad:** Media
 - **Estado:** Pendiente
@@ -473,8 +480,9 @@ Este documento recoge solo lo que hay que cambiar. Cada hallazgo indica qué hay
     - Errores de servicios en español: `profileService.ts:69,140,143` y `settingsService.ts:46`.
     - Errores de `validateImportData` (`validation.ts:139-164`).
     - Cabeceras de CSV en español (`src/utils/exportImport.ts:55`).
-  
+
   Hay que guardar claves (o `type` + parámetros) en las notificaciones y traducirlas al mostrarlas, y añadir claves i18n para el contenido.
+
 - **Impacto:** la app mezcla idiomas en ambos locales (logros en inglés para usuarios en español, notificaciones en español para usuarios en inglés).
 - **Gravedad:** Media
 - **Estado:** Pendiente
@@ -496,8 +504,9 @@ Este documento recoge solo lo que hay que cambiar. Cada hallazgo indica qué hay
   - las `ErrorState` de todas las páginas;
   - `SettingsPage.tsx:77`, por ejemplo "duplicate key value violates unique constraint profiles_username_lower_idx" al elegir un nombre ya usado;
   - `LoginPage.tsx:73`, por ejemplo "Invalid login credentials" en inglés.
-  
+
   Hay que crear un `mapError(error) → TranslationKey` (códigos `23505`, `PGRST*`, `AuthApiError` con `code`) y mostrar el detalle técnico solo en consola o en `error_logs`.
+
 - **Impacto:** mensajes incomprensibles, en otro idioma, que además filtran detalles internos (nombres de restricciones o tablas).
 - **Gravedad:** Media
 - **Estado:** Pendiente
@@ -509,8 +518,9 @@ Este documento recoge solo lo que hay que cambiar. Cada hallazgo indica qué hay
   - like y seguir (`EnhancedSocial.tsx:195,219`);
   - resolver reportes (`AdminPage.tsx:108,115`);
   - marcar o borrar notificaciones (`NotificationsPage.tsx:88,97`; `NotificationBell.tsx:61,90`).
-  
+
   Si fallan, el usuario no se entera (el error solo llega a `error_logs` como `unhandledrejection`). Hay que añadir un sistema de toasts global y actualizaciones optimistas con rollback (`onMutate`/`onError` de TanStack Query).
+
 - **Impacto:** acciones que "no hacen nada" sin explicación, dobles clics y sensación de lentitud.
 - **Gravedad:** Media
 - **Estado:** Pendiente
@@ -522,8 +532,9 @@ Este documento recoge solo lo que hay que cambiar. Cada hallazgo indica qué hay
   - **Usar objetos:** se usan sin confirmar, incluidos los permanentes (`InventoryPage.tsx`, ver COD-03).
   - **Rol de admin:** **conceder** el rol se hace sin confirmación, mientras que revocarlo sí la pide (`AdminPage.tsx:158`); el riesgo está invertido.
   - **Importar backup:** no avisa de que duplica rituales (`SettingsPage.tsx:110`).
-  
+
   Hay que usar `ConfirmDialog` en todos estos casos.
+
 - **Impacto:** compras accidentales irreversibles, escalada de privilegios por un clic erróneo y datos duplicados.
 - **Gravedad:** Media
 - **Estado:** Pendiente
@@ -535,8 +546,9 @@ Este documento recoge solo lo que hay que cambiar. Cada hallazgo indica qué hay
   - **Usuarios:** la lista está limitada a 200 (`adminService.ts:42`), sin búsqueda ni paginación.
   - **Errores:** el registro no muestra `stack` ni usuario.
   - **Errores de carga:** se ignora el error de la query de errores (`useAdmin.ts:60-64`).
-  
+
   Hay que añadir la vista previa del contenido reportado, acciones de borrar, ocultar y suspender (con RPC y auditoría), búsqueda y paginación.
+
 - **Impacto:** el administrador no puede moderar de verdad, así que los reportes no sirven para nada.
 - **Gravedad:** Media
 - **Estado:** Pendiente
@@ -610,8 +622,9 @@ Este documento recoge solo lo que hay que cambiar. Cada hallazgo indica qué hay
 - **Qué cambiar:**
   - En `SettingsPage.tsx`, el idioma se guarda al pulsarlo, pero las notificaciones y la hora del recordatorio necesitan el botón "Guardar" global, que además guarda perfil y ajustes en dos peticiones no atómicas (líneas 64-73).
   - El nombre del archivo exportado usa la fecha UTC (`toISOString`, líneas 97 y 105), en contra de la regla de `dates.ts`.
-  
+
   Hay que unificar (guardado automático por campo, o un formulario por sección) y usar `toDateKey()`.
+
 - **Impacto:** cambios que se pierden al salir sin guardar y guardados parciales si falla la segunda petición.
 - **Gravedad:** Baja
 - **Estado:** Pendiente

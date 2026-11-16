@@ -67,7 +67,10 @@ export const socialService = {
     );
 
     const authorIds = Array.from(
-      new Set([...posts.map((post) => post.user_id), ...comments.map((comment) => comment.user_id)]),
+      new Set([
+        ...posts.map((post) => post.user_id),
+        ...comments.map((comment) => comment.user_id),
+      ]),
     );
     const { data: profilesData, error: profilesError } = await supabase
       .from("profiles")
@@ -189,12 +192,18 @@ export const socialService = {
     if (error) throw error;
   },
 
-  async reportUser(targetUserId: string, reporterId: string, reason: string): Promise<void> {
+  async reportUser(
+    targetUserId: string,
+    reporterId: string,
+    reason: string,
+  ): Promise<void> {
     const validation = validateContent(reason, 500);
     if (!validation.valid) throw new Error(validation.message);
-    const { error } = await supabase
-      .from("reports")
-      .insert({ reporter_id: reporterId, target_user_id: targetUserId, reason: reason.trim() });
+    const { error } = await supabase.from("reports").insert({
+      reporter_id: reporterId,
+      target_user_id: targetUserId,
+      reason: reason.trim(),
+    });
     if (error) throw error;
   },
 

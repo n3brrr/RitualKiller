@@ -11,7 +11,10 @@ import { ErrorState } from "@/components/ui/ErrorState";
 export default function InventoryPage() {
   const { quantities, buffs, isLoading, consume, error, refetch } = useShop();
   const { t, locale } = useI18n();
-  const [feedback, setFeedback] = useState<{ tone: "success" | "error"; text: string } | null>(null);
+  const [feedback, setFeedback] = useState<{
+    tone: "success" | "error";
+    text: string;
+  } | null>(null);
   const [pendingId, setPendingId] = useState<string | null>(null);
 
   if (isLoading) return <Loading />;
@@ -46,7 +49,8 @@ export default function InventoryPage() {
     } catch (consumeError) {
       setFeedback({
         tone: "error",
-        text: consumeError instanceof Error ? consumeError.message : t("inventory.useError"),
+        text:
+          consumeError instanceof Error ? consumeError.message : t("inventory.useError"),
       });
     } finally {
       setPendingId(null);
@@ -92,9 +96,7 @@ export default function InventoryPage() {
                   className="flex items-center justify-between gap-2 rounded-lg border border-ritual-accent/30 bg-ritual-accent/5 p-3"
                 >
                   <span className="text-sm text-zinc-200">
-                    {item
-                      ? t(shopItemKey(item.id, "name"))
-                      : buff.itemId}
+                    {item ? t(shopItemKey(item.id, "name")) : buff.itemId}
                   </span>
                   <span className="text-xs text-ritual-accent">
                     x{buff.multiplier} · {t("inventory.until")}{" "}
@@ -109,7 +111,11 @@ export default function InventoryPage() {
 
       {owned.length === 0 ? (
         <div className="rounded-xl border border-dashed border-zinc-800 p-8 text-center text-sm text-zinc-400">
-          <Package className="mx-auto mb-3 text-ritual-accent/60" size={28} aria-hidden="true" />
+          <Package
+            className="mx-auto mb-3 text-ritual-accent/60"
+            size={28}
+            aria-hidden="true"
+          />
           <p>{t("inventory.empty")}</p>
           <Link
             to="/app/shop"
@@ -121,13 +127,18 @@ export default function InventoryPage() {
       ) : (
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           {owned.map((item) => (
-            <article key={item.id} className="rounded-xl border border-zinc-800 bg-zinc-950 p-4">
+            <article
+              key={item.id}
+              className="rounded-xl border border-zinc-800 bg-zinc-950 p-4"
+            >
               <div className="flex items-start gap-3">
                 <div className="text-3xl" aria-hidden="true">
                   {item.icon}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <h2 className="font-bold text-white">{t(shopItemKey(item.id, "name"))}</h2>
+                  <h2 className="font-bold text-white">
+                    {t(shopItemKey(item.id, "name"))}
+                  </h2>
                   <p className="text-xs text-zinc-400">
                     {t(shopItemKey(item.id, "description"))}
                   </p>

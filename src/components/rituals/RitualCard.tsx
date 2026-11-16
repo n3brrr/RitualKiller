@@ -16,7 +16,13 @@ const DIFFICULTY_STYLES = {
   master: "border-red-900/60 text-red-500",
 } as const;
 
-export function RitualCard({ ritual, isDone, busy = false, onToggle, onDelete }: RitualCardProps) {
+export function RitualCard({
+  ritual,
+  isDone,
+  busy = false,
+  onToggle,
+  onDelete,
+}: RitualCardProps) {
   const { t } = useI18n();
   return (
     <article
@@ -51,7 +57,9 @@ export function RitualCard({ ritual, isDone, busy = false, onToggle, onDelete }:
         )}
 
         <div className="mt-2 flex flex-wrap gap-1.5 text-xs uppercase tracking-wider">
-          <span className={`rounded border px-2 py-0.5 ${DIFFICULTY_STYLES[ritual.difficulty]}`}>
+          <span
+            className={`rounded border px-2 py-0.5 ${DIFFICULTY_STYLES[ritual.difficulty]}`}
+          >
             {t(difficultyKeys[ritual.difficulty])}
           </span>
           <span className="rounded border border-zinc-800 px-2 py-0.5 text-zinc-400">

@@ -46,9 +46,7 @@ describe("achievement progress", () => {
   });
 
   it("counts completed logs for completion achievements", () => {
-    const logs = Array.from({ length: 120 }, (_, index) =>
-      log({ id: `l${index}` }),
-    );
+    const logs = Array.from({ length: 120 }, (_, index) => log({ id: `l${index}` }));
     expect(
       calculateAchievementProgress(achievement("ach-complete-100"), {
         rituals: [ritual()],
@@ -59,9 +57,7 @@ describe("achievement progress", () => {
   });
 
   it("counts created rituals for creation achievements", () => {
-    const rituals = Array.from({ length: 12 }, (_, index) =>
-      ritual({ id: `r${index}` }),
-    );
+    const rituals = Array.from({ length: 12 }, (_, index) => ritual({ id: `r${index}` }));
     expect(
       calculateAchievementProgress(achievement("ach-rituals-10"), {
         rituals,
@@ -90,10 +86,7 @@ describe("achievement progress", () => {
     expect(
       calculateAchievementProgress(achievement("ach-all-difficulties"), {
         rituals,
-        logs: [
-          log({ id: "l1", ritualId: "r1" }),
-          log({ id: "l2", ritualId: "r2" }),
-        ],
+        logs: [log({ id: "l1", ritualId: "r1" }), log({ id: "l2", ritualId: "r2" })],
         essence: 0,
       }),
     ).toBe(2);

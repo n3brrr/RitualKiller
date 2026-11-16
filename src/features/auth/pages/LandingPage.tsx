@@ -143,7 +143,10 @@ export default function LandingPage() {
   }, []);
 
   return (
-    <div ref={rootRef} className="min-h-screen overflow-x-hidden bg-ritual-black text-zinc-100">
+    <div
+      ref={rootRef}
+      className="min-h-screen overflow-x-hidden bg-ritual-black text-zinc-100"
+    >
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-x-0 top-0 h-[42rem] bg-[radial-gradient(ellipse_at_top,rgba(34,197,94,0.10),transparent_60%)]"
@@ -199,7 +202,9 @@ export default function LandingPage() {
             <Frame label="Altar">
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <p className="text-xs uppercase tracking-widest text-zinc-500">Esencia</p>
+                  <p className="text-xs uppercase tracking-widest text-zinc-500">
+                    Esencia
+                  </p>
                   <p className="font-mono text-3xl font-bold text-ritual-accent">1.850</p>
                 </div>
                 <div className="text-right">
@@ -218,7 +223,9 @@ export default function LandingPage() {
 
               <div className="mt-5 flex items-center gap-2 rounded-lg border border-yellow-500/20 bg-yellow-500/5 px-3 py-2">
                 <Flame size={16} className="text-yellow-500" aria-hidden="true" />
-                <span className="font-mono text-sm text-yellow-500">12 días de racha</span>
+                <span className="font-mono text-sm text-yellow-500">
+                  12 días de racha
+                </span>
               </div>
 
               <div className="mt-4 flex items-center gap-3 rounded-xl border border-zinc-800 bg-zinc-900/50 p-3">
@@ -273,7 +280,9 @@ export default function LandingPage() {
               <span className="inline-flex items-center gap-2 text-yellow-500">
                 <Flame size={15} aria-hidden="true" /> 12 días de racha
               </span>
-              <span className="font-mono text-xs text-ritual-accent">+45 esencia hoy</span>
+              <span className="font-mono text-xs text-ritual-accent">
+                +45 esencia hoy
+              </span>
             </div>
           </Frame>
         </Section>
@@ -330,8 +339,8 @@ export default function LandingPage() {
               <span className="font-mono text-xs text-ritual-accent">+15</span>
             </div>
             <div className="mt-4 flex items-center gap-2 border-t border-zinc-900 pt-3 text-xs text-zinc-500">
-              <Flame size={14} className="text-yellow-500" aria-hidden="true" />
-              3 miembros mantienen su racha hoy
+              <Flame size={14} className="text-yellow-500" aria-hidden="true" />3 miembros
+              mantienen su racha hoy
             </div>
           </Frame>
         </Section>
@@ -345,7 +354,11 @@ export default function LandingPage() {
           <div className="grid gap-4 sm:grid-cols-2">
             <Frame label="Mercado">
               <div className="flex items-start justify-between gap-2">
-                <FlaskConical size={32} className="text-ritual-accent" aria-hidden="true" />
+                <FlaskConical
+                  size={32}
+                  className="text-ritual-accent"
+                  aria-hidden="true"
+                />
                 <span className="rounded border border-zinc-800 px-2 py-0.5 text-xs uppercase tracking-wider text-zinc-500">
                   raro
                 </span>
@@ -364,7 +377,11 @@ export default function LandingPage() {
 
             <Frame label="Inventario">
               <div className="flex items-start justify-between gap-2">
-                <FlaskConical size={32} className="text-ritual-accent" aria-hidden="true" />
+                <FlaskConical
+                  size={32}
+                  className="text-ritual-accent"
+                  aria-hidden="true"
+                />
                 <span className="rounded border border-zinc-800 px-2 py-0.5 font-mono text-xs text-zinc-400">
                   x1
                 </span>
@@ -419,10 +436,7 @@ export default function LandingPage() {
         </Section>
 
         <section className="border-t border-zinc-900/80">
-          <div
-            data-reveal
-            className="mx-auto max-w-3xl px-5 py-20 text-center md:py-28"
-          >
+          <div data-reveal className="mx-auto max-w-3xl px-5 py-20 text-center md:py-28">
             <Skull
               size={40}
               className="mx-auto text-ritual-accent/60"

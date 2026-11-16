@@ -32,7 +32,9 @@ export default function ResetPasswordPage() {
     setError(null);
     const validation = validatePassword(password);
     if (!validation.valid) {
-      setError(validation.messageKey ? t(validation.messageKey) : t("auth.invalidPassword"));
+      setError(
+        validation.messageKey ? t(validation.messageKey) : t("auth.invalidPassword"),
+      );
       return;
     }
     if (password !== confirm) {
@@ -68,13 +70,19 @@ export default function ResetPasswordPage() {
         </p>
 
         {error && (
-          <p role="alert" className="mb-4 rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-400">
+          <p
+            role="alert"
+            className="mb-4 rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-400"
+          >
             {error}
           </p>
         )}
 
         {success ? (
-          <p role="status" className="rounded-lg border border-ritual-accent/30 bg-ritual-accent/10 p-3 text-sm text-ritual-accent">
+          <p
+            role="status"
+            className="rounded-lg border border-ritual-accent/30 bg-ritual-accent/10 p-3 text-sm text-ritual-accent"
+          >
             {t("auth.resetSuccess")}
           </p>
         ) : (
@@ -109,7 +117,10 @@ export default function ResetPasswordPage() {
           </form>
         )}
 
-        <Link to="/login" className="mt-4 block text-center text-xs text-zinc-400 hover:text-ritual-accent">
+        <Link
+          to="/login"
+          className="mt-4 block text-center text-xs text-zinc-400 hover:text-ritual-accent"
+        >
           {t("auth.backToLogin")}
         </Link>
       </div>

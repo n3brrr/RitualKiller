@@ -42,7 +42,9 @@ export function AchievementsList() {
       </p>
 
       {(Object.keys(CATEGORY_LABELS) as Achievement["category"][]).map((category) => {
-        const items = achievements.filter((achievement) => achievement.category === category);
+        const items = achievements.filter(
+          (achievement) => achievement.category === category,
+        );
         if (items.length === 0) return null;
 
         return (
@@ -62,7 +64,9 @@ export function AchievementsList() {
                   <article
                     key={achievement.id}
                     className={`rounded-xl border bg-zinc-950 p-4 ${
-                      unlocked ? RARITY_STYLES[achievement.rarity] : "border-zinc-900 opacity-80"
+                      unlocked
+                        ? RARITY_STYLES[achievement.rarity]
+                        : "border-zinc-900 opacity-80"
                     }`}
                   >
                     <div className="flex items-start gap-3">
@@ -86,7 +90,9 @@ export function AchievementsList() {
                             />
                           )}
                         </div>
-                        <p className="mt-1 text-sm text-zinc-400">{achievement.description}</p>
+                        <p className="mt-1 text-sm text-zinc-400">
+                          {achievement.description}
+                        </p>
                       </div>
                     </div>
 

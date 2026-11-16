@@ -10,9 +10,7 @@ import React, { lazy, Suspense } from "react";
 import Loading from "@/components/animations/Loading";
 
 // Carga diferida del componente de la lista de logros.
-const AchievementsList = lazy(
-  () => import("@/components/achievements/AchievementsList"),
-);
+const AchievementsList = lazy(() => import("@/components/achievements/AchievementsList"));
 
 const AchievementsPage = () => {
   return (

@@ -11,9 +11,7 @@ import Loading from "@/components/animations/Loading";
 import { useI18n } from "@/i18n";
 
 // Carga diferida del componente avanzado de analíticas
-const AdvancedAnalytics = lazy(
-  () => import("@/components/analytics/AdvancedAnalytics"),
-);
+const AdvancedAnalytics = lazy(() => import("@/components/analytics/AdvancedAnalytics"));
 
 const AnalyticsPage = () => {
   const { t } = useI18n();

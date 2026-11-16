@@ -36,7 +36,10 @@ export function RitualCalendar({ rituals, logs }: RitualCalendarProps) {
   const leadingBlanks = (firstDay.getDay() + 6) % 7;
   const todayKey = toDateKey();
 
-  const monthLabel = cursor.toLocaleDateString(locale, { month: "long", year: "numeric" });
+  const monthLabel = cursor.toLocaleDateString(locale, {
+    month: "long",
+    year: "numeric",
+  });
 
   const shiftMonth = (delta: number) => {
     setCursor(new Date(year, month + delta, 1));

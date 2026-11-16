@@ -10,8 +10,17 @@ import type { AdminUser } from "@/types";
 
 export default function AdminPage() {
   const { user } = useAuth();
-  const { metrics, users, reports, errorLogs, isLoading, error, refetch, resolveReport, setAdmin } =
-    useAdmin();
+  const {
+    metrics,
+    users,
+    reports,
+    errorLogs,
+    isLoading,
+    error,
+    refetch,
+    resolveReport,
+    setAdmin,
+  } = useAdmin();
   const { t, locale } = useI18n();
   const [adminTarget, setAdminTarget] = useState<AdminUser | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
@@ -83,7 +92,9 @@ export default function AdminPage() {
           {t("admin.reports")} ({pendingReports.length})
         </h2>
         {pendingReports.length === 0 ? (
-          <p className="py-4 text-center text-sm text-zinc-400">{t("admin.noPendingReports")}</p>
+          <p className="py-4 text-center text-sm text-zinc-400">
+            {t("admin.noPendingReports")}
+          </p>
         ) : (
           <ul className="space-y-2">
             {pendingReports.map((report) => (
@@ -105,14 +116,18 @@ export default function AdminPage() {
                 <div className="flex gap-2">
                   <button
                     type="button"
-                    onClick={() => void resolveReport({ id: report.id, status: "resolved" })}
+                    onClick={() =>
+                      void resolveReport({ id: report.id, status: "resolved" })
+                    }
                     className="inline-flex min-h-11 items-center gap-1 rounded-lg border border-ritual-accent/40 px-3 text-xs font-bold text-ritual-accent"
                   >
                     <Check size={14} aria-hidden="true" /> {t("admin.resolve")}
                   </button>
                   <button
                     type="button"
-                    onClick={() => void resolveReport({ id: report.id, status: "dismissed" })}
+                    onClick={() =>
+                      void resolveReport({ id: report.id, status: "dismissed" })
+                    }
                     className="inline-flex min-h-11 items-center gap-1 rounded-lg border border-zinc-700 px-3 text-xs text-zinc-400"
                   >
                     <X size={14} aria-hidden="true" /> {t("admin.dismiss")}
@@ -147,7 +162,9 @@ export default function AdminPage() {
                       <span className="ml-2 text-xs text-zinc-400">{t("admin.you")}</span>
                     )}
                   </td>
-                  <td className="py-2 pr-3 font-mono text-ritual-accent">{item.essence}</td>
+                  <td className="py-2 pr-3 font-mono text-ritual-accent">
+                    {item.essence}
+                  </td>
                   <td className="py-2 pr-3 text-zinc-400">
                     {item.isAdmin ? t("admin.roleAdmin") : t("admin.roleUser")}
                   </td>
@@ -188,7 +205,10 @@ export default function AdminPage() {
         ) : (
           <ul className="space-y-2">
             {errorLogs.map((entry) => (
-              <li key={entry.id} className="rounded-lg border border-zinc-900 p-3 text-sm">
+              <li
+                key={entry.id}
+                className="rounded-lg border border-zinc-900 p-3 text-sm"
+              >
                 <p className="break-words text-zinc-300">{entry.message}</p>
                 <p className="mt-1 text-xs uppercase tracking-wider text-zinc-400">
                   {formatDateTime(entry.createdAt, locale)}
@@ -220,11 +240,21 @@ export default function AdminPage() {
   );
 }
 
-function Metric({ label, value, danger = false }: { label: string; value: number; danger?: boolean }) {
+function Metric({
+  label,
+  value,
+  danger = false,
+}: {
+  label: string;
+  value: number;
+  danger?: boolean;
+}) {
   return (
     <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-4">
       <div className="mb-1 text-xs uppercase tracking-wider text-zinc-400">{label}</div>
-      <div className={`font-mono text-2xl ${danger && value > 0 ? "text-red-400" : "text-white"}`}>
+      <div
+        className={`font-mono text-2xl ${danger && value > 0 ? "text-red-400" : "text-white"}`}
+      >
         {value}
       </div>
     </div>

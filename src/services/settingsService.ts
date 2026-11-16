@@ -35,7 +35,9 @@ export const settingsService = {
 
   async update(
     userId: string,
-    updates: Partial<Pick<UserSettings, "notificationsEnabled" | "reminderTime" | "locale">>,
+    updates: Partial<
+      Pick<UserSettings, "notificationsEnabled" | "reminderTime" | "locale">
+    >,
   ): Promise<void> {
     const payload: Record<string, unknown> = {};
     if (updates.notificationsEnabled !== undefined) {
@@ -50,7 +52,10 @@ export const settingsService = {
     if (updates.locale !== undefined) payload.locale = updates.locale;
     if (Object.keys(payload).length === 0) return;
 
-    const { error } = await supabase.from("user_settings").update(payload).eq("user_id", userId);
+    const { error } = await supabase
+      .from("user_settings")
+      .update(payload)
+      .eq("user_id", userId);
     if (error) throw error;
   },
 };

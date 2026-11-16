@@ -43,10 +43,7 @@ describe("analytics helpers", () => {
       log({ id: "l2", date: "2026-11-10" }),
       log({ id: "l3", date: "2026-10-01" }),
     ];
-    expect(filterLogsByDays(logs, 4, NOW).map((item) => item.id)).toEqual([
-      "l1",
-      "l2",
-    ]);
+    expect(filterLogsByDays(logs, 4, NOW).map((item) => item.id)).toEqual(["l1", "l2"]);
   });
 
   it("builds a dense daily series", () => {

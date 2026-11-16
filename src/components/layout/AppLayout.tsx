@@ -43,15 +43,55 @@ const NAV_GROUPS: Array<{ id: NavGroupID; labelKey: TranslationKey }> = [
 ];
 
 const NAV_ITEMS: NavItem[] = [
-  { to: "/app/dashboard", labelKey: "nav.dashboard", icon: <LayoutDashboard size={20} />, group: "main" },
-  { to: "/app/habits", labelKey: "nav.habits", icon: <CheckSquare size={20} />, group: "main" },
+  {
+    to: "/app/dashboard",
+    labelKey: "nav.dashboard",
+    icon: <LayoutDashboard size={20} />,
+    group: "main",
+  },
+  {
+    to: "/app/habits",
+    labelKey: "nav.habits",
+    icon: <CheckSquare size={20} />,
+    group: "main",
+  },
   { to: "/app/goals", labelKey: "nav.goals", icon: <Target size={20} />, group: "main" },
-  { to: "/app/social", labelKey: "nav.social", icon: <Users size={20} />, group: "circle" },
-  { to: "/app/shop", labelKey: "nav.shop", icon: <ShoppingBag size={20} />, group: "circle" },
-  { to: "/app/inventory", labelKey: "nav.inventory", icon: <Package size={20} />, group: "circle" },
-  { to: "/app/analytics", labelKey: "nav.analytics", icon: <Zap size={20} />, group: "record" },
-  { to: "/app/achievements", labelKey: "nav.achievements", icon: <Crown size={20} />, group: "record" },
-  { to: "/app/settings", labelKey: "nav.settings", icon: <Settings size={20} />, group: "account" },
+  {
+    to: "/app/social",
+    labelKey: "nav.social",
+    icon: <Users size={20} />,
+    group: "circle",
+  },
+  {
+    to: "/app/shop",
+    labelKey: "nav.shop",
+    icon: <ShoppingBag size={20} />,
+    group: "circle",
+  },
+  {
+    to: "/app/inventory",
+    labelKey: "nav.inventory",
+    icon: <Package size={20} />,
+    group: "circle",
+  },
+  {
+    to: "/app/analytics",
+    labelKey: "nav.analytics",
+    icon: <Zap size={20} />,
+    group: "record",
+  },
+  {
+    to: "/app/achievements",
+    labelKey: "nav.achievements",
+    icon: <Crown size={20} />,
+    group: "record",
+  },
+  {
+    to: "/app/settings",
+    labelKey: "nav.settings",
+    icon: <Settings size={20} />,
+    group: "account",
+  },
 ];
 
 const MOBILE_QUICK = [NAV_ITEMS[0]!, NAV_ITEMS[1]!, NAV_ITEMS[2]!, NAV_ITEMS[3]!];
@@ -130,7 +170,10 @@ export const AppLayout: React.FC = () => {
           <NotificationBell />
         </div>
 
-        <nav className="flex-1 space-y-4 overflow-y-auto px-4 pb-2" aria-label={t("shell.primaryNav")}>
+        <nav
+          className="flex-1 space-y-4 overflow-y-auto px-4 pb-2"
+          aria-label={t("shell.primaryNav")}
+        >
           {NAV_GROUPS.map((group) => {
             const items = navItems.filter((item) => item.group === group.id);
             if (items.length === 0) return null;
@@ -220,7 +263,10 @@ export const AppLayout: React.FC = () => {
         >
           <Menu size={22} />
         </button>
-        <NavLink to="/app/dashboard" className="flex min-w-0 flex-col items-center gap-0.5">
+        <NavLink
+          to="/app/dashboard"
+          className="flex min-w-0 flex-col items-center gap-0.5"
+        >
           <span className="flex items-center gap-2">
             <Skull className="text-ritual-accent" size={22} />
             <span className="font-display text-sm font-bold uppercase tracking-widest">
@@ -341,7 +387,9 @@ export const AppLayout: React.FC = () => {
             }
           >
             {item.icon}
-            <span className="text-[11px] uppercase tracking-wide">{t(item.labelKey)}</span>
+            <span className="text-[11px] uppercase tracking-wide">
+              {t(item.labelKey)}
+            </span>
           </NavLink>
         ))}
         <button

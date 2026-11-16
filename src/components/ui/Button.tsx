@@ -1,6 +1,6 @@
 /**
  * Button.tsx
- * 
+ *
  * Componente reutilizable de botón animado utilizando framer-motion.
  * Permite variar su estilo mediante la prop 'variant' y acepta clases adicionales.
  */
@@ -9,10 +9,10 @@ import React from "react";
 import { motion } from "framer-motion";
 
 interface ButtonProps {
-  children: React.ReactNode; 
-  onClick?: () => void;      
-  variant?: "primary" | "ghost"; 
-  className?: string;       
+  children: React.ReactNode;
+  onClick?: () => void;
+  variant?: "primary" | "ghost";
+  className?: string;
 }
 
 // Componente principal Button
@@ -22,7 +22,6 @@ export const Button = ({
   variant = "primary",
   className = "",
 }: ButtonProps) => {
-
   const variants = {
     primary:
       "bg-transparent border border-ritual-accent text-ritual-accent hover:text-black",
@@ -34,8 +33,8 @@ export const Button = ({
 
   return (
     <motion.button
-      whileHover={{ scale: 1.05 }} 
-      whileTap={{ scale: 0.95 }}   
+      whileHover={{ scale: 1.05 }}
+      whileTap={{ scale: 0.95 }}
       transition={{ duration: 0.2 }}
       onClick={onClick}
       className={`${baseStyles} ${variants[variant]} ${className}`}

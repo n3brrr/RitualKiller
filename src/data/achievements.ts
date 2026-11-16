@@ -170,14 +170,19 @@ export function calculateAchievementProgress(
 ): number {
   switch (achievement.category) {
     case "streak": {
-      const maxStreak = Math.max(...userData.rituals.map((ritual) => ritual.streak ?? 0), 0);
+      const maxStreak = Math.max(
+        ...userData.rituals.map((ritual) => ritual.streak ?? 0),
+        0,
+      );
       return Math.min(maxStreak, achievement.target);
     }
     case "essence":
       return Math.min(userData.essence, achievement.target);
     case "rituals":
       return Math.min(
-        achievement.id.includes("complete") ? userData.logs.length : userData.rituals.length,
+        achievement.id.includes("complete")
+          ? userData.logs.length
+          : userData.rituals.length,
         achievement.target,
       );
     case "social":

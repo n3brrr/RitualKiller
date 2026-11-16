@@ -53,7 +53,9 @@ export function NotificationBell() {
           className="absolute right-0 z-[70] mt-2 w-[min(22rem,calc(100vw-2rem))] rounded-xl border border-zinc-800 bg-zinc-950 shadow-2xl outline-none"
         >
           <div className="flex items-center justify-between border-b border-zinc-800 p-4">
-            <h2 className="font-display font-bold text-white">{t("notifications.title")}</h2>
+            <h2 className="font-display font-bold text-white">
+              {t("notifications.title")}
+            </h2>
             <div className="flex items-center gap-1">
               {unreadCount > 0 && (
                 <button
@@ -96,7 +98,9 @@ export function NotificationBell() {
                 }`}
               >
                 <div className="flex items-start justify-between gap-2">
-                  <span className="text-sm font-bold text-white">{notification.title}</span>
+                  <span className="text-sm font-bold text-white">
+                    {notification.title}
+                  </span>
                   {!notification.read && (
                     <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-ritual-accent" />
                   )}

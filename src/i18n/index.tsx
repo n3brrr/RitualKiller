@@ -1,4 +1,11 @@
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import type { Difficulty, Frequency, Locale, Rarity } from "../types";
 
 const es = {
@@ -396,10 +403,8 @@ export const rarityKeys: Record<Rarity, TranslationKey> = {
   legendary: "rarity.legendary",
 };
 
-export const shopItemKey = (
-  id: string,
-  field: "name" | "description",
-): TranslationKey => `item.${id}.${field}` as TranslationKey;
+export const shopItemKey = (id: string, field: "name" | "description"): TranslationKey =>
+  `item.${id}.${field}` as TranslationKey;
 
 const RANK_KEYS: Record<string, TranslationKey> = {
   initiate: "rank.initiate",
@@ -411,10 +416,7 @@ const RANK_KEYS: Record<string, TranslationKey> = {
 };
 
 /** `user.rank` llega en inglés desde el servicio; se traduce al vuelo. */
-export function translateRank(
-  title: string,
-  t: (key: TranslationKey) => string,
-): string {
+export function translateRank(title: string, t: (key: TranslationKey) => string): string {
   const key = RANK_KEYS[title.toLowerCase()];
   return key ? t(key) : title;
 }
@@ -631,8 +633,7 @@ const en: Record<TranslationKey, string> = {
   "social.copyError": "Could not copy the link.",
   "social.delete": "Delete post",
   "social.deleteTitle": "Delete post",
-  "social.deleteDescription":
-    "Delete this post and its comments? This cannot be undone.",
+  "social.deleteDescription": "Delete this post and its comments? This cannot be undone.",
   "social.errorTitle": "Could not load the Coven",
   "report.title": "Report post",
   "report.reason": "Reason",

@@ -17,7 +17,7 @@ const ScrollIn = ({ children }: { children: React.ReactNode }) => {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }} // Inicia invisible y desplazado hacia abajo
-      animate={{ opacity: 1, y: 0 }}  // Aparece visible en su lugar original
+      animate={{ opacity: 1, y: 0 }} // Aparece visible en su lugar original
       transition={{ duration: 0.5, ease: "easeOut" }} // Duración y curva de animación
     >
       {children}

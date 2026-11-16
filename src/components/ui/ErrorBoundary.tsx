@@ -13,7 +13,13 @@ interface State {
   error: Error | null;
 }
 
-function ErrorFallback({ error, onReload }: { error: Error | null; onReload: () => void }) {
+function ErrorFallback({
+  error,
+  onReload,
+}: {
+  error: Error | null;
+  onReload: () => void;
+}) {
   const { t } = useI18n();
   return (
     <div className="min-h-screen bg-ritual-black flex items-center justify-center p-4">

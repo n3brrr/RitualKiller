@@ -9,7 +9,12 @@ interface ReportDialogProps {
   busy?: boolean;
 }
 
-export function ReportDialog({ open, onClose, onSubmit, busy = false }: ReportDialogProps) {
+export function ReportDialog({
+  open,
+  onClose,
+  onSubmit,
+  busy = false,
+}: ReportDialogProps) {
   const { t } = useI18n();
   const formId = useId();
   const [reason, setReason] = useState("");
@@ -36,9 +41,7 @@ export function ReportDialog({ open, onClose, onSubmit, busy = false }: ReportDi
     try {
       await onSubmit(trimmed);
     } catch (submitError) {
-      setError(
-        submitError instanceof Error ? submitError.message : t("report.error"),
-      );
+      setError(submitError instanceof Error ? submitError.message : t("report.error"));
     } finally {
       setSubmitting(false);
     }
@@ -74,7 +77,10 @@ export function ReportDialog({ open, onClose, onSubmit, busy = false }: ReportDi
       }
     >
       <form id={formId} onSubmit={handleSubmit}>
-        <label htmlFor={`${formId}-reason`} className="mb-1 block text-xs font-bold uppercase tracking-wider text-zinc-400">
+        <label
+          htmlFor={`${formId}-reason`}
+          className="mb-1 block text-xs font-bold uppercase tracking-wider text-zinc-400"
+        >
           {t("report.reason")}
         </label>
         <textarea

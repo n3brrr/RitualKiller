@@ -49,7 +49,9 @@ export function ConfirmDialog({
             disabled={busy}
             data-autofocus={destructive ? undefined : true}
             className={`inline-flex min-h-11 items-center justify-center rounded-lg px-4 text-sm font-bold text-black disabled:opacity-50 ${
-              destructive ? "bg-red-500 text-white hover:bg-red-400" : "bg-ritual-accent hover:bg-emerald-400"
+              destructive
+                ? "bg-red-500 text-white hover:bg-red-400"
+                : "bg-ritual-accent hover:bg-emerald-400"
             }`}
           >
             {busy ? t("common.processing") : (confirmLabel ?? t("common.confirm"))}

@@ -131,7 +131,10 @@ export const ritualService = {
   },
 
   /** Re-inserts a backup under the current account, remapping ritual ids. */
-  async importBackup(userId: string, backup: ExportData): Promise<{ rituals: number; logs: number }> {
+  async importBackup(
+    userId: string,
+    backup: ExportData,
+  ): Promise<{ rituals: number; logs: number }> {
     const idMap = new Map<string, string>();
     let ritualCount = 0;
     let logCount = 0;
