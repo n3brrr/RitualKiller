@@ -7,18 +7,32 @@ import { useAuth } from "@/features/auth/useAuth";
 import { useRituals } from "@/hooks/useRituals";
 import { useI18n } from "@/i18n";
 import { quoteKeyFor } from "@/data/quotes";
-import { isRitualCompleted } from "@/utils/analytics";
+import { isCompletedIn } from "@/utils/analytics";
+import { completionReasonKey } from "@/utils/ritualMessages";
+import { errorMessage } from "@/lib/errors";
+import { useToast } from "@/hooks/useToast";
 
-const RitualCalendar = lazy(() => import("@/components/calendar/RitualCalendar"));
+const RitualCalendar = lazy(
+  () => import("@/components/calendar/RitualCalendar"),
+);
 const ProductivityMetrics = lazy(
   () => import("@/components/productivity/ProductivityMetrics"),
 );
 
 export default function DashboardPage() {
   const { user } = useAuth();
-  const { rituals, logs, isLoading, error, refetch, completeRitual, isToggling } =
-    useRituals();
+  const {
+    rituals,
+    logs,
+    completionIndex,
+    isLoading,
+    error,
+    refetch,
+    completeRitual,
+    isPending,
+  } = useRituals();
   const { t, tn } = useI18n();
+  const toast = useToast();
 
   const quoteKey = useMemo(() => quoteKeyFor(), []);
 
@@ -30,15 +44,32 @@ export default function DashboardPage() {
     return (
       <ErrorState
         title={t("dashboard.errorTitle")}
-        message={error.message}
+        message={errorMessage(error, t)}
         onRetry={() => void refetch()}
       />
     );
   }
 
+  const now = new Date();
   const pendingRituals = rituals.filter(
-    (ritual) => !isRitualCompleted(ritual, logs, new Date()),
+    (ritual) => !isCompletedIn(completionIndex, ritual, now),
   );
+
+  // Completing from the dashboard reports the reward (undo lives in Rituals).
+  const handleComplete = async (ritualId: string) => {
+    try {
+      const result = await completeRitual(ritualId);
+      if (result.success) {
+        toast.show(t("habits.completedToast", { essence: result.essence_gained ?? 0 }), {
+          tone: "success",
+        });
+      } else {
+        toast.error(t(completionReasonKey(result.reason)));
+      }
+    } catch (completeError) {
+      toast.error(errorMessage(completeError, t));
+    }
+  };
   const completedCount = rituals.length - pendingRituals.length;
   const bestStreak = Math.max(...rituals.map((ritual) => ritual.streak), 0);
 
@@ -130,8 +161,9 @@ export default function DashboardPage() {
                 </div>
                 <button
                   type="button"
-                  onClick={() => void completeRitual(ritual.id)}
-                  disabled={isToggling}
+                  onClick={() => void handleComplete(ritual.id)}
+                  disabled={isPending(ritual.id)}
+                  aria-busy={isPending(ritual.id)}
                   aria-label={`${t("dashboard.complete")} ${ritual.title}`}
                   className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-zinc-700 text-zinc-400 hover:border-ritual-accent hover:text-ritual-accent disabled:opacity-50"
                 >

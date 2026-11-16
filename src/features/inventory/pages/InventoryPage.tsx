@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Package, ShoppingBag, Zap } from "lucide-react";
 import { useShop } from "@/hooks/useShop";
 import { shopItemKey, useI18n } from "@/i18n";
+import { errorMessage } from "@/lib/errors";
 import { shopItemIcon } from "@/data/items";
 import { formatDateTime } from "@/utils/dates";
 import Loading from "@/components/animations/Loading";
@@ -23,7 +24,7 @@ export default function InventoryPage() {
       <div className="mx-auto max-w-3xl">
         <ErrorState
           title={t("inventory.errorTitle")}
-          message={error.message}
+          message={errorMessage(error, t)}
           onRetry={() => void refetch()}
         />
       </div>
@@ -58,8 +59,7 @@ export default function InventoryPage() {
     } catch (consumeError) {
       setFeedback({
         tone: "error",
-        text:
-          consumeError instanceof Error ? consumeError.message : t("inventory.useError"),
+        text: errorMessage(consumeError, t),
       });
     } finally {
       setPendingId(null);

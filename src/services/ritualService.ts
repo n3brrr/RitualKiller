@@ -148,6 +148,20 @@ export const ritualService = {
     return mapRitual(data as RitualRow);
   },
 
+  /** Reward and streak are recomputed/protected by the database trigger. */
+  async update(id: string, input: CreateRitualInput): Promise<void> {
+    const { error } = await supabase
+      .from("rituals")
+      .update({
+        title: input.title.trim(),
+        description: input.description.trim(),
+        difficulty: input.difficulty,
+        frequency: input.frequency,
+      })
+      .eq("id", id);
+    if (error) throw error;
+  },
+
   /** Rituals are archived, never deleted, so their history is preserved. */
   async archive(id: string): Promise<void> {
     const { error } = await supabase

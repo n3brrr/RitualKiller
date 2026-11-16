@@ -3,6 +3,7 @@ import ReactDOM from "react-dom/client";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import App from "./App";
 import { I18nProvider } from "./i18n/I18nProvider";
+import { ToastProvider } from "./components/ui/ToastProvider";
 import { initObservability } from "./lib/observability";
 import "@fontsource/cinzel/400.css";
 import "@fontsource/cinzel/700.css";
@@ -31,7 +32,9 @@ ReactDOM.createRoot(rootElement).render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
       <I18nProvider>
-        <App />
+        <ToastProvider>
+          <App />
+        </ToastProvider>
       </I18nProvider>
     </QueryClientProvider>
   </React.StrictMode>,

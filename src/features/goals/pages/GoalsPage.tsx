@@ -3,6 +3,7 @@ import { Calendar, Plus, Target, Trash2 } from "lucide-react";
 import { useGoals } from "@/hooks/useGoals";
 import { useRituals } from "@/hooks/useRituals";
 import { useI18n } from "@/i18n";
+import { errorMessage } from "@/lib/errors";
 import { addDays, daysUntil, toDateKey } from "@/utils/dates";
 import Loading from "@/components/animations/Loading";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
@@ -33,7 +34,7 @@ export default function GoalsPage() {
       <div className="mx-auto max-w-3xl">
         <ErrorState
           title={t("goals.errorTitle")}
-          message={error.message}
+          message={errorMessage(error, t)}
           onRetry={() => void refetch()}
         />
       </div>
@@ -72,9 +73,7 @@ export default function GoalsPage() {
       });
       setShowCreator(false);
     } catch (createError) {
-      setFormError(
-        createError instanceof Error ? createError.message : t("goals.createError"),
-      );
+      setFormError(errorMessage(createError, t));
     }
   };
 
@@ -98,9 +97,7 @@ export default function GoalsPage() {
     try {
       await removeGoal(deleteTarget.id);
     } catch (deleteError) {
-      setFormError(
-        deleteError instanceof Error ? deleteError.message : t("goals.deleteError"),
-      );
+      setFormError(errorMessage(deleteError, t));
     } finally {
       setDeleting(false);
       setDeleteTarget(null);

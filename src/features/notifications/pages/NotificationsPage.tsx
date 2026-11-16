@@ -1,6 +1,7 @@
 import { Bell, CheckCheck, Trash2 } from "lucide-react";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useI18n } from "@/i18n";
+import { errorMessage } from "@/lib/errors";
 import { notificationText } from "@/utils/notificationText";
 import { formatDateTime } from "@/utils/dates";
 import Loading from "@/components/animations/Loading";
@@ -25,7 +26,7 @@ export default function NotificationsPage() {
       <div className="mx-auto max-w-2xl">
         <ErrorState
           title={t("notifications.errorTitle")}
-          message={error.message}
+          message={errorMessage(error, t)}
           onRetry={() => void refetch()}
         />
       </div>

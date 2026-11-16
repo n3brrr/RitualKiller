@@ -17,6 +17,7 @@ import {
 import { Calendar, Download, TrendingUp, Target } from "lucide-react";
 import { useRituals } from "@/hooks/useRituals";
 import { difficultyKeys, useI18n } from "@/i18n";
+import { errorMessage } from "@/lib/errors";
 import {
   buildDailySeries,
   buildDifficultySeries,
@@ -70,7 +71,7 @@ export function AdvancedAnalytics() {
     return (
       <ErrorState
         title={t("analytics.errorTitle")}
-        message={error.message}
+        message={errorMessage(error, t)}
         onRetry={() => void refetch()}
       />
     );

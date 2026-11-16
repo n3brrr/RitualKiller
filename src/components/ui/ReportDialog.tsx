@@ -1,6 +1,7 @@
 import { useEffect, useId, useState, type FormEvent } from "react";
 import { Modal } from "./Modal";
 import { useI18n } from "@/i18n";
+import { errorMessage } from "@/lib/errors";
 
 interface ReportDialogProps {
   open: boolean;
@@ -41,7 +42,7 @@ export function ReportDialog({
     try {
       await onSubmit(trimmed);
     } catch (submitError) {
-      setError(submitError instanceof Error ? submitError.message : t("report.error"));
+      setError(errorMessage(submitError, t));
     } finally {
       setSubmitting(false);
     }

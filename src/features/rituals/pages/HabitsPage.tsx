@@ -7,45 +7,60 @@ import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { useAuth } from "@/features/auth/useAuth";
 import { useRituals } from "@/hooks/useRituals";
+import { useToast } from "@/hooks/useToast";
 import { difficultyKeys, frequencyKeys, useI18n } from "@/i18n";
+import { errorMessage } from "@/lib/errors";
 import type { Difficulty, Frequency, Ritual } from "@/types";
 import { templateText, type RitualTemplate } from "@/data/ritualLibrary";
 import { ritualReward } from "@/utils/rewards";
-import { isRitualCompleted } from "@/utils/analytics";
+import { isCompletedIn } from "@/utils/analytics";
 import { completionReasonKey } from "@/utils/ritualMessages";
 import { validateRitual } from "@/utils/validation";
 
 const DIFFICULTIES: Difficulty[] = ["novice", "adept", "master"];
 const FREQUENCIES: Frequency[] = ["daily", "weekly"];
 
+interface RitualForm {
+  title: string;
+  description: string;
+  difficulty: Difficulty;
+  frequency: Frequency;
+}
+
+const EMPTY_FORM: RitualForm = {
+  title: "",
+  description: "",
+  difficulty: "novice",
+  frequency: "daily",
+};
+
 export default function HabitsPage() {
   const { user } = useAuth();
   const {
     rituals,
-    logs,
+    completionIndex,
     isLoading,
     error,
     refetch,
     createRitual,
     isCreating,
+    updateRitual,
+    isUpdating,
     archiveRitual,
     completeRitual,
     undoRitual,
-    isToggling,
+    isPending,
   } = useRituals();
   const { t } = useI18n();
+  const toast = useToast();
 
   const [showCreator, setShowCreator] = useState(false);
   const [showLibrary, setShowLibrary] = useState(false);
+  const [editTarget, setEditTarget] = useState<Ritual | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Ritual | null>(null);
   const [deleting, setDeleting] = useState(false);
-  const [form, setForm] = useState({
-    title: "",
-    description: "",
-    difficulty: "novice" as Difficulty,
-    frequency: "daily" as Frequency,
-  });
+  const [form, setForm] = useState<RitualForm>(EMPTY_FORM);
 
   if (!user) return null;
   if (isLoading) return <Loading />;
@@ -54,95 +69,127 @@ export default function HabitsPage() {
       <div className="mx-auto max-w-3xl">
         <ErrorState
           title={t("habits.errorTitle")}
-          message={error.message}
+          message={errorMessage(error, t)}
           onRetry={() => void refetch()}
         />
       </div>
     );
   }
 
-  // Master rituals require the Binding Contract (enforced again by the database).
-  const canUseMaster = user.isAdmin || user.inventory.includes("binding_contract");
+  // Master rituals require the Binding Contract (enforced again by the database);
+  // an existing master ritual can keep its difficulty while being edited.
+  const canUseMaster =
+    user.isAdmin ||
+    user.inventory.includes("binding_contract") ||
+    editTarget?.difficulty === "master";
   const reward = ritualReward(form.difficulty, form.frequency);
   const existingTitles = new Set(rituals.map((ritual) => ritual.title.toLowerCase()));
-  const pending = rituals.filter(
-    (ritual) => !isRitualCompleted(ritual, logs, new Date()),
-  );
-  const completed = rituals.filter((ritual) =>
-    isRitualCompleted(ritual, logs, new Date()),
-  );
+  const now = new Date();
+  const isDone = (ritual: Ritual) => isCompletedIn(completionIndex, ritual, now);
+  const pending = rituals.filter((ritual) => !isDone(ritual));
+  const completed = rituals.filter(isDone);
 
-  const handleError = (error: unknown) => {
-    setMessage(error instanceof Error ? error.message : t("common.error"));
+  const openCreator = () => {
+    setEditTarget(null);
+    setForm(EMPTY_FORM);
+    setShowCreator(true);
+    setShowLibrary(false);
   };
 
-  const handleManualCreate = async (event: React.FormEvent) => {
+  const openEditor = (ritual: Ritual) => {
+    setEditTarget(ritual);
+    setForm({
+      title: ritual.title,
+      description: ritual.description,
+      difficulty: ritual.difficulty,
+      frequency: ritual.frequency,
+    });
+    setShowCreator(true);
+    setShowLibrary(false);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const closeForm = () => {
+    setShowCreator(false);
+    setEditTarget(null);
+    setForm(EMPTY_FORM);
+  };
+
+  const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     setMessage(null);
     const validation = validateRitual(form);
     if (!validation.valid) {
-      setMessage(validation.messageKey ? t(validation.messageKey) : t("habits.invalid"));
+      setMessage(t(validation.messageKey ?? "habits.invalid"));
       return;
     }
 
     try {
-      await createRitual({
-        title: form.title,
-        description: form.description,
-        difficulty: form.difficulty,
-        frequency: form.frequency,
-      });
-      setForm({ title: "", description: "", difficulty: "novice", frequency: "daily" });
-      setShowCreator(false);
-    } catch (error) {
-      handleError(error);
+      if (editTarget) {
+        await updateRitual({ id: editTarget.id, input: form });
+        toast.success(t("habits.updated"));
+      } else {
+        await createRitual(form);
+      }
+      closeForm();
+    } catch (saveError) {
+      setMessage(errorMessage(saveError, t));
     }
   };
 
   const handleImport = async (template: RitualTemplate) => {
-    setMessage(null);
     try {
       await createRitual({
         ...templateText(template, t),
         difficulty: template.difficulty,
         frequency: template.frequency,
       });
-    } catch (error) {
-      handleError(error);
+      toast.success(t("habits.added"));
+    } catch (importError) {
+      toast.error(errorMessage(importError, t));
     }
   };
 
   const handleToggle = async (ritual: Ritual) => {
-    setMessage(null);
     try {
-      if (isRitualCompleted(ritual, logs, new Date())) {
+      if (isDone(ritual)) {
         const result = await undoRitual(ritual.id);
-        if (!result.success) setMessage(t(completionReasonKey(result.reason)));
+        if (!result.success) toast.error(t(completionReasonKey(result.reason)));
       } else {
         const result = await completeRitual(ritual.id);
-        if (!result.success) setMessage(t(completionReasonKey(result.reason)));
+        if (result.success) {
+          toast.success(
+            t("habits.completedToast", { essence: result.essence_gained ?? 0 }),
+          );
+        } else {
+          toast.error(t(completionReasonKey(result.reason)));
+        }
       }
-    } catch (error) {
-      handleError(error);
+    } catch (toggleError) {
+      toast.error(errorMessage(toggleError, t));
     }
-  };
-
-  const handleDelete = (id: string) => {
-    setDeleteTarget(rituals.find((ritual) => ritual.id === id) ?? null);
   };
 
   const confirmDelete = async () => {
     if (!deleteTarget) return;
-    setMessage(null);
     setDeleting(true);
     try {
       await archiveRitual(deleteTarget.id);
-    } catch (error) {
-      handleError(error);
+    } catch (archiveError) {
+      toast.error(errorMessage(archiveError, t));
     } finally {
       setDeleting(false);
       setDeleteTarget(null);
     }
+  };
+
+  const listProps = {
+    isDone,
+    isPending,
+    onToggle: (ritual: Ritual) => void handleToggle(ritual),
+    onEdit: openEditor,
+    onDelete: (id: string) =>
+      setDeleteTarget(rituals.find((ritual) => ritual.id === id) ?? null),
   };
 
   return (
@@ -164,7 +211,7 @@ export default function HabitsPage() {
             type="button"
             onClick={() => {
               setShowLibrary((value) => !value);
-              setShowCreator(false);
+              closeForm();
             }}
             aria-pressed={showLibrary}
             className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-white transition-colors hover:bg-zinc-800 sm:flex-none"
@@ -173,10 +220,7 @@ export default function HabitsPage() {
           </button>
           <button
             type="button"
-            onClick={() => {
-              setShowCreator((value) => !value);
-              setShowLibrary(false);
-            }}
+            onClick={() => (showCreator ? closeForm() : openCreator())}
             aria-expanded={showCreator}
             className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-lg bg-ritual-accent px-3 text-sm font-bold text-black transition-colors hover:bg-emerald-400 sm:flex-none"
           >
@@ -190,15 +234,6 @@ export default function HabitsPage() {
         </div>
       </header>
 
-      {message && (
-        <p
-          role="alert"
-          className="rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-400"
-        >
-          {message}
-        </p>
-      )}
-
       {showLibrary && (
         <RitualLibrary onImport={handleImport} existingTitles={existingTitles} />
       )}
@@ -206,9 +241,17 @@ export default function HabitsPage() {
       {showCreator && (
         <section className="rounded-xl border border-zinc-800 bg-zinc-900 p-4 shadow-xl sm:p-6">
           <h2 className="mb-4 font-display text-lg font-bold text-white">
-            {t("habits.new")}
+            {editTarget ? t("habits.editTitle") : t("habits.new")}
           </h2>
-          <form onSubmit={handleManualCreate} className="space-y-4">
+          {message && (
+            <p
+              role="alert"
+              className="mb-4 rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-400"
+            >
+              {message}
+            </p>
+          )}
+          <form onSubmit={handleSubmit} className="space-y-4">
             <Field label={t("habits.titleLabel")}>
               <input
                 type="text"
@@ -279,10 +322,14 @@ export default function HabitsPage() {
               </span>
               <button
                 type="submit"
-                disabled={isCreating}
+                disabled={isCreating || isUpdating}
                 className="inline-flex min-h-11 items-center justify-center rounded-lg bg-ritual-accent px-5 font-bold text-black transition-colors hover:bg-emerald-400 disabled:opacity-50"
               >
-                {isCreating ? t("common.saving") : t("habits.create")}
+                {isCreating || isUpdating
+                  ? t("common.saving")
+                  : editTarget
+                    ? t("common.save")
+                    : t("habits.create")}
               </button>
             </div>
           </form>
@@ -299,10 +346,7 @@ export default function HabitsPage() {
             {rituals.length === 0 && !showCreator && (
               <button
                 type="button"
-                onClick={() => {
-                  setShowCreator(true);
-                  setShowLibrary(false);
-                }}
+                onClick={openCreator}
                 className="inline-flex min-h-11 items-center gap-2 rounded-lg bg-ritual-accent px-4 text-sm font-bold text-black transition-colors hover:bg-emerald-400"
               >
                 <Plus size={16} aria-hidden="true" /> {t("habits.new")}
@@ -311,11 +355,8 @@ export default function HabitsPage() {
           </div>
         }
         rituals={pending}
-        logs={logs}
-        onToggle={handleToggle}
-        onDelete={handleDelete}
-        busy={isToggling}
         icon={<Sparkles size={18} className="text-ritual-accent" aria-hidden="true" />}
+        {...listProps}
       />
 
       {completed.length > 0 && (
@@ -323,12 +364,8 @@ export default function HabitsPage() {
           title={t("habits.completed")}
           empty=""
           rituals={completed}
-          logs={logs}
-          onToggle={handleToggle}
-          onDelete={handleDelete}
-          busy={isToggling}
           icon={<Check size={18} aria-hidden="true" />}
-          muted
+          {...listProps}
         />
       )}
 
@@ -361,25 +398,25 @@ function RitualList({
   title,
   empty,
   rituals,
-  logs,
-  onToggle,
-  onDelete,
-  busy,
   icon,
-  muted = false,
+  isDone,
+  isPending,
+  onToggle,
+  onEdit,
+  onDelete,
 }: {
   title: string;
   empty: React.ReactNode;
   rituals: Ritual[];
-  logs: Parameters<typeof isRitualCompleted>[1];
-  onToggle: (ritual: Ritual) => void;
-  onDelete: (id: string) => void;
-  busy: boolean;
   icon: React.ReactNode;
-  muted?: boolean;
+  isDone: (ritual: Ritual) => boolean;
+  isPending: (id: string) => boolean;
+  onToggle: (ritual: Ritual) => void;
+  onEdit: (ritual: Ritual) => void;
+  onDelete: (id: string) => void;
 }) {
   return (
-    <section className={muted ? "opacity-70 transition-opacity hover:opacity-100" : ""}>
+    <section>
       <h2 className="mb-3 flex items-center gap-2 text-lg font-bold text-white">
         {icon}
         {title}
@@ -394,9 +431,10 @@ function RitualList({
           <RitualCard
             key={ritual.id}
             ritual={ritual}
-            isDone={isRitualCompleted(ritual, logs, new Date())}
-            busy={busy}
+            isDone={isDone(ritual)}
+            busy={isPending(ritual.id)}
             onToggle={onToggle}
+            onEdit={onEdit}
             onDelete={onDelete}
           />
         ))}

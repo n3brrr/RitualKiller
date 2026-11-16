@@ -1,6 +1,7 @@
 import { Lock, Trophy, Unlock } from "lucide-react";
 import { useAchievements } from "@/hooks/useAchievements";
 import { achievementKey, useI18n, type TranslationKey } from "@/i18n";
+import { errorMessage } from "@/lib/errors";
 import { formatDateTime } from "@/utils/dates";
 import type { Achievement } from "@/types";
 import Loading from "@/components/animations/Loading";
@@ -29,7 +30,7 @@ export function AchievementsList() {
     return (
       <ErrorState
         title={t("achievements.errorTitle")}
-        message={error.message}
+        message={errorMessage(error, t)}
         onRetry={() => void refetch()}
       />
     );

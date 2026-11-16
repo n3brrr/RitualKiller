@@ -86,18 +86,42 @@ export function buildDifficultySeries(
     }));
 }
 
-/** Daily rituals count once per day; weekly rituals count once per Monday-based week. */
+export type CompletionIndex = Map<string, Set<string>>;
+
+/** Groups completion dates by ritual so lookups do not scan every log. */
+export function buildCompletionIndex(
+  logs: Pick<RitualLog, "ritualId" | "date">[],
+): CompletionIndex {
+  const index: CompletionIndex = new Map();
+  for (const log of logs) {
+    const dates = index.get(log.ritualId) ?? new Set<string>();
+    dates.add(log.date.slice(0, 10));
+    index.set(log.ritualId, dates);
+  }
+  return index;
+}
+
+/** Daily rituals count once per day; weekly rituals once per Monday-based week. */
+export function isCompletedIn(
+  index: CompletionIndex,
+  ritual: Pick<Ritual, "id" | "frequency">,
+  now: Date = new Date(),
+): boolean {
+  const dates = index.get(ritual.id);
+  if (!dates) return false;
+  const today = toDateKey(now);
+  if (ritual.frequency !== "weekly") return dates.has(today);
+  for (const date of dates) if (isSameWeek(date, today)) return true;
+  return false;
+}
+
+/** Convenience wrapper for one-off checks; prefer an index inside loops. */
 export function isRitualCompleted(
   ritual: Pick<Ritual, "id" | "frequency">,
   logs: RitualLog[],
   now: Date = new Date(),
 ): boolean {
-  const today = toDateKey(now);
-  return logs.some((log) => {
-    if (log.ritualId !== ritual.id) return false;
-    const date = log.date.slice(0, 10);
-    return ritual.frequency === "weekly" ? isSameWeek(date, today) : date === today;
-  });
+  return isCompletedIn(buildCompletionIndex(logs), ritual, now);
 }
 
 /**

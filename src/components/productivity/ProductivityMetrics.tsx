@@ -4,7 +4,8 @@ import type { Ritual, RitualLog } from "@/types";
 import {
   buildWeekdaySeries,
   calculateCompletionRate,
-  isRitualCompleted,
+  buildCompletionIndex,
+  isCompletedIn,
 } from "@/utils/analytics";
 import { useI18n } from "@/i18n";
 import { useStats } from "@/hooks/useStats";
@@ -25,8 +26,10 @@ export function ProductivityMetrics({ rituals, logs }: ProductivityMetricsProps)
   const { stats } = useStats();
   const metrics = useMemo(() => {
     const todayKey = toDateKey();
+    const index = buildCompletionIndex(logs);
+    const now = new Date();
     const completedToday = rituals.filter((ritual) =>
-      isRitualCompleted(ritual, logs, new Date()),
+      isCompletedIn(index, ritual, now),
     ).length;
     const dailyEfficiency =
       rituals.length > 0 ? (completedToday / rituals.length) * 100 : 0;

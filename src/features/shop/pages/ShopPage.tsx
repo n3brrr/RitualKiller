@@ -3,6 +3,7 @@ import { ShoppingBag, Zap } from "lucide-react";
 import { useAuth } from "@/features/auth/useAuth";
 import { useShop } from "@/hooks/useShop";
 import { rarityKeys, shopItemKey, useI18n } from "@/i18n";
+import { errorMessage } from "@/lib/errors";
 import { shopItemIcon } from "@/data/items";
 import Loading from "@/components/animations/Loading";
 import { ErrorState } from "@/components/ui/ErrorState";
@@ -32,7 +33,7 @@ export default function ShopPage() {
       <div className="mx-auto max-w-4xl">
         <ErrorState
           title={t("shop.errorTitle")}
-          message={error.message}
+          message={errorMessage(error, t)}
           onRetry={() => void refetch()}
         />
       </div>
@@ -64,10 +65,7 @@ export default function ShopPage() {
     } catch (purchaseError) {
       setFeedback({
         tone: "error",
-        text:
-          purchaseError instanceof Error
-            ? purchaseError.message
-            : t("shop.purchaseCatch"),
+        text: errorMessage(purchaseError, t),
       });
     } finally {
       setSelected(null);

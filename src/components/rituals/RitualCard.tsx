@@ -1,5 +1,5 @@
 import type { Ritual } from "@/types";
-import { Archive, Check, Zap } from "lucide-react";
+import { Archive, Check, Pencil, Zap } from "lucide-react";
 import { difficultyKeys, frequencyKeys, useI18n } from "@/i18n";
 
 interface RitualCardProps {
@@ -7,6 +7,7 @@ interface RitualCardProps {
   isDone: boolean;
   busy?: boolean;
   onToggle: (ritual: Ritual) => void;
+  onEdit?: (ritual: Ritual) => void;
   onDelete: (id: string) => void;
 }
 
@@ -21,6 +22,7 @@ export function RitualCard({
   isDone,
   busy = false,
   onToggle,
+  onEdit,
   onDelete,
 }: RitualCardProps) {
   const { t, tn } = useI18n();
@@ -76,6 +78,7 @@ export function RitualCard({
           type="button"
           onClick={() => onToggle(ritual)}
           disabled={busy}
+          aria-busy={busy}
           aria-label={`${
             isDone ? t("habits.markUndone") : t("habits.markDone")
           } ${ritual.title}`}
@@ -88,6 +91,16 @@ export function RitualCard({
         >
           <Check size={20} aria-hidden="true" />
         </button>
+        {onEdit && (
+          <button
+            type="button"
+            onClick={() => onEdit(ritual)}
+            aria-label={t("habits.editLabel", { name: ritual.title })}
+            className="inline-flex h-11 w-11 items-center justify-center rounded-full text-zinc-400 transition-colors hover:text-white"
+          >
+            <Pencil size={18} aria-hidden="true" />
+          </button>
+        )}
         <button
           type="button"
           onClick={() => onDelete(ritual.id)}

@@ -615,4 +615,11 @@ export const es = {
   "landing.footerEnter": "Entrar al altar",
   "meta.description":
     "RitualKiller convierte tus hábitos en un ritual diario: completa rituales, gana esencia, sube de rango y sostén tu racha.",
+  "habits.editTitle": "Editar ritual",
+  "habits.editLabel": "Editar {name}",
+  "habits.updated": "Ritual actualizado",
+  "habits.added": "Ritual añadido a tu grimorio",
+  "habits.completedToast": "Ritual completado: +{essence} de esencia",
+  "route.newVersion":
+    "Hay una versión nueva de RitualKiller. Recarga la página para continuar.",
 } as const;

@@ -5,6 +5,8 @@ import {
   buildDifficultySeries,
   calculateCompletionRate,
   countOpportunities,
+  buildCompletionIndex,
+  isCompletedIn,
   filterLogsByDays,
   isRitualCompleted,
 } from "../analytics";
@@ -109,5 +111,18 @@ describe("analytics helpers", () => {
     const weekly = ritual({ frequency: "weekly" });
     expect(isRitualCompleted(weekly, [log({ date: "2026-11-09" })], NOW)).toBe(true);
     expect(isRitualCompleted(weekly, [log({ date: "2026-11-08" })], NOW)).toBe(false);
+  });
+
+  it("answers completion checks from an index", () => {
+    const index = buildCompletionIndex([
+      log({ date: "2026-11-13" }),
+      log({ id: "l2", ritualId: "r2", date: "2026-11-10" }),
+    ]);
+    expect(isCompletedIn(index, ritual(), NOW)).toBe(true);
+    expect(isCompletedIn(index, ritual({ id: "r2", frequency: "weekly" }), NOW)).toBe(
+      true,
+    );
+    expect(isCompletedIn(index, ritual({ id: "r2" }), NOW)).toBe(false);
+    expect(isCompletedIn(index, ritual({ id: "missing" }), NOW)).toBe(false);
   });
 });

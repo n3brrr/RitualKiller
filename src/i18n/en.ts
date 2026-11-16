@@ -615,4 +615,11 @@ export const en: Record<TranslationKey, string> = {
   "landing.footerEnter": "Enter the altar",
   "meta.description":
     "RitualKiller turns your habits into a daily ritual: complete rituals, earn essence, rank up and keep your streak.",
+  "habits.editTitle": "Edit ritual",
+  "habits.editLabel": "Edit {name}",
+  "habits.updated": "Ritual updated",
+  "habits.added": "Ritual added to your grimoire",
+  "habits.completedToast": "Ritual completed: +{essence} essence",
+  "route.newVersion":
+    "A new version of RitualKiller is available. Reload the page to continue.",
 };
