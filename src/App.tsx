@@ -72,6 +72,11 @@ function RootLayout() {
         : key
           ? `${t(key)} · RitualKiller`
           : "RitualKiller";
+    // The static description in index.html is Spanish; keep it in the
+    // current language for users and crawlers that run JavaScript.
+    document
+      .querySelector('meta[name="description"]')
+      ?.setAttribute("content", t("meta.description"));
   }, [pathname, hash, t]);
 
   return <Outlet />;

@@ -21,6 +21,11 @@ export default tseslint.config(
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
+    // Plain scripts served as-is from public/ (run in the browser, not bundled).
+    files: ["public/**/*.js"],
+    languageOptions: { sourceType: "script", globals: globals.browser },
+  },
+  {
     files: ["**/*.{ts,tsx}"],
     languageOptions: {
       ecmaVersion: 2022,

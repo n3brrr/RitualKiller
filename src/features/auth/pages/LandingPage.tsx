@@ -9,10 +9,11 @@ import {
   Skull,
   Trophy,
 } from "lucide-react";
-
-const CTA_LABEL = "Empezar el ritual";
+import { useI18n, type TranslationKey } from "@/i18n";
+import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
 
 function CTA({ className = "" }: { className?: string }) {
+  const { t } = useI18n();
   return (
     <Link
       to="/login"
@@ -22,7 +23,7 @@ function CTA({ className = "" }: { className?: string }) {
         aria-hidden="true"
         className="absolute inset-0 translate-y-full bg-ritual-accent transition-transform duration-300 group-hover:translate-y-0 group-focus-visible:translate-y-0"
       />
-      <span className="relative z-10">{CTA_LABEL}</span>
+      <span className="relative z-10">{t("landing.cta")}</span>
       <ArrowRight size={16} className="relative z-10" aria-hidden="true" />
     </Link>
   );
@@ -43,12 +44,14 @@ function Frame({ label, children }: { label: string; children: ReactNode }) {
 }
 
 function Section({
+  id,
   eyebrow,
   title,
   copy,
   flip = false,
   children,
 }: {
+  id: string;
   eyebrow: string;
   title: string;
   copy: string;
@@ -59,7 +62,7 @@ function Section({
     <section
       data-reveal
       className="border-t border-zinc-900/80"
-      aria-labelledby={`section-${eyebrow.replace(/\W+/g, "-")}`}
+      aria-labelledby={`section-${id}`}
     >
       <div className="mx-auto grid max-w-6xl gap-10 px-5 py-16 md:grid-cols-[0.9fr_1.1fr] md:items-center md:py-24">
         <div className={flip ? "md:order-2" : undefined}>
@@ -67,7 +70,7 @@ function Section({
             {eyebrow}
           </span>
           <h2
-            id={`section-${eyebrow.replace(/\W+/g, "-")}`}
+            id={`section-${id}`}
             className="mt-3 font-display text-3xl font-bold leading-tight text-white md:text-4xl"
           >
             {title}
@@ -82,10 +85,10 @@ function Section({
   );
 }
 
-const RITUALS = [
-  { title: "Meditar 10 minutos", reward: "+15", done: true },
-  { title: "Leer 20 páginas", reward: "+10", done: true },
-  { title: "Entrenar 30 minutos", reward: "+20", done: false },
+const RITUALS: Array<{ titleKey: TranslationKey; reward: string; done: boolean }> = [
+  { titleKey: "landing.ritual.meditate", reward: "+15", done: true },
+  { titleKey: "landing.ritual.read", reward: "+10", done: true },
+  { titleKey: "landing.ritual.train", reward: "+20", done: false },
 ];
 
 const HEATMAP = [
@@ -101,6 +104,8 @@ const HEATMAP_STYLES = [
 
 export default function LandingPage() {
   const rootRef = useRef<HTMLDivElement>(null);
+  const { t, locale } = useI18n();
+  const number = (value: number) => value.toLocaleString(locale);
 
   useLayoutEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
@@ -161,12 +166,15 @@ export default function LandingPage() {
             <Skull size={22} className="text-ritual-accent" aria-hidden="true" />
             RitualKiller
           </Link>
-          <Link
-            to="/login"
-            className="inline-flex min-h-11 items-center rounded-lg border border-zinc-800 px-4 font-display text-xs font-bold uppercase tracking-widest text-zinc-300 transition-colors hover:border-ritual-accent hover:text-ritual-accent"
-          >
-            Entrar
-          </Link>
+          <div className="flex items-center gap-2">
+            <LanguageSwitcher />
+            <Link
+              to="/login"
+              className="inline-flex min-h-11 items-center rounded-lg border border-zinc-800 px-4 font-display text-xs font-bold uppercase tracking-widest text-zinc-300 transition-colors hover:border-ritual-accent hover:text-ritual-accent"
+            >
+              {t("landing.enter")}
+            </Link>
+          </div>
         </div>
       </header>
 
@@ -183,48 +191,55 @@ export default function LandingPage() {
               data-hero
               className="mt-4 font-display text-4xl font-black leading-[1.05] text-white sm:text-5xl md:text-6xl"
             >
-              La disciplina no se promete.
-              <span className="mt-2 block text-ritual-accent">Se ritualiza.</span>
+              {t("landing.headline")}
+              <span className="mt-2 block text-ritual-accent">
+                {t("landing.headlineAccent")}
+              </span>
             </h1>
             <p data-hero className="mt-5 max-w-lg text-lg leading-relaxed text-zinc-400">
-              Un altar para tus hábitos: rituales diarios, esencia, rango y una racha que
-              solo crece si vuelves mañana.
+              {t("landing.intro")}
             </p>
             <div data-hero className="mt-8">
               <CTA />
             </div>
-            <p data-hero className="mt-4 text-xs uppercase tracking-widest text-zinc-600">
-              Sin promesas. Solo el registro de tus actos.
+            <p data-hero className="mt-4 text-xs uppercase tracking-widest text-zinc-400">
+              {t("landing.tagline")}
             </p>
           </div>
 
           <div data-hero aria-hidden="true">
-            <Frame label="Altar">
+            <Frame label={t("landing.frame.altar")}>
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <p className="text-xs uppercase tracking-widest text-zinc-500">
-                    Esencia
+                  <p className="text-xs uppercase tracking-widest text-zinc-400">
+                    {t("landing.essence")}
                   </p>
-                  <p className="font-mono text-3xl font-bold text-ritual-accent">1.850</p>
+                  <p className="font-mono text-3xl font-bold text-ritual-accent">
+                    {number(1850)}
+                  </p>
                 </div>
                 <div className="text-right">
-                  <p className="text-xs uppercase tracking-widest text-zinc-500">Rango</p>
-                  <p className="font-display text-lg font-bold text-white">Warlock</p>
+                  <p className="text-xs uppercase tracking-widest text-zinc-400">
+                    {t("landing.rank")}
+                  </p>
+                  <p className="font-display text-lg font-bold text-white">
+                    {t("rank.warlock")}
+                  </p>
                 </div>
               </div>
 
               <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-zinc-900">
                 <div className="h-full w-[57%] rounded-full bg-ritual-accent" />
               </div>
-              <div className="mt-1 flex justify-between text-xs text-zinc-500">
-                <span>1.000</span>
-                <span>2.500</span>
+              <div className="mt-1 flex justify-between text-xs text-zinc-400">
+                <span>{number(1000)}</span>
+                <span>{number(2500)}</span>
               </div>
 
               <div className="mt-5 flex items-center gap-2 rounded-lg border border-yellow-500/20 bg-yellow-500/5 px-3 py-2">
                 <Flame size={16} className="text-yellow-500" aria-hidden="true" />
                 <span className="font-mono text-sm text-yellow-500">
-                  12 días de racha
+                  {t("landing.streakDays")}
                 </span>
               </div>
 
@@ -234,9 +249,9 @@ export default function LandingPage() {
                 </span>
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium text-white">
-                    Meditar 10 minutos
+                    {t("landing.ritual.meditate")}
                   </p>
-                  <p className="text-xs text-zinc-500">Hecho hoy</p>
+                  <p className="text-xs text-zinc-400">{t("landing.doneToday")}</p>
                 </div>
                 <span className="font-mono text-sm text-ritual-accent">+15</span>
               </div>
@@ -245,22 +260,23 @@ export default function LandingPage() {
         </section>
 
         <Section
-          eyebrow="01 · Rituales"
-          title="Tres actos al día. Cero negociación."
-          copy="Define tus rituales, complétalos y mira cómo la racha sostiene lo que prometiste. Si fallas, el altar lo sabe."
+          id="rituals"
+          eyebrow={t("landing.rituals.eyebrow")}
+          title={t("landing.rituals.title")}
+          copy={t("landing.rituals.copy")}
         >
-          <Frame label="Rituales · Hoy">
+          <Frame label={t("landing.rituals.frame")}>
             <ul className="space-y-2">
               {RITUALS.map((ritual) => (
                 <li
-                  key={ritual.title}
+                  key={ritual.titleKey}
                   className="flex items-center gap-3 rounded-xl border border-zinc-800 bg-zinc-900/40 p-3"
                 >
                   <span
                     className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 ${
                       ritual.done
                         ? "border-ritual-accent bg-ritual-accent text-black"
-                        : "border-zinc-700 text-zinc-500"
+                        : "border-zinc-700 text-zinc-400"
                     }`}
                   >
                     <Check size={16} aria-hidden="true" />
@@ -270,112 +286,121 @@ export default function LandingPage() {
                       ritual.done ? "text-zinc-400 line-through" : "text-white"
                     }`}
                   >
-                    {ritual.title}
+                    {t(ritual.titleKey)}
                   </span>
-                  <span className="font-mono text-xs text-zinc-500">{ritual.reward}</span>
+                  <span className="font-mono text-xs text-zinc-400">{ritual.reward}</span>
                 </li>
               ))}
             </ul>
             <div className="mt-4 flex items-center justify-between border-t border-zinc-900 pt-3 text-sm">
               <span className="inline-flex items-center gap-2 text-yellow-500">
-                <Flame size={15} aria-hidden="true" /> 12 días de racha
+                <Flame size={15} aria-hidden="true" /> {t("landing.streakDays")}
               </span>
               <span className="font-mono text-xs text-ritual-accent">
-                +45 esencia hoy
+                {t("landing.rituals.essenceToday")}
               </span>
             </div>
           </Frame>
         </Section>
 
         <Section
-          eyebrow="02 · Objetivos"
-          title="Una meta sin barra es un deseo."
-          copy="Ata cada objetivo a tus rituales y deja que el progreso se calcule solo. Nada de marcar casillas a mano."
+          id="goals"
+          eyebrow={t("landing.goals.eyebrow")}
+          title={t("landing.goals.title")}
+          copy={t("landing.goals.copy")}
           flip
         >
-          <Frame label="Objetivo">
+          <Frame label={t("landing.goals.frame")}>
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="text-sm font-medium text-white">Leer 12 libros este año</p>
-                <p className="mt-1 text-xs text-zinc-500">Vence en diciembre</p>
+                <p className="text-sm font-medium text-white">
+                  {t("landing.goals.example")}
+                </p>
+                <p className="mt-1 text-xs text-zinc-400">{t("landing.goals.due")}</p>
               </div>
               <span className="font-mono text-2xl font-bold text-ritual-accent">58%</span>
             </div>
             <div className="mt-4 h-2 overflow-hidden rounded-full bg-zinc-900">
               <div className="h-full w-[58%] rounded-full bg-ritual-accent" />
             </div>
-            <div className="mt-2 flex justify-between text-xs text-zinc-500">
-              <span>7 de 12</span>
-              <span>5 restantes</span>
+            <div className="mt-2 flex justify-between text-xs text-zinc-400">
+              <span>{t("landing.goals.progress")}</span>
+              <span>{t("landing.goals.remaining")}</span>
             </div>
             <div className="mt-4 flex flex-wrap gap-2">
               <span className="rounded-lg border border-zinc-800 px-2 py-1 text-xs text-zinc-400">
-                Leer 20 páginas
+                {t("landing.ritual.read")}
               </span>
               <span className="rounded-lg border border-zinc-800 px-2 py-1 text-xs text-zinc-400">
-                Racha activa
+                {t("landing.goals.activeStreak")}
               </span>
             </div>
           </Frame>
         </Section>
 
         <Section
-          eyebrow="03 · Coven"
-          title="Tu constancia también se ve fuera."
-          copy="Un feed de actos cumplidos, no de intenciones. Sigue a quien sostiene el ritmo y deja que te sigan."
+          id="coven"
+          eyebrow={t("landing.coven.eyebrow")}
+          title={t("landing.coven.title")}
+          copy={t("landing.coven.copy")}
         >
-          <Frame label="Coven">
+          <Frame label={t("nav.social")}>
             <div className="flex items-center gap-3">
               <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-zinc-700 bg-zinc-800 font-display font-bold text-ritual-accent">
                 V
               </span>
               <div className="min-w-0 flex-1">
                 <p className="text-sm text-zinc-200">
-                  <span className="font-bold text-white">Vex</span> completó «Meditar 10
-                  minutos»
+                  <span className="font-bold text-white">Vex</span>{" "}
+                  {t("landing.coven.activity")}
                 </p>
-                <p className="text-xs uppercase tracking-wider text-zinc-500">hace 2 h</p>
+                <p className="text-xs uppercase tracking-wider text-zinc-400">
+                  {t("landing.coven.when")}
+                </p>
               </div>
               <span className="font-mono text-xs text-ritual-accent">+15</span>
             </div>
-            <div className="mt-4 flex items-center gap-2 border-t border-zinc-900 pt-3 text-xs text-zinc-500">
-              <Flame size={14} className="text-yellow-500" aria-hidden="true" />3 miembros
-              mantienen su racha hoy
+            <div className="mt-4 flex items-center gap-2 border-t border-zinc-900 pt-3 text-xs text-zinc-400">
+              <Flame size={14} className="text-yellow-500" aria-hidden="true" />
+              {t("landing.coven.members")}
             </div>
           </Frame>
         </Section>
 
         <Section
-          eyebrow="04 · Mercado"
-          title="La esencia se gana. No se regala."
-          copy="Cambia constancia por objetos que empujan la siguiente racha. Lo comprado aparece en tu inventario, listo para usar."
+          id="market"
+          eyebrow={t("landing.market.eyebrow")}
+          title={t("landing.market.title")}
+          copy={t("landing.market.copy")}
           flip
         >
           <div className="grid gap-4 sm:grid-cols-2">
-            <Frame label="Mercado">
+            <Frame label={t("nav.shop")}>
               <div className="flex items-start justify-between gap-2">
                 <FlaskConical
                   size={32}
                   className="text-ritual-accent"
                   aria-hidden="true"
                 />
-                <span className="rounded border border-zinc-800 px-2 py-0.5 text-xs uppercase tracking-wider text-zinc-500">
-                  raro
+                <span className="rounded border border-zinc-800 px-2 py-0.5 text-xs uppercase tracking-wider text-zinc-400">
+                  {t("rarity.rare")}
                 </span>
               </div>
               <p className="mt-3 text-sm font-bold text-white">Elixir de disciplina</p>
-              <p className="mt-1 text-xs leading-relaxed text-zinc-500">
-                Duplica la esencia de tus rituales durante un día.
+              <p className="mt-1 text-xs leading-relaxed text-zinc-400">
+                {t("landing.market.elixirDescription")}
               </p>
               <div className="mt-4 flex items-center justify-between border-t border-zinc-900 pt-3">
-                <span className="font-mono text-sm text-ritual-accent">500 esencia</span>
+                <span className="font-mono text-sm text-ritual-accent">
+                  {t("landing.market.price")}
+                </span>
                 <span className="rounded-lg border border-ritual-accent/40 px-3 py-1 text-xs font-bold uppercase tracking-wider text-ritual-accent">
-                  Comprar
+                  {t("shop.buy")}
                 </span>
               </div>
             </Frame>
 
-            <Frame label="Inventario">
+            <Frame label={t("nav.inventory")}>
               <div className="flex items-start justify-between gap-2">
                 <FlaskConical
                   size={32}
@@ -387,15 +412,15 @@ export default function LandingPage() {
                 </span>
               </div>
               <p className="mt-3 text-sm font-bold text-white">Elixir de disciplina</p>
-              <p className="mt-1 text-xs leading-relaxed text-zinc-500">
-                Comprado con la esencia de esta semana.
+              <p className="mt-1 text-xs leading-relaxed text-zinc-400">
+                {t("landing.market.bought")}
               </p>
               <div className="mt-4 flex items-center justify-between border-t border-zinc-900 pt-3">
-                <span className="text-xs uppercase tracking-wider text-zinc-500">
-                  En inventario
+                <span className="text-xs uppercase tracking-wider text-zinc-400">
+                  {t("landing.market.inInventory")}
                 </span>
                 <span className="rounded-lg border border-zinc-700 px-3 py-1 text-xs font-bold uppercase tracking-wider text-zinc-300">
-                  Usar
+                  {t("inventory.use")}
                 </span>
               </div>
             </Frame>
@@ -403,11 +428,12 @@ export default function LandingPage() {
         </Section>
 
         <Section
-          eyebrow="05 · Analíticas"
-          title="El registro no miente."
-          copy="Rangos, rachas y mapas de constancia. Cuando el mes se cierra, solo queda lo que hiciste."
+          id="analytics"
+          eyebrow={t("landing.analytics.eyebrow")}
+          title={t("landing.analytics.title")}
+          copy={t("landing.analytics.copy")}
         >
-          <Frame label="Analíticas · 28 días">
+          <Frame label={t("landing.analytics.frame")}>
             <div className="grid grid-cols-[repeat(14,minmax(0,1fr))] gap-1">
               {HEATMAP.map((level, index) => (
                 <span
@@ -420,15 +446,23 @@ export default function LandingPage() {
               <div className="flex items-center gap-2 rounded-xl border border-yellow-500/30 bg-yellow-500/5 p-3">
                 <Trophy size={18} className="text-yellow-500" aria-hidden="true" />
                 <div>
-                  <p className="text-xs font-bold text-white">Primera semana</p>
-                  <p className="text-xs text-zinc-500">Logro desbloqueado</p>
+                  <p className="text-xs font-bold text-white">
+                    {t("achievement.ach-streak-7.name")}
+                  </p>
+                  <p className="text-xs text-zinc-400">
+                    {t("notifications.achievementTitle")}
+                  </p>
                 </div>
               </div>
               <div className="flex items-center gap-2 rounded-xl border border-zinc-800 bg-zinc-900/40 p-3">
-                <Lock size={18} className="text-zinc-500" aria-hidden="true" />
+                <Lock size={18} className="text-zinc-400" aria-hidden="true" />
                 <div>
-                  <p className="text-xs font-bold text-zinc-400">Mes completo</p>
-                  <p className="text-xs text-zinc-500">30 días de racha</p>
+                  <p className="text-xs font-bold text-zinc-400">
+                    {t("landing.analytics.locked")}
+                  </p>
+                  <p className="text-xs text-zinc-400">
+                    {t("landing.analytics.lockedDetail")}
+                  </p>
                 </div>
               </div>
             </div>
@@ -443,12 +477,12 @@ export default function LandingPage() {
               aria-hidden="true"
             />
             <h2 className="mt-5 font-display text-3xl font-black leading-tight text-white md:text-5xl">
-              La disciplina no se promete.
-              <span className="mt-2 block text-ritual-accent">Se ritualiza.</span>
+              {t("landing.headline")}
+              <span className="mt-2 block text-ritual-accent">
+                {t("landing.headlineAccent")}
+              </span>
             </h2>
-            <p className="mx-auto mt-4 max-w-xl text-zinc-400">
-              Entra al altar, define tu primer ritual y deja que la racha hable por ti.
-            </p>
+            <p className="mx-auto mt-4 max-w-xl text-zinc-400">{t("landing.final")}</p>
             <div className="mt-8">
               <CTA />
             </div>
@@ -457,13 +491,13 @@ export default function LandingPage() {
       </main>
 
       <footer className="border-t border-zinc-900 py-8">
-        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-3 px-5 text-xs text-zinc-500 sm:flex-row">
+        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-3 px-5 text-xs text-zinc-400 sm:flex-row">
           <span className="inline-flex items-center gap-2">
             <Skull size={14} className="text-ritual-accent/70" aria-hidden="true" />
             RitualKiller · 2026
           </span>
           <Link to="/login" className="transition-colors hover:text-ritual-accent">
-            Entrar al altar
+            {t("landing.footerEnter")}
           </Link>
         </div>
       </footer>

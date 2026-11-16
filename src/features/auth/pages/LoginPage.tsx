@@ -17,6 +17,7 @@ import {
 } from "@/utils/validation";
 import Loading from "@/components/animations/Loading";
 import { PasswordField, TextField } from "@/components/ui/FormField";
+import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
 
 type Mode = "login" | "signup" | "reset";
 
@@ -109,6 +110,9 @@ export default function LoginPage() {
   return (
     <main className="flex min-h-screen items-center justify-center bg-ritual-black px-4 py-10">
       <div className="w-full max-w-sm">
+        <div className="mb-4 flex justify-end">
+          <LanguageSwitcher />
+        </div>
         <div className="mb-8 flex flex-col items-center gap-2 text-center">
           <Skull size={40} className="text-ritual-accent" aria-hidden="true" />
           <h1 className="font-display text-2xl font-bold uppercase tracking-widest">

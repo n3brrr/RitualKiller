@@ -14,6 +14,7 @@
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="RitualKiller" />
     <meta property="og:locale" content="es_ES" />
+    <meta property="og:locale:alternate" content="en_US" />
     <meta property="og:url" content="https://ritualkiller.vercel.app/" />
     <meta
       property="og:title"
@@ -53,6 +54,8 @@
         background: #22c55e;
       }
     </style>
+    <!-- Sets <html lang> before React renders (kept external for the CSP). -->
+    <script src="/locale-init.js"></script>
   </head>
   <body>
     <div id="root"></div>
