@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { useI18n } from "@/i18n";
 import { Modal } from "./Modal";
 
 interface ConfirmDialogProps {
@@ -17,13 +18,14 @@ export function ConfirmDialog({
   open,
   title,
   description,
-  confirmLabel = "Confirmar",
-  cancelLabel = "Cancelar",
+  confirmLabel,
+  cancelLabel,
   destructive = false,
   busy = false,
   onConfirm,
   onClose,
 }: ConfirmDialogProps) {
+  const { t } = useI18n();
   return (
     <Modal
       open={open}
@@ -39,7 +41,7 @@ export function ConfirmDialog({
             data-autofocus={destructive ? true : undefined}
             className="inline-flex min-h-11 items-center justify-center rounded-lg border border-zinc-700 px-4 text-sm font-bold text-zinc-300 hover:border-zinc-500 disabled:opacity-50"
           >
-            {cancelLabel}
+            {cancelLabel ?? t("common.cancel")}
           </button>
           <button
             type="button"
@@ -50,7 +52,7 @@ export function ConfirmDialog({
               destructive ? "bg-red-500 text-white hover:bg-red-400" : "bg-ritual-accent hover:bg-emerald-400"
             }`}
           >
-            {busy ? "Procesando..." : confirmLabel}
+            {busy ? t("common.processing") : (confirmLabel ?? t("common.confirm"))}
           </button>
         </>
       }

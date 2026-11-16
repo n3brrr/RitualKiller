@@ -2,6 +2,7 @@ import React from "react";
 import { Navigate } from "react-router-dom";
 import { AlertCircle } from "lucide-react";
 import { useAuth } from "@/features/auth/AuthProvider";
+import { useI18n } from "@/i18n";
 import Loading from "@/components/animations/Loading";
 
 function FullPageLoader() {
@@ -14,6 +15,7 @@ function FullPageLoader() {
 
 export const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { session, user, loading, error, refreshProfile } = useAuth();
+  const { t } = useI18n();
 
   if (loading) return <FullPageLoader />;
   if (!session) return <Navigate to="/login" replace />;
@@ -23,13 +25,13 @@ export const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ childr
       <div className="min-h-[60vh] flex items-center justify-center p-4">
         <div className="max-w-md w-full bg-zinc-950 border border-red-500/30 rounded-xl p-6 text-center">
           <AlertCircle className="mx-auto mb-3 text-red-500" size={28} />
-          <h1 className="text-lg font-bold text-white mb-2">No se pudo cargar tu perfil</h1>
+          <h1 className="text-lg font-bold text-white mb-2">{t("auth.profileError")}</h1>
           <p className="text-sm text-zinc-400 mb-4">{error.message}</p>
           <button
             onClick={() => void refreshProfile()}
             className="min-h-11 px-4 py-2 bg-ritual-accent text-black font-bold rounded-lg"
           >
-            Reintentar
+            {t("common.retry")}
           </button>
         </div>
       </div>
