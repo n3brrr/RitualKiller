@@ -197,6 +197,9 @@ importers:
         specifier: ^2.12.7
         version: 2.15.4(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
     devDependencies:
+      '@electric-sql/pglite':
+        specifier: ^0.5.16
+        version: 0.5.16
       '@eslint/js':
         specifier: ^10.0.1
         version: 10.0.1(eslint@10.14.0(jiti@1.21.7))
@@ -399,6 +402,9 @@ packages:
   '@csstools/css-tokenizer@3.0.4':
     resolution: {integrity: sha512-Vd/9EVDiu6PPJt9yAh6roZP6El1xHrdvIVGjyBsHR0RYwNHgL7FJPyIIW4fANJNG6FtyZfvlRPpFI4ZM/lubvw==}
     engines: {node: '>=18'}
+
+  '@electric-sql/pglite@0.5.16':
+    resolution: {integrity: sha512-Nj8KcIsJL748W408U2N8q4+9IlONdpRIU8MJypIAAINMJ5nqKyqpX7Mgg/5XKkXiAib3AoZGR6hnJFlrlLBrcg==}
 
   '@esbuild/aix-ppc64@0.21.5':
     resolution: {integrity: sha512-1SDgH6ZSPTlggy1yI6+Dbkiz8xzpHJEVAlF/AM1tHPLsf5STom9rwtjE4hKAF20FfXXNTFqEYXyJNWh1GiZedQ==}
@@ -3020,6 +3026,8 @@ snapshots:
       '@csstools/css-tokenizer': 3.0.4
 
   '@csstools/css-tokenizer@3.0.4': {}
+
+  '@electric-sql/pglite@0.5.16': {}
 
   '@esbuild/aix-ppc64@0.21.5':
     optional: true

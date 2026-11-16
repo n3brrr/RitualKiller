@@ -16,8 +16,9 @@
     "test:watch": "vitest",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest --coverage",
-    "verify": "pnpm format:check && pnpm typecheck && pnpm lint && pnpm test && pnpm build",
-    "analyze": "vite build --mode analyze"
+    "verify": "pnpm format:check && pnpm typecheck && pnpm lint && pnpm test && pnpm test:db && pnpm build",
+    "analyze": "vite build --mode analyze",
+    "test:db": "vitest run --config vitest.db.config.ts"
   },
   "dependencies": {
     "@fontsource/cinzel": "^5.2.8",
@@ -32,6 +33,7 @@
     "recharts": "^2.12.7"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "^0.5.16",
     "@eslint/js": "^10.0.1",
     "@testing-library/jest-dom": "^6.4.2",
     "@testing-library/react": "^16.0.1",
