@@ -12,7 +12,7 @@
 
 ## ⚡ Descripción general
 
-RitualKiller convierte hábitos diarios en rituales medibles: rachas, esencia, logros, objetivos, comunidad y una tienda de artefactos. La autenticación y los datos viven en Supabase; la generación de rituales con IA se ejecuta en local mediante Ollama, sin claves de terceros en el navegador.
+RitualKiller convierte hábitos diarios en rituales medibles: rachas, esencia, logros, objetivos, comunidad y una tienda de artefactos. La autenticación y los datos viven en Supabase, sin claves privadas en el navegador.
 
 ### ✨ Características
 
@@ -23,7 +23,7 @@ RitualKiller convierte hábitos diarios en rituales medibles: rachas, esencia, l
 - 🏆 **Logros persistidos** y notificaciones in-app.
 - 🛒 **Mercado e inventario** con compra y consumo transaccional.
 - 📊 **Analíticas** de 7/30/90 días y exportación CSV/JSON.
-- 🧠 **IA local con Ollama** (fallback a sugerencias locales si no está disponible).
+- 🧠 **Base preparada para IA** en servidor (Edge Function autenticada con cuota), desactivada por defecto.
 - 🛡️ **Panel de administración** con métricas, usuarios, reportes y errores.
 - 📱 **Mobile-first**, accesible y con interfaz ES/EN.
 - 🔐 **Sin claves privadas en el cliente**: solo la anon key pública de Supabase.
@@ -36,7 +36,6 @@ RitualKiller convierte hábitos diarios en rituales medibles: rachas, esencia, l
 <img src="https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white" alt="Tailwind CSS" />
 <img src="https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white" alt="Vite" />
 <img src="https://img.shields.io/badge/Supabase-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white" alt="Supabase" />
-<img src="https://img.shields.io/badge/Ollama-000000?style=for-the-badge&logo=ollama&logoColor=white" alt="Ollama" />
 </p>
 
 ---
@@ -48,7 +47,7 @@ RitualKiller convierte hábitos diarios en rituales medibles: rachas, esencia, l
 - Node.js 22+
 - [pnpm](https://pnpm.io/) 12 (único gestor soportado)
 - Un proyecto de [Supabase](https://supabase.com/)
-- Docker (opcional, para Ollama y despliegue)
+- Docker (opcional, para el despliegue)
 
 ### Configuración rápida
 
@@ -77,14 +76,14 @@ pnpm dev
 
 La app queda en `http://localhost:3000`.
 
-### IA local con Ollama
+### IA (opcional, desactivada por defecto)
 
-```bash
-docker compose up -d ollama ollama-pull
-pnpm dev
-```
-
-Vite proxya `/ollama` hacia `http://localhost:11434`. Si Ollama no responde, la app usa sugerencias locales sin romper el flujo. El modelo se configura con `VITE_OLLAMA_MODEL` (por defecto `llama3.2`).
+La integración anterior con Ollama se ha eliminado. Las futuras funciones de IA se
+conectan mediante la interfaz `AiProvider` de `src/services/ai/` y la Edge Function
+`supabase/functions/ai-suggest-rituals`, que valida la sesión, aplica una cuota por
+usuario (`consume_ai_quota`) y es el único lugar donde puede vivir la clave del
+proveedor (como secreto de Supabase). Mientras `VITE_AI_ENABLED` no sea `true`, la
+interfaz no muestra ningún punto de entrada de IA.
 
 ### Despliegue con Docker
 
@@ -94,8 +93,7 @@ docker compose up --build
 ```
 
 - Web: `http://localhost:8080`
-- Ollama: `http://localhost:11434`
-- El contenedor web sirve la SPA con fallback a `index.html` y proxya `/ollama`.
+- El contenedor web sirve la SPA con fallback a `index.html`.
 
 ## 🧪 Scripts
 
@@ -118,11 +116,12 @@ RitualKiller/
 │   ├── components/      # UI (rituales, social, analytics, layout...)
 │   ├── features/        # Páginas por dominio
 │   ├── hooks/           # Hooks de React Query
-│   ├── services/        # Acceso a Supabase y Ollama
+│   ├── services/        # Acceso a Supabase y proveedores de IA
 │   ├── i18n/            # Diccionarios ES/EN
 │   ├── utils/           # Fechas, validación, export/import, analítica
 │   └── App.tsx          # Router y providers
 ├── supabase/migrations/ # Esquema, RLS y RPC
+├── supabase/functions/  # Edge Functions (Deno)
 ├── docker/              # Configuración de nginx
 ├── Dockerfile
 ├── docker-compose.yml
