@@ -23,6 +23,7 @@ export function useRituals() {
     void queryClient.invalidateQueries({ queryKey: ["profile", userId] });
     void queryClient.invalidateQueries({ queryKey: ["goals", userId] });
     void queryClient.invalidateQueries({ queryKey: ["achievements", userId] });
+    void queryClient.invalidateQueries({ queryKey: ["stats", userId] });
     void queryClient.invalidateQueries({ queryKey: ["notifications", userId] });
   };
 
@@ -47,7 +48,7 @@ export function useRituals() {
   });
 
   const importMutation = useMutation({
-    mutationFn: (backup: ExportData) => ritualService.importBackup(userId!, backup),
+    mutationFn: (backup: ExportData) => ritualService.importBackup(backup),
     onSuccess: invalidate,
   });
 

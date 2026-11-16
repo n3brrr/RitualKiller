@@ -110,46 +110,69 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
 }
 
-/** Validates the backup shape before touching the database. */
+export const BACKUP_LIMITS = {
+  bytes: 2 * 1024 * 1024,
+  rituals: 200,
+  logs: 20_000,
+} as const;
+
+/**
+ * Validates the backup shape before sending it to import_backup. Errors are
+ * stable codes (e.g. "ritual.3.title"), not user-facing text; the UI shows a
+ * translated summary.
+ */
 export function validateImportData(data: unknown): {
   valid: boolean;
   errors: string[];
 } {
   const errors: string[] = [];
-  if (!isRecord(data)) {
-    return { valid: false, errors: ["El archivo no contiene un objeto JSON"] };
+  if (!isRecord(data)) return { valid: false, errors: ["root.object"] };
+  if (!Array.isArray(data.rituals)) errors.push("rituals.array");
+  if (!Array.isArray(data.logs)) errors.push("logs.array");
+  if (Array.isArray(data.rituals) && data.rituals.length > BACKUP_LIMITS.rituals) {
+    errors.push("rituals.limit");
   }
-  if (!Array.isArray(data.rituals)) errors.push("Los rituales deben ser un array");
-  if (!Array.isArray(data.logs)) errors.push("Los logs deben ser un array");
+  if (Array.isArray(data.logs) && data.logs.length > BACKUP_LIMITS.logs) {
+    errors.push("logs.limit");
+  }
+  if (errors.length > 0) return { valid: false, errors };
 
-  if (Array.isArray(data.rituals)) {
-    data.rituals.forEach((ritual, index) => {
-      if (!isRecord(ritual) || typeof ritual.title !== "string") {
-        errors.push(`Ritual ${index + 1}: título inválido`);
-      } else if (
-        !DIFFICULTIES.includes(ritual.difficulty as (typeof DIFFICULTIES)[number])
-      ) {
-        errors.push(`Ritual ${index + 1}: dificultad inválida`);
-      } else if (
-        !FREQUENCIES.includes(ritual.frequency as (typeof FREQUENCIES)[number])
-      ) {
-        errors.push(`Ritual ${index + 1}: frecuencia inválida`);
-      }
-    });
-  }
+  (data.rituals as unknown[]).forEach((ritual, index) => {
+    const at = `ritual.${index + 1}`;
+    if (!isRecord(ritual)) return errors.push(`${at}.object`);
+    if (typeof ritual.id !== "string" || !ritual.id) errors.push(`${at}.id`);
+    if (
+      typeof ritual.title !== "string" ||
+      !ritual.title.trim() ||
+      ritual.title.length > 100
+    ) {
+      errors.push(`${at}.title`);
+    }
+    if (
+      ritual.description !== undefined &&
+      (typeof ritual.description !== "string" || ritual.description.length > 500)
+    ) {
+      errors.push(`${at}.description`);
+    }
+    if (!DIFFICULTIES.includes(ritual.difficulty as (typeof DIFFICULTIES)[number])) {
+      errors.push(`${at}.difficulty`);
+    }
+    if (!FREQUENCIES.includes(ritual.frequency as (typeof FREQUENCIES)[number])) {
+      errors.push(`${at}.frequency`);
+    }
+    return undefined;
+  });
 
-  if (Array.isArray(data.logs)) {
-    data.logs.forEach((log, index) => {
-      if (
-        !isRecord(log) ||
-        typeof log.ritualId !== "string" ||
-        typeof log.date !== "string" ||
-        !/^\d{4}-\d{2}-\d{2}$/.test(log.date)
-      ) {
-        errors.push(`Log ${index + 1}: formato inválido`);
-      }
-    });
-  }
+  (data.logs as unknown[]).forEach((log, index) => {
+    if (
+      !isRecord(log) ||
+      typeof log.ritualId !== "string" ||
+      typeof log.date !== "string" ||
+      !/^\d{4}-\d{2}-\d{2}$/.test(log.date)
+    ) {
+      errors.push(`log.${index + 1}`);
+    }
+  });
 
   return { valid: errors.length === 0, errors };
 }

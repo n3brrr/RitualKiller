@@ -32,7 +32,15 @@ describe("export/import helpers", () => {
   });
 
   it("exports logs with escaped ritual titles", () => {
-    const csv = exportToCSV([ritual], [log]);
+    const csv = exportToCSV([ritual], [log], {
+      date: "Fecha",
+      ritual: "Ritual",
+      difficulty: "Dificultad",
+      essence: "Esencia",
+      unknown: "?",
+      difficultyName: (value) => value.toUpperCase(),
+    });
+    expect(csv).toContain("ADEPT");
     expect(csv.split("\n")[0]).toContain("Fecha");
     expect(csv).toContain("'=HYPERLINK");
   });
@@ -42,6 +50,25 @@ describe("export/import helpers", () => {
     const parsed = importData(raw);
     expect(parsed?.rituals[0]?.title).toBe(ritual.title);
     expect(parsed?.logs[0]?.date).toBe(log.date);
+  });
+
+  it("rejects oversized or incomplete backups", () => {
+    expect(
+      importData(
+        JSON.stringify({
+          rituals: Array.from({ length: 201 }, (_, i) => ({ ...ritual, id: `r${i}` })),
+          logs: [],
+        }),
+      ),
+    ).toBeNull();
+    expect(
+      importData(
+        JSON.stringify({
+          rituals: [{ title: "No id", difficulty: "novice", frequency: "daily" }],
+          logs: [],
+        }),
+      ),
+    ).toBeNull();
   });
 
   it("rejects broken backups instead of throwing", () => {

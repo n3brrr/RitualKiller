@@ -25,6 +25,7 @@ import {
   filterLogsByDays,
 } from "@/utils/analytics";
 import { downloadFile, exportToCSV } from "@/utils/exportImport";
+import { csvLabels } from "@/utils/csvLabels";
 import Loading from "@/components/animations/Loading";
 import { ErrorState } from "@/components/ui/ErrorState";
 
@@ -32,7 +33,7 @@ const RANGES = [7, 30, 90] as const;
 const COLORS = ["#22c55e", "#eab308", "#ef4444"];
 
 export function AdvancedAnalytics() {
-  const { rituals, logs, isLoading, error, refetch } = useRituals();
+  const { rituals, archivedRituals, logs, isLoading, error, refetch } = useRituals();
   const { t, locale } = useI18n();
   const [range, setRange] = useState<(typeof RANGES)[number]>(7);
 
@@ -55,7 +56,7 @@ export function AdvancedAnalytics() {
   );
 
   const handleExport = () => {
-    const csv = exportToCSV(rituals, filteredLogs);
+    const csv = exportToCSV([...rituals, ...archivedRituals], filteredLogs, csvLabels(t));
     downloadFile(csv, `ritualkiller-analytics-${range}d.csv`, "text/csv;charset=utf-8");
   };
 

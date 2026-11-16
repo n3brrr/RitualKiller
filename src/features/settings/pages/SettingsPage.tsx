@@ -8,7 +8,10 @@ import { useI18n } from "@/i18n";
 import { profileService } from "@/services/profileService";
 import { updatePassword } from "@/services/authService";
 import { downloadFile, exportData, exportToCSV, importData } from "@/utils/exportImport";
-import { validatePassword } from "@/utils/validation";
+import { BACKUP_LIMITS, validatePassword } from "@/utils/validation";
+import { csvLabels } from "@/utils/csvLabels";
+import { toDateKey } from "@/utils/dates";
+import { ritualService } from "@/services/ritualService";
 import Loading from "@/components/animations/Loading";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { ErrorState } from "@/components/ui/ErrorState";
@@ -23,7 +26,7 @@ export default function SettingsPage() {
     updateSettings,
     isUpdating,
   } = useSettings();
-  const { rituals, logs, importBackup } = useRituals();
+  const { rituals, archivedRituals, importBackup } = useRituals();
   const { t, locale, setLocale } = useI18n();
   const navigate = useNavigate();
   const fileInput = useRef<HTMLInputElement>(null);
@@ -101,20 +104,36 @@ export default function SettingsPage() {
     }
   };
 
-  const handleExportJson = () => {
-    downloadFile(
-      exportData(rituals, logs),
-      `ritualkiller-backup-${new Date().toISOString().slice(0, 10)}.json`,
-      "application/json",
-    );
-  };
-
-  const handleExportCsv = () => {
-    downloadFile(
-      exportToCSV(rituals, logs),
-      `ritualkiller-backup-${new Date().toISOString().slice(0, 10)}.csv`,
-      "text/csv;charset=utf-8",
-    );
+  // Exports read the full history page by page (the UI only keeps a window)
+  // and include archived rituals so every log keeps its title.
+  const handleExport = async (format: "json" | "csv") => {
+    setError(null);
+    setMessage(t("settings.exporting"));
+    setBusy(true);
+    try {
+      const allRituals = [...rituals, ...archivedRituals];
+      const allLogs = await ritualService.listAllLogs(user.id);
+      const stamp = toDateKey();
+      if (format === "json") {
+        downloadFile(
+          exportData(allRituals, allLogs),
+          `ritualkiller-backup-${stamp}.json`,
+          "application/json",
+        );
+      } else {
+        downloadFile(
+          exportToCSV(allRituals, allLogs, csvLabels(t)),
+          `ritualkiller-backup-${stamp}.csv`,
+          "text/csv;charset=utf-8",
+        );
+      }
+      setMessage(null);
+    } catch (exportError) {
+      setMessage(null);
+      setError(exportError instanceof Error ? exportError.message : t("common.error"));
+    } finally {
+      setBusy(false);
+    }
   };
 
   const handleImport = async (file: File | undefined) => {
@@ -123,12 +142,13 @@ export default function SettingsPage() {
     setMessage(null);
     setBusy(true);
     try {
+      if (file.size > BACKUP_LIMITS.bytes) throw new Error(t("settings.backupTooLarge"));
       const text = await file.text();
       const backup = importData(text);
       if (!backup) throw new Error(t("settings.invalidBackup"));
       const result = await importBackup(backup);
       flash(
-        `${t("settings.imported")} ${result.rituals} ${t("settings.ritualsUnit")}, ${result.logs} ${t("settings.logsUnit")}.`,
+        `${t("settings.imported")} ${result.rituals} ${t("settings.ritualsUnit")} (${result.reused} ${t("settings.importReused")}), ${result.logs} ${t("settings.logsUnit")}, ${result.skipped} ${t("settings.importSkipped")}.`,
       );
     } catch (importError) {
       setError(
@@ -350,14 +370,16 @@ export default function SettingsPage() {
         <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
           <button
             type="button"
-            onClick={handleExportJson}
+            onClick={() => void handleExport("json")}
+            disabled={busy}
             className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-zinc-700 px-4 text-sm text-zinc-200 hover:border-ritual-accent"
           >
             <Download size={16} aria-hidden="true" /> {t("settings.exportJson")}
           </button>
           <button
             type="button"
-            onClick={handleExportCsv}
+            onClick={() => void handleExport("csv")}
+            disabled={busy}
             className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-zinc-700 px-4 text-sm text-zinc-200 hover:border-ritual-accent"
           >
             <Download size={16} aria-hidden="true" /> {t("settings.exportCsv")}

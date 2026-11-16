@@ -51,14 +51,38 @@ export function exportData(rituals: Ritual[], logs: RitualLog[]): string {
   return JSON.stringify(data, null, 2);
 }
 
-export function exportToCSV(rituals: Ritual[], logs: RitualLog[]): string {
-  const headers = ["Fecha", "Ritual", "Dificultad", "Esencia ganada"];
+export interface CsvLabels {
+  date: string;
+  ritual: string;
+  difficulty: string;
+  essence: string;
+  unknown: string;
+  difficultyName: (difficulty: Difficulty) => string;
+}
+
+const DEFAULT_CSV_LABELS: CsvLabels = {
+  date: "Date",
+  ritual: "Ritual",
+  difficulty: "Difficulty",
+  essence: "Essence gained",
+  unknown: "Unknown",
+  difficultyName: (difficulty) => difficulty,
+};
+
+/** CSV of completions; headers come translated from the caller. */
+export function exportToCSV(
+  rituals: Ritual[],
+  logs: RitualLog[],
+  labels: CsvLabels = DEFAULT_CSV_LABELS,
+): string {
+  const byId = new Map(rituals.map((ritual) => [ritual.id, ritual]));
+  const headers = [labels.date, labels.ritual, labels.difficulty, labels.essence];
   const rows = logs.map((log) => {
-    const ritual = rituals.find((item) => item.id === log.ritualId);
+    const ritual = byId.get(log.ritualId);
     return [
       log.date,
-      ritual?.title ?? "Desconocido",
-      ritual?.difficulty ?? "N/A",
+      ritual?.title ?? labels.unknown,
+      ritual ? labels.difficultyName(ritual.difficulty) : labels.unknown,
       log.essence_gained,
     ];
   });
@@ -84,14 +108,8 @@ export function downloadFile(content: string, filename: string, mimeType: string
 export function importData(jsonString: string): ExportData | null {
   try {
     const parsed = JSON.parse(jsonString) as unknown;
-    const validation = validateShape(parsed);
-    if (!validation.valid) {
-      console.error("Invalid backup:", validation.errors);
-      return null;
-    }
-    return parsed as ExportData;
-  } catch (error) {
-    console.error("Error importing data:", error);
+    return validateShape(parsed).valid ? (parsed as ExportData) : null;
+  } catch {
     return null;
   }
 }

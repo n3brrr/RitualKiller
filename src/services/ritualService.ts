@@ -1,4 +1,6 @@
 import { supabase } from "@/lib/supabase";
+import { fetchAllPages } from "@/lib/paginate";
+import { lastNDays } from "@/utils/dates";
 import type { Difficulty, Frequency, Ritual, RitualLog } from "@/types";
 import type { ExportData } from "@/utils/exportImport";
 
@@ -41,6 +43,19 @@ export interface CompleteResult {
   streak?: number;
 }
 
+export interface ImportResult {
+  rituals: number;
+  reused: number;
+  logs: number;
+  skipped: number;
+}
+
+/**
+ * Days of history loaded for the UI (heatmap, calendar, analytics). Totals and
+ * achievements use server aggregates, and exports read the full history.
+ */
+export const HISTORY_DAYS = 400;
+
 export interface CreateRitualInput {
   title: string;
   description: string;
@@ -76,7 +91,8 @@ function mapLog(row: LogRow): RitualLog {
 
 export const ritualService = {
   async list(userId: string): Promise<RitualBundle> {
-    const [ritualsResult, archivedResult, logsResult] = await Promise.all([
+    const since = lastNDays(HISTORY_DAYS)[0];
+    const [ritualsResult, archivedResult, logRows] = await Promise.all([
       supabase
         .from("rituals_with_streak")
         .select("*")
@@ -87,19 +103,24 @@ export const ritualService = {
         .select("*")
         .eq("user_id", userId)
         .not("archived_at", "is", null),
-      supabase
-        .from("ritual_logs")
-        .select("*")
-        .eq("user_id", userId)
-        // Days filled by the Potion of Oblivion keep streaks alive on the server
-        // but are not completions, so they stay out of stats and calendars.
-        .eq("protected", false)
-        .order("date", { ascending: true }),
+      fetchAllPages<LogRow>((from, to) => {
+        let query = supabase
+          .from("ritual_logs")
+          .select("*")
+          .eq("user_id", userId)
+          // Days filled by the Potion of Oblivion keep streaks alive on the
+          // server but are not completions, so they stay out of client stats.
+          .eq("protected", false);
+        if (since) query = query.gte("date", since);
+        return query
+          .order("date", { ascending: true })
+          .order("id", { ascending: true })
+          .range(from, to);
+      }),
     ]);
 
     if (ritualsResult.error) throw ritualsResult.error;
     if (archivedResult.error) throw archivedResult.error;
-    if (logsResult.error) throw logsResult.error;
 
     return {
       rituals: ((ritualsResult.data ?? []) as RitualRow[]).map(mapRitual),
@@ -107,7 +128,7 @@ export const ritualService = {
         ...mapRitual(row),
         streak: 0,
       })),
-      logs: ((logsResult.data ?? []) as LogRow[]).map(mapLog),
+      logs: logRows.map(mapLog),
     };
   },
 
@@ -149,48 +170,27 @@ export const ritualService = {
     return data as CompleteResult;
   },
 
-  /** Re-inserts a backup under the current account, remapping ritual ids. */
-  async importBackup(
-    userId: string,
-    backup: ExportData,
-  ): Promise<{ rituals: number; logs: number }> {
-    const idMap = new Map<string, string>();
-    let ritualCount = 0;
-    let logCount = 0;
+  /** Imports a backup in one transaction on the server (import_backup RPC). */
+  async importBackup(backup: ExportData): Promise<ImportResult> {
+    const { data, error } = await supabase.rpc("import_backup", {
+      p_backup: { rituals: backup.rituals, logs: backup.logs },
+    });
+    if (error) throw error;
+    return data as ImportResult;
+  },
 
-    for (const ritual of backup.rituals) {
-      const { data, error } = await supabase
-        .from("rituals")
-        .insert({
-          user_id: userId,
-          title: ritual.title.slice(0, 100),
-          description: (ritual.description ?? "").slice(0, 500),
-          difficulty: ritual.difficulty,
-          frequency: ritual.frequency,
-        })
-        .select("id")
-        .single();
-      if (error) throw error;
-      idMap.set(ritual.id, data.id as string);
-      ritualCount += 1;
-    }
-
-    for (const log of backup.logs) {
-      const ritualId = idMap.get(log.ritualId);
-      if (!ritualId || !/^\d{4}-\d{2}-\d{2}$/.test(log.date)) continue;
-      const { error } = await supabase.from("ritual_logs").upsert(
-        {
-          ritual_id: ritualId,
-          user_id: userId,
-          date: log.date,
-          essence_gained: Math.max(0, Number(log.essence_gained) || 0),
-        },
-        { onConflict: "ritual_id,date", ignoreDuplicates: true },
-      );
-      if (error) throw error;
-      logCount += 1;
-    }
-
-    return { rituals: ritualCount, logs: logCount };
+  /** Full history for exports, read page by page (never truncated). */
+  async listAllLogs(userId: string): Promise<RitualLog[]> {
+    const rows = await fetchAllPages<LogRow>((from, to) =>
+      supabase
+        .from("ritual_logs")
+        .select("*")
+        .eq("user_id", userId)
+        .eq("protected", false)
+        .order("date", { ascending: true })
+        .order("id", { ascending: true })
+        .range(from, to),
+    );
+    return rows.map(mapLog);
   },
 };

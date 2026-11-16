@@ -51,15 +51,24 @@ export const adminService = {
   },
 
   async getReports(): Promise<Report[]> {
-    const [reportsResult, profilesResult] = await Promise.all([
-      supabase
-        .from("reports")
-        .select("*")
-        .order("created_at", { ascending: false })
-        .limit(100),
-      supabase.from("public_profiles").select("id, username"),
-    ]);
+    const reportsResult = await supabase
+      .from("reports")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(100);
     if (reportsResult.error) throw reportsResult.error;
+
+    // Only the profiles referenced by these reports (never the whole table,
+    // which would be cut at the server's row limit).
+    const reporterIds = Array.from(
+      new Set(((reportsResult.data ?? []) as ReportRow[]).map((row) => row.reporter_id)),
+    );
+    const profilesResult = reporterIds.length
+      ? await supabase
+          .from("public_profiles")
+          .select("id, username")
+          .in("id", reporterIds)
+      : { data: [], error: null };
     if (profilesResult.error) throw profilesResult.error;
 
     const names = new Map(
