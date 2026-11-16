@@ -58,6 +58,7 @@ export function useRituals() {
     logs: query.data?.logs ?? [],
     isLoading: query.isLoading,
     error: (query.error as Error | null) ?? null,
+    refetch: query.refetch,
     createRitual: createMutation.mutateAsync,
     isCreating: createMutation.isPending,
     removeRitual: removeMutation.mutateAsync,

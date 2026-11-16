@@ -8,22 +8,29 @@ import {
   type RitualTemplate,
 } from "@/data/ritualLibrary";
 import type { Difficulty } from "@/types";
-import { translateDifficulty, translateFrequency } from "@/utils/translations";
+import {
+  difficultyKeys,
+  frequencyKeys,
+  useI18n,
+  type TranslationKey,
+} from "@/i18n";
 
 interface RitualLibraryProps {
   onImport: (template: RitualTemplate) => Promise<void> | void;
 }
 
-const CATEGORIES: Array<{ value: RitualCategory; label: string }> = [
-  { value: "health", label: "Salud" },
-  { value: "productivity", label: "Productividad" },
-  { value: "mental", label: "Mental" },
-  { value: "physical", label: "Físico" },
-  { value: "learning", label: "Aprendizaje" },
-  { value: "creativity", label: "Creatividad" },
-  { value: "social", label: "Social" },
-  { value: "spiritual", label: "Espiritual" },
+const CATEGORIES: Array<{ value: RitualCategory; labelKey: TranslationKey }> = [
+  { value: "health", labelKey: "library.category.health" },
+  { value: "productivity", labelKey: "library.category.productivity" },
+  { value: "mental", labelKey: "library.category.mental" },
+  { value: "physical", labelKey: "library.category.physical" },
+  { value: "learning", labelKey: "library.category.learning" },
+  { value: "creativity", labelKey: "library.category.creativity" },
+  { value: "social", labelKey: "library.category.social" },
+  { value: "spiritual", labelKey: "library.category.spiritual" },
 ];
+
+const DIFFICULTIES: Difficulty[] = ["novice", "adept", "master"];
 
 const DIFFICULTY_STYLES = {
   novice: "border-green-500/30 bg-green-500/10 text-green-500",
@@ -32,6 +39,7 @@ const DIFFICULTY_STYLES = {
 } as const;
 
 export function RitualLibrary({ onImport }: RitualLibraryProps) {
+  const { t } = useI18n();
   const [searchQuery, setSearchQuery] = useState("");
   const [category, setCategory] = useState<RitualCategory | "all">("all");
   const [difficulty, setDifficulty] = useState<Difficulty | "all">("all");
@@ -60,10 +68,10 @@ export function RitualLibrary({ onImport }: RitualLibraryProps) {
   };
 
   return (
-    <section className="space-y-4" aria-label="Biblioteca de rituales">
+    <section className="space-y-4" aria-label={t("library.label")}>
       <div className="flex items-center gap-2">
         <BookOpen className="text-ritual-accent" size={22} aria-hidden="true" />
-        <h2 className="font-display text-xl font-bold">Biblioteca</h2>
+        <h2 className="font-display text-xl font-bold">{t("library.title")}</h2>
       </div>
 
       <div className="space-y-3">
@@ -77,8 +85,8 @@ export function RitualLibrary({ onImport }: RitualLibraryProps) {
             type="search"
             value={searchQuery}
             onChange={(event) => setSearchQuery(event.target.value)}
-            placeholder="Buscar ritual..."
-            aria-label="Buscar ritual"
+            placeholder={t("library.searchPlaceholder")}
+            aria-label={t("library.searchLabel")}
             className="min-h-11 w-full rounded-lg border border-zinc-800 bg-zinc-950 py-2 pl-10 pr-4 text-white placeholder-zinc-500 outline-none focus:border-ritual-accent"
           />
         </div>
@@ -94,19 +102,19 @@ export function RitualLibrary({ onImport }: RitualLibraryProps) {
                 : "border-zinc-800 bg-zinc-900 text-zinc-400"
             }`}
           >
-            <Star size={14} aria-hidden="true" /> Populares
+            <Star size={14} aria-hidden="true" /> {t("library.popular")}
           </button>
 
           <select
             value={category}
             onChange={(event) => setCategory(event.target.value as RitualCategory | "all")}
-            aria-label="Filtrar por categoría"
+            aria-label={t("library.categoryLabel")}
             className="min-h-11 flex-1 rounded-lg border border-zinc-800 bg-zinc-900 px-3 text-sm text-white outline-none focus:border-ritual-accent"
           >
-            <option value="all">Todas las categorías</option>
+            <option value="all">{t("library.categoryAll")}</option>
             {CATEGORIES.map((item) => (
               <option key={item.value} value={item.value}>
-                {item.label}
+                {t(item.labelKey)}
               </option>
             ))}
           </select>
@@ -114,13 +122,15 @@ export function RitualLibrary({ onImport }: RitualLibraryProps) {
           <select
             value={difficulty}
             onChange={(event) => setDifficulty(event.target.value as Difficulty | "all")}
-            aria-label="Filtrar por dificultad"
+            aria-label={t("library.difficultyLabel")}
             className="min-h-11 flex-1 rounded-lg border border-zinc-800 bg-zinc-900 px-3 text-sm text-white outline-none focus:border-ritual-accent"
           >
-            <option value="all">Toda dificultad</option>
-            <option value="novice">Novato</option>
-            <option value="adept">Intermedio</option>
-            <option value="master">Maestro</option>
+            <option value="all">{t("library.difficultyAll")}</option>
+            {DIFFICULTIES.map((value) => (
+              <option key={value} value={value}>
+                {t(difficultyKeys[value])}
+              </option>
+            ))}
           </select>
         </div>
       </div>
@@ -137,7 +147,7 @@ export function RitualLibrary({ onImport }: RitualLibraryProps) {
                 <Star
                   className="shrink-0 fill-yellow-500/20 text-yellow-500"
                   size={16}
-                  aria-label="Popular"
+                  aria-label={t("library.popularMark")}
                 />
               )}
             </div>
@@ -145,10 +155,10 @@ export function RitualLibrary({ onImport }: RitualLibraryProps) {
 
             <div className="mb-3 flex flex-wrap gap-1.5 text-xs uppercase tracking-wider">
               <span className={`rounded border px-2 py-0.5 ${DIFFICULTY_STYLES[template.difficulty]}`}>
-                {translateDifficulty(template.difficulty)}
+                {t(difficultyKeys[template.difficulty])}
               </span>
               <span className="rounded border border-zinc-800 px-2 py-0.5 text-zinc-400">
-                {translateFrequency(template.frequency)}
+                {t(frequencyKeys[template.frequency])}
               </span>
               <span className="rounded border border-ritual-accent/30 px-2 py-0.5 text-ritual-accent">
                 +{template.essenceReward}
@@ -162,14 +172,14 @@ export function RitualLibrary({ onImport }: RitualLibraryProps) {
               className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-ritual-accent px-4 text-sm font-bold text-black transition-colors hover:bg-emerald-400 disabled:opacity-50"
             >
               <Plus size={16} aria-hidden="true" />
-              {importingId === template.id ? "Añadiendo..." : "Añadir"}
+              {importingId === template.id ? t("library.adding") : t("library.add")}
             </button>
           </article>
         ))}
       </div>
 
       {filtered.length === 0 && (
-        <p className="py-8 text-center text-sm text-zinc-500">No hay rituales con esos filtros.</p>
+        <p className="py-8 text-center text-sm text-zinc-400">{t("library.empty")}</p>
       )}
     </section>
   );

@@ -1,12 +1,12 @@
 import { useState } from "react";
-import { BookOpen, Check, PenTool, Plus, Sparkles, X } from "lucide-react";
+import { AlertCircle, BookOpen, Check, PenTool, Plus, Sparkles, X } from "lucide-react";
 import RitualCard from "@/components/rituals/RitualCard";
 import RitualLibrary from "@/components/rituals/RitualLibrary";
 import Loading from "@/components/animations/Loading";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { useAuth } from "@/features/auth/AuthProvider";
 import { useRituals } from "@/hooks/useRituals";
-import { useI18n } from "@/i18n";
+import { difficultyKeys, frequencyKeys, useI18n } from "@/i18n";
 import { generateRitualSuggestions } from "@/services/ai/ollamaService";
 import type { Difficulty, Frequency, Ritual } from "@/types";
 import type { RitualTemplate } from "@/data/ritualLibrary";
@@ -17,6 +17,8 @@ import { validateRitual } from "@/utils/validation";
 type CreateMode = "manual" | "ai";
 
 const BASE_REWARD: Record<Difficulty, number> = { novice: 10, adept: 25, master: 50 };
+const DIFFICULTIES: Difficulty[] = ["novice", "adept", "master"];
+const FREQUENCIES: Frequency[] = ["daily", "weekly"];
 
 export default function HabitsPage() {
   const { user } = useAuth();
@@ -24,6 +26,8 @@ export default function HabitsPage() {
     rituals,
     logs,
     isLoading,
+    error,
+    refetch,
     createRitual,
     isCreating,
     removeRitual,
@@ -50,6 +54,29 @@ export default function HabitsPage() {
 
   if (!user) return null;
   if (isLoading) return <Loading />;
+  if (error) {
+    return (
+      <div className="mx-auto max-w-3xl">
+        <div
+          role="alert"
+          className="rounded-xl border border-red-500/30 bg-red-500/5 p-6 text-center"
+        >
+          <AlertCircle className="mx-auto mb-2 text-red-500" size={24} aria-hidden="true" />
+          <h1 className="font-display text-lg font-bold text-white">
+            {t("habits.errorTitle")}
+          </h1>
+          <p className="mt-1 text-sm text-red-400">{error.message}</p>
+          <button
+            type="button"
+            onClick={() => void refetch()}
+            className="mt-4 inline-flex min-h-11 items-center rounded-lg border border-zinc-700 px-4 text-sm text-zinc-200 transition-colors hover:border-ritual-accent hover:text-ritual-accent"
+          >
+            {t("common.retry")}
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   const todayKey = toDateKey();
   const reward = BASE_REWARD[form.difficulty] * (form.frequency === "weekly" ? 3 : 1);
@@ -57,7 +84,7 @@ export default function HabitsPage() {
   const completed = rituals.filter((ritual) => isRitualCompleted(ritual, logs, new Date()));
 
   const handleError = (error: unknown) => {
-    setMessage(error instanceof Error ? error.message : "Algo salió mal");
+    setMessage(error instanceof Error ? error.message : t("common.error"));
   };
 
   const handleManualCreate = async (event: React.FormEvent) => {
@@ -65,7 +92,7 @@ export default function HabitsPage() {
     setMessage(null);
     const validation = validateRitual(form);
     if (!validation.valid) {
-      setMessage(validation.message ?? "Ritual inválido");
+      setMessage(validation.message ?? t("habits.invalid"));
       return;
     }
 
@@ -161,8 +188,9 @@ export default function HabitsPage() {
       <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="font-display text-2xl font-bold sm:text-3xl">{t("habits.title")}</h1>
-          <p className="text-sm text-zinc-500">
-            {pending.length} pendientes · {completed.length} completados
+          <p className="text-sm text-zinc-400">
+            {pending.length} {t("habits.pendingCount")} · {completed.length}{" "}
+            {t("habits.completedCount")}
           </p>
         </div>
         <div className="flex gap-2">
@@ -209,7 +237,7 @@ export default function HabitsPage() {
               className={`flex min-h-11 items-center gap-2 border-b-2 text-xs font-bold uppercase tracking-wider ${
                 mode === "manual"
                   ? "border-ritual-accent text-ritual-accent"
-                  : "border-transparent text-zinc-500"
+                  : "border-transparent text-zinc-400"
               }`}
             >
               <PenTool size={14} aria-hidden="true" /> {t("habits.manual")}
@@ -220,7 +248,7 @@ export default function HabitsPage() {
               className={`flex min-h-11 items-center gap-2 border-b-2 text-xs font-bold uppercase tracking-wider ${
                 mode === "ai"
                   ? "border-ritual-accent text-ritual-accent"
-                  : "border-transparent text-zinc-500"
+                  : "border-transparent text-zinc-400"
               }`}
             >
               <Sparkles size={14} aria-hidden="true" /> {t("habits.ai")}
@@ -236,7 +264,7 @@ export default function HabitsPage() {
                   onChange={(event) => setForm({ ...form, title: event.target.value })}
                   maxLength={100}
                   required
-                  placeholder="ej: Carrera matutina"
+                  placeholder={t("habits.titlePlaceholder")}
                   className="min-h-11 w-full rounded-lg border border-zinc-700 bg-black px-4 text-white outline-none focus:border-ritual-accent"
                 />
               </Field>
@@ -247,7 +275,7 @@ export default function HabitsPage() {
                   onChange={(event) => setForm({ ...form, description: event.target.value })}
                   maxLength={500}
                   rows={2}
-                  placeholder="Condiciones para completarlo..."
+                  placeholder={t("habits.descriptionPlaceholder")}
                   className="w-full rounded-lg border border-zinc-700 bg-black px-4 py-2 text-white outline-none focus:border-ritual-accent"
                 />
               </Field>
@@ -261,9 +289,11 @@ export default function HabitsPage() {
                     }
                     className="min-h-11 w-full rounded-lg border border-zinc-700 bg-black px-4 text-white outline-none focus:border-ritual-accent"
                   >
-                    <option value="novice">Novato</option>
-                    <option value="adept">Intermedio</option>
-                    <option value="master">Maestro</option>
+                    {DIFFICULTIES.map((value) => (
+                      <option key={value} value={value}>
+                        {t(difficultyKeys[value])}
+                      </option>
+                    ))}
                   </select>
                 </Field>
 
@@ -275,8 +305,11 @@ export default function HabitsPage() {
                     }
                     className="min-h-11 w-full rounded-lg border border-zinc-700 bg-black px-4 text-white outline-none focus:border-ritual-accent"
                   >
-                    <option value="daily">Diario</option>
-                    <option value="weekly">Semanal</option>
+                    {FREQUENCIES.map((value) => (
+                      <option key={value} value={value}>
+                        {t(frequencyKeys[value])}
+                      </option>
+                    ))}
                   </select>
                 </Field>
               </div>
@@ -289,7 +322,7 @@ export default function HabitsPage() {
                 <button
                   type="submit"
                   disabled={isCreating}
-                  className="inline-flex min-h-11 items-center justify-center rounded-lg bg-white px-5 font-bold text-black transition-colors hover:bg-zinc-200 disabled:opacity-50"
+                  className="inline-flex min-h-11 items-center justify-center rounded-lg bg-ritual-accent px-5 font-bold text-black transition-colors hover:bg-emerald-400 disabled:opacity-50"
                 >
                   {isCreating ? t("common.saving") : t("habits.create")}
                 </button>
@@ -297,10 +330,7 @@ export default function HabitsPage() {
             </form>
           ) : (
             <form onSubmit={handleAiCreate} className="space-y-3">
-              <p className="text-sm text-zinc-400">
-                Describe tu objetivo. Ollama propondrá tres rituales; si no está disponible se usan
-                sugerencias locales.
-              </p>
+              <p className="text-sm text-zinc-400">{t("habits.aiHelp")}</p>
               <div className="flex flex-col gap-2 sm:flex-row">
                 <input
                   type="text"
@@ -308,7 +338,7 @@ export default function HabitsPage() {
                   onChange={(event) => setGoalInput(event.target.value)}
                   maxLength={200}
                   required
-                  placeholder="ej: Aprender a programar"
+                  placeholder={t("habits.goalPlaceholder")}
                   className="min-h-11 flex-1 rounded-lg border border-zinc-700 bg-black px-4 text-white outline-none focus:border-ritual-accent"
                 />
                 <button
@@ -316,7 +346,7 @@ export default function HabitsPage() {
                   disabled={isGenerating || isCreating}
                   className="inline-flex min-h-11 items-center justify-center rounded-lg bg-ritual-accent px-5 font-bold text-black transition-colors hover:bg-emerald-400 disabled:opacity-50"
                 >
-                  {isGenerating ? "Invocando..." : t("habits.invoke")}
+                  {isGenerating ? t("habits.invoking") : t("habits.invoke")}
                 </button>
               </div>
             </form>
@@ -326,7 +356,25 @@ export default function HabitsPage() {
 
       <RitualList
         title={t("habits.pending")}
-        empty={t("habits.empty")}
+        empty={
+          <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <span>
+              {rituals.length === 0 ? t("habits.emptyGrimoire") : t("habits.empty")}
+            </span>
+            {rituals.length === 0 && !showCreator && (
+              <button
+                type="button"
+                onClick={() => {
+                  setShowCreator(true);
+                  setShowLibrary(false);
+                }}
+                className="inline-flex min-h-11 items-center gap-2 rounded-lg bg-ritual-accent px-4 text-sm font-bold text-black transition-colors hover:bg-emerald-400"
+              >
+                <Plus size={16} aria-hidden="true" /> {t("habits.new")}
+              </button>
+            )}
+          </div>
+        }
         rituals={pending}
         logs={logs}
         onToggle={handleToggle}
@@ -351,14 +399,15 @@ export default function HabitsPage() {
 
       <ConfirmDialog
         open={Boolean(deleteTarget)}
-        title="Eliminar ritual"
+        title={t("habits.deleteTitle")}
         description={
           <>
-            ¿Eliminar <strong className="text-zinc-200">{deleteTarget?.title}</strong> y su historial?
-            No se puede deshacer.
+            {t("habits.deletePrompt")}{" "}
+            <strong className="text-zinc-200">{deleteTarget?.title}</strong>{" "}
+            {t("habits.deleteSuffix")}
           </>
         }
-        confirmLabel="Eliminar"
+        confirmLabel={t("common.delete")}
         destructive
         busy={deleting}
         onConfirm={() => void confirmDelete()}
@@ -371,7 +420,7 @@ export default function HabitsPage() {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label className="block">
-      <span className="mb-1 block text-xs font-bold uppercase tracking-wider text-zinc-500">
+      <span className="mb-1 block text-xs font-bold uppercase tracking-wider text-zinc-400">
         {label}
       </span>
       {children}
@@ -391,7 +440,7 @@ function RitualList({
   muted = false,
 }: {
   title: string;
-  empty: string;
+  empty: React.ReactNode;
   rituals: Ritual[];
   logs: Parameters<typeof isRitualCompleted>[1];
   onToggle: (ritual: Ritual) => void;
@@ -408,9 +457,9 @@ function RitualList({
       </h2>
       <div className="space-y-2">
         {rituals.length === 0 && empty && (
-          <p className="rounded-lg border border-dashed border-zinc-800 p-4 text-sm italic text-zinc-400">
+          <div className="rounded-xl border border-dashed border-zinc-800 p-4 text-sm text-zinc-400">
             {empty}
-          </p>
+          </div>
         )}
         {rituals.map((ritual) => (
           <RitualCard

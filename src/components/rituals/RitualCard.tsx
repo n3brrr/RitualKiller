@@ -1,6 +1,6 @@
 import type { Ritual } from "@/types";
 import { Check, Trash2, Zap } from "lucide-react";
-import { translateDifficulty, translateFrequency } from "@/utils/translations";
+import { difficultyKeys, frequencyKeys, useI18n } from "@/i18n";
 
 interface RitualCardProps {
   ritual: Ritual;
@@ -17,6 +17,7 @@ const DIFFICULTY_STYLES = {
 } as const;
 
 export function RitualCard({ ritual, isDone, busy = false, onToggle, onDelete }: RitualCardProps) {
+  const { t } = useI18n();
   return (
     <article
       className={`relative flex items-start justify-between gap-3 rounded-xl border p-4 transition-colors sm:p-5 ${
@@ -35,7 +36,10 @@ export function RitualCard({ ritual, isDone, busy = false, onToggle, onDelete }:
             {ritual.title}
           </h3>
           {ritual.streak > 1 && (
-            <span className="inline-flex items-center gap-1 rounded border border-yellow-500/20 bg-yellow-500/10 px-2 py-0.5 font-mono text-xs text-yellow-500">
+            <span
+              aria-label={`${ritual.streak} ${t("productivity.days")}`}
+              className="inline-flex items-center gap-1 rounded border border-yellow-500/20 bg-yellow-500/10 px-2 py-0.5 font-mono text-xs text-yellow-500"
+            >
               <Zap size={10} fill="currentColor" aria-hidden="true" />
               {ritual.streak}
             </span>
@@ -48,13 +52,13 @@ export function RitualCard({ ritual, isDone, busy = false, onToggle, onDelete }:
 
         <div className="mt-2 flex flex-wrap gap-1.5 text-xs uppercase tracking-wider">
           <span className={`rounded border px-2 py-0.5 ${DIFFICULTY_STYLES[ritual.difficulty]}`}>
-            {translateDifficulty(ritual.difficulty)}
+            {t(difficultyKeys[ritual.difficulty])}
           </span>
           <span className="rounded border border-zinc-800 px-2 py-0.5 text-zinc-400">
-            {translateFrequency(ritual.frequency)}
+            {t(frequencyKeys[ritual.frequency])}
           </span>
           <span className="rounded border border-zinc-800 px-2 py-0.5 text-zinc-400">
-            +{ritual.essenceReward} essence
+            +{ritual.essenceReward} {t("dashboard.essenceUnit")}
           </span>
         </div>
       </div>
@@ -64,7 +68,9 @@ export function RitualCard({ ritual, isDone, busy = false, onToggle, onDelete }:
           type="button"
           onClick={() => onToggle(ritual)}
           disabled={busy}
-          aria-label={isDone ? `Desmarcar ${ritual.title}` : `Completar ${ritual.title}`}
+          aria-label={`${
+            isDone ? t("habits.markUndone") : t("habits.markDone")
+          } ${ritual.title}`}
           aria-pressed={isDone}
           className={`inline-flex h-11 w-11 items-center justify-center rounded-full border-2 transition-colors disabled:cursor-wait disabled:opacity-60 ${
             isDone
@@ -77,7 +83,7 @@ export function RitualCard({ ritual, isDone, busy = false, onToggle, onDelete }:
         <button
           type="button"
           onClick={() => onDelete(ritual.id)}
-          aria-label={`Eliminar ${ritual.title}`}
+          aria-label={`${t("common.delete")} ${ritual.title}`}
           className="inline-flex h-11 w-11 items-center justify-center rounded-full text-zinc-400 transition-colors hover:text-red-500"
         >
           <Trash2 size={18} aria-hidden="true" />
