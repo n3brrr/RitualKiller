@@ -2,5 +2,6 @@ dist
 node_modules
 coverage
 pnpm-lock.yaml
+.claude
 .opencode
 .superpowers

@@ -21,7 +21,10 @@ export function Modal({ open, onClose, title, children, footer, role = "dialog" 
   if (!open) return null;
 
   return createPortal(
+    // The backdrop only offers a pointer shortcut; keyboard users close with Escape
+    // (useFocusTrap) or the close button, so it is presentational for AT.
     <div
+      role="presentation"
       className="fixed inset-0 z-[90] flex items-end justify-center bg-black/70 backdrop-blur-sm sm:items-center sm:p-4"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) onClose();
