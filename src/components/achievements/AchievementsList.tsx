@@ -1,9 +1,10 @@
-import { AlertCircle, Lock, Trophy, Unlock } from "lucide-react";
+import { Lock, Trophy, Unlock } from "lucide-react";
 import { useAchievements } from "@/hooks/useAchievements";
 import { useI18n, type TranslationKey } from "@/i18n";
 import { formatDateTime } from "@/utils/dates";
 import type { Achievement } from "@/types";
 import Loading from "@/components/animations/Loading";
+import { ErrorState } from "@/components/ui/ErrorState";
 
 const RARITY_STYLES = {
   common: "border-zinc-700 text-zinc-300",
@@ -26,23 +27,11 @@ export function AchievementsList() {
   if (isLoading) return <Loading />;
   if (error) {
     return (
-      <div
-        role="alert"
-        className="rounded-xl border border-red-500/30 bg-red-500/5 p-6 text-center"
-      >
-        <AlertCircle className="mx-auto mb-2 text-red-500" size={24} aria-hidden="true" />
-        <h2 className="font-display text-lg font-bold text-white">
-          {t("achievements.errorTitle")}
-        </h2>
-        <p className="mt-1 text-sm text-red-400">{error.message}</p>
-        <button
-          type="button"
-          onClick={() => void refetch()}
-          className="mt-4 inline-flex min-h-11 items-center rounded-lg border border-zinc-700 px-4 text-sm text-zinc-200 transition-colors hover:border-ritual-accent hover:text-ritual-accent"
-        >
-          {t("common.retry")}
-        </button>
-      </div>
+      <ErrorState
+        title={t("achievements.errorTitle")}
+        message={error.message}
+        onRetry={() => void refetch()}
+      />
     );
   }
 

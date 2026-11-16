@@ -1,6 +1,5 @@
 import { useState } from "react";
 import {
-  AlertCircle,
   Heart,
   MessageCircle,
   Send,
@@ -17,6 +16,7 @@ import { useI18n } from "@/i18n";
 import { formatDateTime } from "@/utils/dates";
 import Loading from "@/components/animations/Loading";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { ErrorState } from "@/components/ui/ErrorState";
 import { ReportDialog } from "@/components/ui/ReportDialog";
 import type { SocialPost } from "@/types";
 
@@ -50,21 +50,11 @@ export function EnhancedSocial() {
   if (isLoading) return <Loading />;
   if (error) {
     return (
-      <div
-        role="alert"
-        className="rounded-xl border border-red-500/30 bg-red-500/5 p-6 text-center"
-      >
-        <AlertCircle className="mx-auto mb-2 text-red-500" size={24} aria-hidden="true" />
-        <h1 className="font-display text-lg font-bold text-white">{t("social.errorTitle")}</h1>
-        <p className="mt-1 text-sm text-red-400">{error.message}</p>
-        <button
-          type="button"
-          onClick={() => void refetch()}
-          className="mt-4 inline-flex min-h-11 items-center rounded-lg border border-zinc-700 px-4 text-sm text-zinc-200 transition-colors hover:border-ritual-accent hover:text-ritual-accent"
-        >
-          {t("common.retry")}
-        </button>
-      </div>
+      <ErrorState
+        title={t("social.errorTitle")}
+        message={error.message}
+        onRetry={() => void refetch()}
+      />
     );
   }
 

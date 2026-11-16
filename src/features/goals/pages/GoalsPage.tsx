@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { AlertCircle, Calendar, Plus, Target, Trash2 } from "lucide-react";
+import { Calendar, Plus, Target, Trash2 } from "lucide-react";
 import { useGoals } from "@/hooks/useGoals";
 import { useRituals } from "@/hooks/useRituals";
 import { useI18n } from "@/i18n";
 import { addDays, daysUntil, toDateKey } from "@/utils/dates";
 import Loading from "@/components/animations/Loading";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { ErrorState } from "@/components/ui/ErrorState";
 
 export default function GoalsPage() {
   const { goals, isLoading, error, refetch, createGoal, isCreating, removeGoal } = useGoals();
@@ -28,23 +29,11 @@ export default function GoalsPage() {
   if (error) {
     return (
       <div className="mx-auto max-w-3xl">
-        <div
-          role="alert"
-          className="rounded-xl border border-red-500/30 bg-red-500/5 p-6 text-center"
-        >
-          <AlertCircle className="mx-auto mb-2 text-red-500" size={24} aria-hidden="true" />
-          <h1 className="font-display text-lg font-bold text-white">
-            {t("goals.errorTitle")}
-          </h1>
-          <p className="mt-1 text-sm text-red-400">{error.message}</p>
-          <button
-            type="button"
-            onClick={() => void refetch()}
-            className="mt-4 inline-flex min-h-11 items-center rounded-lg border border-zinc-700 px-4 text-sm text-zinc-200 transition-colors hover:border-ritual-accent hover:text-ritual-accent"
-          >
-            {t("common.retry")}
-          </button>
-        </div>
+        <ErrorState
+          title={t("goals.errorTitle")}
+          message={error.message}
+          onRetry={() => void refetch()}
+        />
       </div>
     );
   }

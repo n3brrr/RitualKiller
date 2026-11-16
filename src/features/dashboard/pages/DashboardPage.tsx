@@ -2,6 +2,7 @@ import { lazy, Suspense, useMemo } from "react";
 import { AlertCircle, Check, CheckCircle2, Flame, Package, Zap } from "lucide-react";
 import { Heatmap } from "@/components/Heatmap";
 import Loading from "@/components/animations/Loading";
+import { ErrorState } from "@/components/ui/ErrorState";
 import { useAuth } from "@/features/auth/AuthProvider";
 import { useRituals } from "@/hooks/useRituals";
 import { useI18n } from "@/i18n";
@@ -14,7 +15,7 @@ const ProductivityMetrics = lazy(() => import("@/components/productivity/Product
 
 export default function DashboardPage() {
   const { user } = useAuth();
-  const { rituals, logs, isLoading, error, completeRitual, isToggling } = useRituals();
+  const { rituals, logs, isLoading, error, refetch, completeRitual, isToggling } = useRituals();
   const { t } = useI18n();
 
   const dailyQuote = useMemo(() => {
@@ -30,10 +31,11 @@ export default function DashboardPage() {
 
   if (error) {
     return (
-      <div className="rounded-xl border border-red-500/30 bg-red-500/5 p-6 text-center">
-        <AlertCircle className="mx-auto mb-2 text-red-500" size={24} />
-        <p className="text-sm text-red-400">{error.message}</p>
-      </div>
+      <ErrorState
+        title={t("dashboard.errorTitle")}
+        message={error.message}
+        onRetry={() => void refetch()}
+      />
     );
   }
 

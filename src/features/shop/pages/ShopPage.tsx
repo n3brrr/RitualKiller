@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { AlertCircle, ShoppingBag, Zap } from "lucide-react";
+import { ShoppingBag, Zap } from "lucide-react";
 import { useAuth } from "@/features/auth/AuthProvider";
 import { useShop } from "@/hooks/useShop";
 import { rarityKeys, shopItemKey, useI18n } from "@/i18n";
 import { SHOP_ITEMS } from "@/data/items";
+import { ErrorState } from "@/components/ui/ErrorState";
 import type { Rarity } from "@/types";
 
 const RARITY_STYLES: Record<Rarity, string> = {
@@ -23,23 +24,11 @@ export default function ShopPage() {
   if (error) {
     return (
       <div className="mx-auto max-w-4xl">
-        <div
-          role="alert"
-          className="rounded-xl border border-red-500/30 bg-red-500/5 p-6 text-center"
-        >
-          <AlertCircle className="mx-auto mb-2 text-red-500" size={24} aria-hidden="true" />
-          <h1 className="font-display text-lg font-bold text-white">
-            {t("shop.errorTitle")}
-          </h1>
-          <p className="mt-1 text-sm text-red-400">{error.message}</p>
-          <button
-            type="button"
-            onClick={() => void refetch()}
-            className="mt-4 inline-flex min-h-11 items-center rounded-lg border border-zinc-700 px-4 text-sm text-zinc-200 transition-colors hover:border-ritual-accent hover:text-ritual-accent"
-          >
-            {t("common.retry")}
-          </button>
-        </div>
+        <ErrorState
+          title={t("shop.errorTitle")}
+          message={error.message}
+          onRetry={() => void refetch()}
+        />
       </div>
     );
   }

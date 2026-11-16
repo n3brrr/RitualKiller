@@ -1,11 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link, useParams } from "react-router-dom";
-import { AlertCircle, Settings, Shield, User as UserIcon, Zap } from "lucide-react";
+import { Settings, Shield, User as UserIcon, Zap } from "lucide-react";
 import { useAuth } from "@/features/auth/AuthProvider";
 import { profileService } from "@/services/profileService";
 import { translateRank, useI18n } from "@/i18n";
 import { formatDateTime } from "@/utils/dates";
 import Loading from "@/components/animations/Loading";
+import { ErrorState } from "@/components/ui/ErrorState";
 
 export default function ProfilePage() {
   const { username } = useParams<{ username: string }>();
@@ -24,20 +25,11 @@ export default function ProfilePage() {
   if (!isOwn && profileQuery.error) {
     return (
       <div className="mx-auto max-w-2xl">
-        <div
-          role="alert"
-          className="rounded-xl border border-red-500/30 bg-red-500/5 p-6 text-center"
-        >
-          <AlertCircle className="mx-auto mb-2 text-red-500" size={24} aria-hidden="true" />
-          <p className="text-sm text-red-400">{profileQuery.error.message}</p>
-          <button
-            type="button"
-            onClick={() => void profileQuery.refetch()}
-            className="mt-4 inline-flex min-h-11 items-center rounded-lg border border-zinc-700 px-4 text-sm text-zinc-200 transition-colors hover:border-ritual-accent hover:text-ritual-accent"
-          >
-            {t("common.retry")}
-          </button>
-        </div>
+        <ErrorState
+          title={t("profile.errorTitle")}
+          message={profileQuery.error.message}
+          onRetry={() => void profileQuery.refetch()}
+        />
       </div>
     );
   }
