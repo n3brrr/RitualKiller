@@ -120,7 +120,6 @@ export interface UserSettings {
   userId: string;
   notificationsEnabled: boolean;
   reminderTime: string;
-  locale: Locale;
   timezone: string;
 }
 

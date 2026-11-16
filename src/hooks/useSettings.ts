@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useAuth } from "@/features/auth/AuthProvider";
+import { useAuth } from "@/features/auth/useAuth";
 import { settingsService } from "@/services/settingsService";
 import type { UserSettings } from "@/types";
 
@@ -16,9 +16,7 @@ export function useSettings() {
 
   const updateMutation = useMutation({
     mutationFn: (
-      updates: Partial<
-        Pick<UserSettings, "notificationsEnabled" | "reminderTime" | "locale">
-      >,
+      updates: Partial<Pick<UserSettings, "notificationsEnabled" | "reminderTime">>,
     ) => settingsService.update(userId!, updates),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["settings", userId] });

@@ -1,4 +1,5 @@
 import type { User as SupabaseUser } from "@supabase/supabase-js";
+import { AppError } from "@/lib/errors";
 import { supabase } from "@/lib/supabase";
 import type { ActiveBuff, Locale, User } from "@/types";
 import { getRank } from "@/utils/rank";
@@ -30,47 +31,6 @@ function mapRole(essence: number): string {
   return getRank(essence).title;
 }
 
-function sanitizeUsername(value: string): string {
-  const clean = value
-    .trim()
-    .replace(/[^a-zA-Z0-9_]+/g, "_")
-    .slice(0, 24);
-  return clean.length >= 2 ? clean : "initiate";
-}
-
-async function createProfile(user: SupabaseUser): Promise<ProfileRow> {
-  const base = sanitizeUsername(
-    (user.user_metadata?.username as string | undefined) ??
-      user.email?.split("@")[0] ??
-      "initiate",
-  );
-
-  for (let attempt = 0; attempt < 4; attempt += 1) {
-    const username =
-      attempt === 0 ? base : `${base}${Math.floor(1000 + Math.random() * 9000)}`;
-    const { data, error } = await supabase
-      .from("profiles")
-      .insert({ id: user.id, username })
-      .select("*")
-      .single();
-    if (!error) {
-      await supabase.from("user_settings").insert({ user_id: user.id });
-      return data as ProfileRow;
-    }
-    if (error.code !== "23505") throw error;
-
-    // El trigger pudo crear el perfil entre la lectura y el insert.
-    const { data: raced } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", user.id)
-      .maybeSingle();
-    if (raced) return raced as ProfileRow;
-  }
-
-  throw new Error("No se pudo crear el perfil");
-}
-
 export const profileService = {
   async getProfile(user: SupabaseUser): Promise<User> {
     const { data: existing, error } = await supabase
@@ -80,7 +40,9 @@ export const profileService = {
       .maybeSingle();
     if (error) throw error;
 
-    const profile = (existing as ProfileRow | null) ?? (await createProfile(user));
+    // handle_new_user creates the profile on sign-up; the client never does.
+    if (!existing) throw new AppError("profile.createError");
+    const profile = existing as ProfileRow;
 
     const [
       { data: inventory, error: inventoryError },
@@ -130,7 +92,9 @@ export const profileService = {
 
     if (updates.username !== undefined) {
       const validation = validateUsername(updates.username);
-      if (!validation.valid) throw new Error(validation.message);
+      if (!validation.valid) {
+        throw new AppError(validation.messageKey ?? "auth.invalidUsername");
+      }
       payload.username = updates.username.trim();
     }
 
@@ -141,10 +105,10 @@ export const profileService = {
         try {
           parsed = new URL(value);
         } catch {
-          throw new Error("La URL del avatar no es válida");
+          throw new AppError("settings.avatarInvalid");
         }
         if (parsed.protocol !== "https:" || value.length > 500) {
-          throw new Error("La URL del avatar no es válida");
+          throw new AppError("settings.avatarInvalid");
         }
         payload.avatar_url = value;
       } else {
@@ -186,8 +150,11 @@ export const profileService = {
     };
   },
 
-  async deleteMyData(): Promise<void> {
-    const { error } = await supabase.rpc("delete_my_data");
+  /** Deletes the auth account through the delete-account Edge Function. */
+  async deleteAccount(): Promise<void> {
+    const { error } = await supabase.functions.invoke("delete-account", {
+      method: "POST",
+    });
     if (error) throw error;
   },
 };
