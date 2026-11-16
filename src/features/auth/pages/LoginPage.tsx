@@ -30,14 +30,14 @@ export default function LoginPage() {
     setMessage(null);
 
     if (!validateEmail(email)) {
-      setError("Introduce un email válido");
+      setError(t("auth.invalidEmail"));
       return;
     }
 
     if (mode === "signup") {
       const usernameValidation = validateUsername(username);
       if (!usernameValidation.valid) {
-        setError(usernameValidation.message ?? "Usuario inválido");
+        setError(usernameValidation.message ?? t("auth.invalidUsername"));
         return;
       }
     }
@@ -45,7 +45,7 @@ export default function LoginPage() {
     if (mode !== "reset") {
       const passwordValidation = validatePassword(password);
       if (!passwordValidation.valid) {
-        setError(passwordValidation.message ?? "Contraseña inválida");
+        setError(passwordValidation.message ?? t("auth.invalidPassword"));
         return;
       }
     }
@@ -62,7 +62,7 @@ export default function LoginPage() {
         if (data.session) {
           navigate("/app/dashboard", { replace: true });
         } else {
-          setMessage("Cuenta creada. Revisa tu email para confirmarla.");
+          setMessage(t("auth.signupConfirm"));
         }
       } else {
         const { error: signInError } = await signInWithEmail(email, password);
@@ -70,7 +70,7 @@ export default function LoginPage() {
         navigate("/app/dashboard", { replace: true });
       }
     } catch (authError) {
-      setError(authError instanceof Error ? authError.message : "Error de autenticación");
+      setError(authError instanceof Error ? authError.message : t("auth.error"));
     } finally {
       setBusy(false);
     }
@@ -84,7 +84,7 @@ export default function LoginPage() {
           <h1 className="font-display text-2xl font-bold uppercase tracking-widest">
             RitualKiller
           </h1>
-          <p className="text-sm text-zinc-500">
+          <p className="text-sm text-zinc-400">
             {mode === "signup"
               ? t("auth.createAccount")
               : mode === "reset"
@@ -153,12 +153,12 @@ export default function LoginPage() {
                 : mode === "signup"
                   ? t("auth.signup")
                   : mode === "reset"
-                    ? "Enviar enlace"
+                    ? t("auth.sendLink")
                     : t("auth.login")}
             </button>
           </form>
 
-          <div className="mt-4 flex flex-col items-center gap-2 text-xs text-zinc-500">
+          <div className="mt-4 flex flex-col items-center gap-2 text-xs text-zinc-400">
             {mode === "login" && (
               <button type="button" onClick={() => setMode("reset")} className="hover:text-ritual-accent">
                 {t("auth.forgot")}

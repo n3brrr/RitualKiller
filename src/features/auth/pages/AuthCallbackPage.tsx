@@ -1,10 +1,12 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
+import { useI18n } from "@/i18n";
 import Loading from "@/components/animations/Loading";
 
 export default function AuthCallbackPage() {
   const navigate = useNavigate();
+  const { t } = useI18n();
 
   useEffect(() => {
     let active = true;
@@ -19,7 +21,7 @@ export default function AuthCallbackPage() {
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-ritual-black">
-      <Loading label="Verificando sesión" />
+      <Loading label={t("auth.verifying")} />
     </main>
   );
 }

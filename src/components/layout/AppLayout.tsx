@@ -19,7 +19,7 @@ import {
   Flame,
 } from "lucide-react";
 import { useAuth } from "@/features/auth/AuthProvider";
-import { useI18n, type TranslationKey } from "@/i18n";
+import { translateRank, useI18n, type TranslationKey } from "@/i18n";
 import { getRank, rankProgress } from "@/utils/rank";
 import { notificationService } from "@/services/notificationService";
 import { useFocusTrap } from "@/hooks/useFocusTrap";
@@ -178,14 +178,14 @@ export const AppLayout: React.FC = () => {
                 )}
               </div>
               <div className="text-xs uppercase tracking-wider text-ritual-accent">
-                {user.rank}
+                {translateRank(user.rank, t)}
               </div>
             </div>
           </NavLink>
 
           <div className="mb-3">
             <div className="mb-1 flex justify-between text-xs uppercase tracking-wider text-zinc-500">
-              <span>Progreso</span>
+              <span>{t("shell.progress")}</span>
               <span>
                 {user.essence} / {rank.next}
               </span>
@@ -214,7 +214,7 @@ export const AppLayout: React.FC = () => {
         <button
           type="button"
           onClick={() => setMenuOpen(true)}
-          aria-label="Abrir menú"
+          aria-label={t("shell.openMenu")}
           aria-expanded={menuOpen}
           className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg text-zinc-400 hover:text-white"
         >
@@ -252,7 +252,7 @@ export const AppLayout: React.FC = () => {
         <div className="fixed inset-0 z-[80] md:hidden">
           <button
             type="button"
-            aria-label="Cerrar menú"
+            aria-label={t("shell.closeMenu")}
             className="absolute inset-0 animate-fade-in bg-black/80 backdrop-blur-sm"
             onClick={() => setMenuOpen(false)}
           />
@@ -260,23 +260,25 @@ export const AppLayout: React.FC = () => {
             ref={menuRef}
             role="dialog"
             aria-modal="true"
-            aria-label="Menú"
+            aria-label={t("shell.menu")}
             tabIndex={-1}
             className="safe-pt absolute inset-y-0 left-0 w-[min(20rem,85vw)] animate-slide-in-left overflow-y-auto border-r border-zinc-800 bg-ritual-dark p-4 outline-none"
           >
             <div className="mb-6 flex items-center justify-between">
-              <span className="font-display font-bold uppercase tracking-widest">Menú</span>
+              <span className="font-display font-bold uppercase tracking-widest">
+                {t("shell.menu")}
+              </span>
               <button
                 type="button"
                 onClick={() => setMenuOpen(false)}
-                aria-label="Cerrar menú"
+                aria-label={t("shell.closeMenu")}
                 data-autofocus
                 className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg text-zinc-400"
               >
                 <X size={20} />
               </button>
             </div>
-            <nav className="space-y-4" aria-label="Menú móvil">
+            <nav className="space-y-4" aria-label={t("shell.mobileMenu")}>
               {NAV_GROUPS.map((group) => {
                 const items = navItems.filter((item) => item.group === group.id);
                 if (items.length === 0) return null;
@@ -325,7 +327,7 @@ export const AppLayout: React.FC = () => {
       {/* Mobile bottom nav */}
       <nav
         className="safe-pb fixed inset-x-0 bottom-0 z-40 flex items-center justify-around border-t border-zinc-900 bg-ritual-dark/95 px-2 pt-1 backdrop-blur md:hidden"
-        aria-label="Accesos rápidos"
+        aria-label={t("shell.quickLinks")}
       >
         {MOBILE_QUICK.map((item) => (
           <NavLink

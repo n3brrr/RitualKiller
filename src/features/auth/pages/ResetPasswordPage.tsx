@@ -3,11 +3,13 @@ import { Link, useNavigate } from "react-router-dom";
 import { Skull } from "lucide-react";
 import { updatePassword } from "@/services/authService";
 import { useAuth } from "@/features/auth/AuthProvider";
+import { useI18n } from "@/i18n";
 import { validatePassword } from "@/utils/validation";
 import Loading from "@/components/animations/Loading";
 
 export default function ResetPasswordPage() {
   const { session, loading } = useAuth();
+  const { t } = useI18n();
   const navigate = useNavigate();
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
@@ -30,11 +32,11 @@ export default function ResetPasswordPage() {
     setError(null);
     const validation = validatePassword(password);
     if (!validation.valid) {
-      setError(validation.message ?? "Contraseña inválida");
+      setError(validation.message ?? t("auth.invalidPassword"));
       return;
     }
     if (password !== confirm) {
-      setError("Las contraseñas no coinciden");
+      setError(t("auth.passwordsMismatch"));
       return;
     }
 
@@ -44,7 +46,7 @@ export default function ResetPasswordPage() {
       if (updateError) throw updateError;
       setSuccess(true);
     } catch (resetError) {
-      setError(resetError instanceof Error ? resetError.message : "No se pudo actualizar");
+      setError(resetError instanceof Error ? resetError.message : t("auth.resetError"));
     } finally {
       setBusy(false);
     }
@@ -60,11 +62,9 @@ export default function ResetPasswordPage() {
           </span>
         </div>
 
-        <h1 className="mb-2 font-display text-2xl font-bold">Nueva contraseña</h1>
-        <p className="mb-4 text-sm text-zinc-500">
-          {session
-            ? "Introduce tu nueva contraseña para recuperar el acceso."
-            : "El enlace no es válido o ha caducado. Solicita uno nuevo desde el login."}
+        <h1 className="mb-2 font-display text-2xl font-bold">{t("auth.resetTitle")}</h1>
+        <p className="mb-4 text-sm text-zinc-400">
+          {session ? t("auth.resetIntro") : t("auth.resetInvalidLink")}
         </p>
 
         {error && (
@@ -75,7 +75,7 @@ export default function ResetPasswordPage() {
 
         {success ? (
           <p role="status" className="rounded-lg border border-ritual-accent/30 bg-ritual-accent/10 p-3 text-sm text-ritual-accent">
-            Contraseña actualizada. Redirigiendo al login...
+            {t("auth.resetSuccess")}
           </p>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-3">
@@ -86,7 +86,7 @@ export default function ResetPasswordPage() {
               minLength={6}
               required
               autoComplete="new-password"
-              placeholder="Nueva contraseña"
+              placeholder={t("auth.newPassword")}
               className="min-h-11 w-full rounded-lg border border-zinc-700 bg-black px-4 text-white outline-none focus:border-ritual-accent"
             />
             <input
@@ -96,7 +96,7 @@ export default function ResetPasswordPage() {
               minLength={6}
               required
               autoComplete="new-password"
-              placeholder="Repite la contraseña"
+              placeholder={t("auth.confirmPassword")}
               className="min-h-11 w-full rounded-lg border border-zinc-700 bg-black px-4 text-white outline-none focus:border-ritual-accent"
             />
             <button
@@ -104,13 +104,13 @@ export default function ResetPasswordPage() {
               disabled={busy || !session}
               className="inline-flex min-h-11 w-full items-center justify-center rounded-lg bg-ritual-accent font-bold text-black hover:bg-emerald-400 disabled:opacity-50"
             >
-              {busy ? "Guardando..." : "Actualizar contraseña"}
+              {busy ? t("common.saving") : t("auth.updatePassword")}
             </button>
           </form>
         )}
 
-        <Link to="/login" className="mt-4 block text-center text-xs text-zinc-500 hover:text-ritual-accent">
-          Volver al login
+        <Link to="/login" className="mt-4 block text-center text-xs text-zinc-400 hover:text-ritual-accent">
+          {t("auth.backToLogin")}
         </Link>
       </div>
     </main>

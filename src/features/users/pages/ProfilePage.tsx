@@ -1,16 +1,16 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link, useParams } from "react-router-dom";
-import { Settings, Shield, User as UserIcon, Zap } from "lucide-react";
+import { AlertCircle, Settings, Shield, User as UserIcon, Zap } from "lucide-react";
 import { useAuth } from "@/features/auth/AuthProvider";
 import { profileService } from "@/services/profileService";
-import { useI18n } from "@/i18n";
+import { translateRank, useI18n } from "@/i18n";
 import { formatDateTime } from "@/utils/dates";
 import Loading from "@/components/animations/Loading";
 
 export default function ProfilePage() {
   const { username } = useParams<{ username: string }>();
   const { user: currentUser } = useAuth();
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
 
   const isOwn = !username || username === currentUser?.username;
   const profileQuery = useQuery({
@@ -21,12 +21,32 @@ export default function ProfilePage() {
 
   if (isOwn && !currentUser) return <Loading />;
   if (!isOwn && profileQuery.isLoading) return <Loading />;
+  if (!isOwn && profileQuery.error) {
+    return (
+      <div className="mx-auto max-w-2xl">
+        <div
+          role="alert"
+          className="rounded-xl border border-red-500/30 bg-red-500/5 p-6 text-center"
+        >
+          <AlertCircle className="mx-auto mb-2 text-red-500" size={24} aria-hidden="true" />
+          <p className="text-sm text-red-400">{profileQuery.error.message}</p>
+          <button
+            type="button"
+            onClick={() => void profileQuery.refetch()}
+            className="mt-4 inline-flex min-h-11 items-center rounded-lg border border-zinc-700 px-4 text-sm text-zinc-200 transition-colors hover:border-ritual-accent hover:text-ritual-accent"
+          >
+            {t("common.retry")}
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   const user = isOwn ? currentUser : profileQuery.data;
   if (!user) {
     return (
-      <p className="rounded-xl border border-dashed border-zinc-800 p-8 text-center text-sm text-zinc-500">
-        Usuario no encontrado.
+      <p className="rounded-xl border border-dashed border-zinc-800 p-8 text-center text-sm text-zinc-400">
+        {t("profile.notFound")}
       </p>
     );
   }
@@ -52,9 +72,11 @@ export default function ProfilePage() {
                 </span>
               )}
             </div>
-            <p className="text-sm uppercase tracking-widest text-ritual-accent">{user.rank}</p>
+            <p className="text-sm uppercase tracking-widest text-ritual-accent">
+              {translateRank(user.rank, t)}
+            </p>
             <p className="mt-1 text-xs text-zinc-400">
-              Iniciado el {formatDateTime(user.created_at)}
+              {t("profile.since")} {formatDateTime(user.created_at, locale)}
             </p>
           </div>
 
@@ -71,14 +93,14 @@ export default function ProfilePage() {
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
         <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-4">
-          <div className="mb-1 flex items-center gap-2 text-xs uppercase tracking-wider text-zinc-500">
-            <Zap size={14} aria-hidden="true" /> Esencia
+          <div className="mb-1 flex items-center gap-2 text-xs uppercase tracking-wider text-zinc-400">
+            <Zap size={14} aria-hidden="true" /> {t("profile.essence")}
           </div>
           <div className="font-mono text-2xl text-ritual-accent">{user.essence}</div>
         </div>
         <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-4">
-          <div className="mb-1 flex items-center gap-2 text-xs uppercase tracking-wider text-zinc-500">
-            <UserIcon size={14} aria-hidden="true" /> Inventario
+          <div className="mb-1 flex items-center gap-2 text-xs uppercase tracking-wider text-zinc-400">
+            <UserIcon size={14} aria-hidden="true" /> {t("profile.inventory")}
           </div>
           <div className="font-mono text-2xl text-white">{user.inventory.length}</div>
         </div>
