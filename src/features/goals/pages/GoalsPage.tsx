@@ -3,6 +3,7 @@ import { Calendar, Pencil, Plus, Target, Trash2 } from "lucide-react";
 import { useGoals } from "@/hooks/useGoals";
 import { useRituals } from "@/hooks/useRituals";
 import { useI18n } from "@/i18n";
+import { ProgressBar } from "@/components/ui/ProgressBar";
 import { errorMessage } from "@/lib/errors";
 import { addDays, daysUntil, toDateKey } from "@/utils/dates";
 import Loading from "@/components/animations/Loading";
@@ -341,12 +342,12 @@ export default function GoalsPage() {
                   </span>
                   <span>{percent}%</span>
                 </div>
-                <div className="h-2 overflow-hidden rounded-full bg-zinc-900">
-                  <div
-                    className="h-full bg-ritual-accent"
-                    style={{ width: `${percent}%` }}
-                  />
-                </div>
+                <ProgressBar
+                  label={t("goals.progressLabel", { name: goal.title })}
+                  value={progress}
+                  max={goal.target_value}
+                  className="h-2"
+                />
 
                 <div className="mt-3 flex flex-wrap gap-3 text-xs uppercase tracking-wider text-zinc-400">
                   <span className="inline-flex items-center gap-1">

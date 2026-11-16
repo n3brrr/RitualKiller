@@ -4,10 +4,15 @@ const FOCUSABLE =
   'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
 /**
- * Locks scroll and keeps keyboard focus inside the returned element while `open`.
- * Escape closes through `onClose`; focus returns to the trigger on cleanup.
+ * Moves focus into the returned element while `open`; Escape closes through
+ * `onClose` and focus returns to the trigger on cleanup. Modal panels (the
+ * default) also lock scroll and keep Tab inside; non-modal popovers do not.
  */
-export function useFocusTrap<T extends HTMLElement>(open: boolean, onClose: () => void) {
+export function useFocusTrap<T extends HTMLElement>(
+  open: boolean,
+  onClose: () => void,
+  { modal = true }: { modal?: boolean } = {},
+) {
   const ref = useRef<T>(null);
   const closeRef = useRef(onClose);
 
@@ -21,7 +26,7 @@ export function useFocusTrap<T extends HTMLElement>(open: boolean, onClose: () =
     const previouslyFocused =
       document.activeElement instanceof HTMLElement ? document.activeElement : null;
     const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    if (modal) document.body.style.overflow = "hidden";
 
     const panel = ref.current;
     const initialFocus = panel?.querySelector<HTMLElement>("[data-autofocus]") ?? panel;
@@ -33,7 +38,7 @@ export function useFocusTrap<T extends HTMLElement>(open: boolean, onClose: () =
         closeRef.current();
         return;
       }
-      if (event.key !== "Tab" || !panel) return;
+      if (!modal || event.key !== "Tab" || !panel) return;
 
       const items = Array.from(panel.querySelectorAll<HTMLElement>(FOCUSABLE)).filter(
         (element) => element.offsetParent !== null,
@@ -57,10 +62,10 @@ export function useFocusTrap<T extends HTMLElement>(open: boolean, onClose: () =
     document.addEventListener("keydown", onKeyDown);
     return () => {
       document.removeEventListener("keydown", onKeyDown);
-      document.body.style.overflow = previousOverflow;
+      if (modal) document.body.style.overflow = previousOverflow;
       previouslyFocused?.focus();
     };
-  }, [open]);
+  }, [open, modal]);
 
   return ref;
 }

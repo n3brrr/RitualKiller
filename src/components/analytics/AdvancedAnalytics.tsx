@@ -133,7 +133,14 @@ export function AdvancedAnalytics() {
         <h2 className="mb-4 text-sm font-bold uppercase tracking-wider text-zinc-300">
           {t("analytics.daily")}
         </h2>
-        <div className="h-64 w-full">
+        <ChartTable
+          title={t("analytics.daily")}
+          rows={dailySeries.map((point) => ({
+            label: point.label,
+            value: point.Completions,
+          }))}
+        />
+        <div className="h-64 w-full" aria-hidden="true">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={dailySeries}>
               <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
@@ -160,7 +167,14 @@ export function AdvancedAnalytics() {
           <h2 className="mb-4 text-sm font-bold uppercase tracking-wider text-zinc-300">
             {t("analytics.weekday")}
           </h2>
-          <div className="h-56 w-full">
+          <ChartTable
+            title={t("analytics.weekday")}
+            rows={weekdaySeries.map((point) => ({
+              label: point.name,
+              value: point.Completions,
+            }))}
+          />
+          <div className="h-56 w-full" aria-hidden="true">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={weekdaySeries}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
@@ -189,28 +203,40 @@ export function AdvancedAnalytics() {
               {t("analytics.noData")}
             </p>
           ) : (
-            <div className="h-56 w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={difficultySeries}
-                    dataKey="Completions"
-                    nameKey="name"
-                    innerRadius={45}
-                    outerRadius={80}
-                    paddingAngle={3}
-                  >
-                    {difficultySeries.map((entry, index) => (
-                      <Cell key={entry.name} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    contentStyle={{ background: "#09090b", border: "1px solid #27272a" }}
-                  />
-                  <Legend />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
+            <>
+              <ChartTable
+                title={t("analytics.byDifficulty")}
+                rows={difficultySeries.map((point) => ({
+                  label: point.name,
+                  value: point.Completions,
+                }))}
+              />
+              <div className="h-56 w-full" aria-hidden="true">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={difficultySeries}
+                      dataKey="Completions"
+                      nameKey="name"
+                      innerRadius={45}
+                      outerRadius={80}
+                      paddingAngle={3}
+                    >
+                      {difficultySeries.map((entry, index) => (
+                        <Cell key={entry.name} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      contentStyle={{
+                        background: "#09090b",
+                        border: "1px solid #27272a",
+                      }}
+                    />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            </>
           )}
         </section>
       </div>
@@ -219,3 +245,33 @@ export function AdvancedAnalytics() {
 }
 
 export default AdvancedAnalytics;
+
+/** Screen-reader alternative to a chart: the same numbers as a table. */
+function ChartTable({
+  title,
+  rows,
+}: {
+  title: string;
+  rows: Array<{ label: string; value: number }>;
+}) {
+  const { t } = useI18n();
+  return (
+    <table className="sr-only">
+      <caption>{t("analytics.tableCaption", { title })}</caption>
+      <thead>
+        <tr>
+          <th scope="col">{t("analytics.tableLabel")}</th>
+          <th scope="col">{t("analytics.completed")}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {rows.map((row) => (
+          <tr key={row.label}>
+            <th scope="row">{row.label}</th>
+            <td>{row.value}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+}

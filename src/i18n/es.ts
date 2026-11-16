@@ -629,4 +629,11 @@ export const es = {
   "inventory.confirmPrompt": "¿Usar «{name}»? Se consumirá una unidad.",
   "goals.editTitle": "Editar objetivo",
   "goals.editLabel": "Editar {name}",
+  "heatmap.summary":
+    "En las últimas 52 semanas completaste {total} rituales en {days} días distintos.",
+  "shell.rankProgress": "Progreso hacia el siguiente rango",
+  "goals.progressLabel": "Progreso del objetivo {name}",
+  "achievements.progressLabel": "Progreso de {name}",
+  "analytics.tableCaption": "Datos del gráfico: {title}",
+  "analytics.tableLabel": "Etiqueta",
 } as const;

@@ -20,7 +20,8 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/features/auth/useAuth";
 import { translateRank, useI18n, type TranslationKey } from "@/i18n";
-import { getRank, rankProgress } from "@/utils/rank";
+import { ProgressBar } from "@/components/ui/ProgressBar";
+import { getRank } from "@/utils/rank";
 import { useQueryClient } from "@tanstack/react-query";
 import { notificationService } from "@/services/notificationService";
 import { settingsService } from "@/services/settingsService";
@@ -155,7 +156,6 @@ export const AppLayout: React.FC = () => {
   if (!user) return null;
 
   const rank = getRank(user.essence);
-  const progress = rankProgress(user.essence);
   const bestStreak = Math.max(...rituals.map((ritual) => ritual.streak), 0);
   const navItems = user.isAdmin
     ? [
@@ -257,12 +257,11 @@ export const AppLayout: React.FC = () => {
                 {user.essence} / {rank.next}
               </span>
             </div>
-            <div className="h-1.5 w-full overflow-hidden rounded-full border border-zinc-800 bg-zinc-800">
-              <div
-                className="h-full bg-ritual-accent transition-all duration-500"
-                style={{ width: `${progressMounted ? progress : 0}%` }}
-              />
-            </div>
+            <ProgressBar
+              label={t("shell.rankProgress")}
+              value={progressMounted ? user.essence - rank.current : 0}
+              max={rank.next - rank.current}
+            />
           </div>
 
           <button

@@ -1,6 +1,7 @@
 import { Lock, Trophy, Unlock } from "lucide-react";
 import { useAchievements } from "@/hooks/useAchievements";
 import { achievementKey, useI18n, type TranslationKey } from "@/i18n";
+import { ProgressBar } from "@/components/ui/ProgressBar";
 import { errorMessage } from "@/lib/errors";
 import { formatDateTime } from "@/utils/dates";
 import type { Achievement } from "@/types";
@@ -109,12 +110,14 @@ export function AchievementsList() {
                         </span>
                         <span>{progress}%</span>
                       </div>
-                      <div className="h-1.5 overflow-hidden rounded-full bg-zinc-900">
-                        <div
-                          className={`h-full ${unlocked ? "bg-ritual-accent" : "bg-zinc-600"}`}
-                          style={{ width: `${progress}%` }}
-                        />
-                      </div>
+                      <ProgressBar
+                        label={t("achievements.progressLabel", {
+                          name: t(achievementKey(achievement.id, "name")),
+                        })}
+                        value={achievement.progress}
+                        max={achievement.target}
+                        barClassName={unlocked ? "bg-ritual-accent" : "bg-zinc-500"}
+                      />
                       {achievement.unlockedAt && (
                         <p className="mt-2 flex items-center gap-1 text-xs text-zinc-400">
                           <Trophy size={10} aria-hidden="true" />

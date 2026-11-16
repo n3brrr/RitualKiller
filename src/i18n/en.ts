@@ -629,4 +629,11 @@ export const en: Record<TranslationKey, string> = {
   "inventory.confirmPrompt": "Use “{name}”? One unit will be consumed.",
   "goals.editTitle": "Edit goal",
   "goals.editLabel": "Edit {name}",
+  "heatmap.summary":
+    "In the last 52 weeks you completed {total} rituals on {days} different days.",
+  "shell.rankProgress": "Progress to the next rank",
+  "goals.progressLabel": "Progress of goal {name}",
+  "achievements.progressLabel": "Progress of {name}",
+  "analytics.tableCaption": "Chart data: {title}",
+  "analytics.tableLabel": "Label",
 };

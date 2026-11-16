@@ -23,7 +23,9 @@ export function NotificationBell() {
   };
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
-  const panelRef = useFocusTrap<HTMLDivElement>(open, () => setOpen(false));
+  const panelRef = useFocusTrap<HTMLDivElement>(open, () => setOpen(false), {
+    modal: false,
+  });
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -59,7 +61,6 @@ export function NotificationBell() {
         <div
           ref={panelRef}
           role="dialog"
-          aria-modal="true"
           aria-label={t("notifications.title")}
           tabIndex={-1}
           className="absolute right-0 z-[70] mt-2 w-[min(22rem,calc(100vw-2rem))] rounded-xl border border-zinc-800 bg-zinc-950 shadow-2xl outline-none"

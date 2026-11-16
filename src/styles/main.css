@@ -19,6 +19,12 @@
     outline-offset: 2px;
   }
 
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible {
+    box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.65);
+  }
+
   button,
   a,
   input,
