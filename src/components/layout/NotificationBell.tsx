@@ -3,10 +3,12 @@ import { Bell, CheckCheck, X } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useFocusTrap } from "@/hooks/useFocusTrap";
+import { useI18n } from "@/i18n";
 import { formatDateTime } from "@/utils/dates";
 
 export function NotificationBell() {
   const { notifications, unreadCount, markRead, markAllRead } = useNotifications();
+  const { t, locale } = useI18n();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const panelRef = useFocusTrap<HTMLDivElement>(open, () => setOpen(false));
@@ -28,7 +30,7 @@ export function NotificationBell() {
       <button
         type="button"
         onClick={() => setOpen((value) => !value)}
-        aria-label={`Notificaciones, ${unreadCount} sin leer`}
+        aria-label={`${t("notifications.title")}, ${unreadCount} ${t("notifications.unread")}`}
         aria-expanded={open}
         aria-haspopup="dialog"
         className="relative inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg text-zinc-400 hover:bg-zinc-900 hover:text-white"
@@ -46,12 +48,12 @@ export function NotificationBell() {
           ref={panelRef}
           role="dialog"
           aria-modal="true"
-          aria-label="Notificaciones"
+          aria-label={t("notifications.title")}
           tabIndex={-1}
           className="absolute right-0 z-[70] mt-2 w-[min(22rem,calc(100vw-2rem))] rounded-xl border border-zinc-800 bg-zinc-950 shadow-2xl outline-none"
         >
           <div className="flex items-center justify-between border-b border-zinc-800 p-4">
-            <h2 className="font-display font-bold text-white">Notificaciones</h2>
+            <h2 className="font-display font-bold text-white">{t("notifications.title")}</h2>
             <div className="flex items-center gap-1">
               {unreadCount > 0 && (
                 <button
@@ -59,15 +61,15 @@ export function NotificationBell() {
                   onClick={() => void markAllRead()}
                   className="inline-flex min-h-11 items-center gap-1 rounded-lg px-2 text-xs text-zinc-400 hover:text-ritual-accent"
                 >
-                  <CheckCheck size={14} /> Leídas
+                  <CheckCheck size={14} /> {t("notifications.read")}
                 </button>
               )}
               <button
                 type="button"
                 onClick={() => setOpen(false)}
-                aria-label="Cerrar notificaciones"
+                aria-label={t("notifications.close")}
                 data-autofocus
-                className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg text-zinc-500 hover:text-white"
+                className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg text-zinc-400 hover:text-white"
               >
                 <X size={18} />
               </button>
@@ -76,8 +78,8 @@ export function NotificationBell() {
 
           <div className="max-h-80 overflow-y-auto">
             {notifications.length === 0 && (
-              <p className="p-6 text-center text-sm text-zinc-500">
-                No tienes notificaciones.
+              <p className="p-6 text-center text-sm text-zinc-400">
+                {t("notifications.empty")}
               </p>
             )}
             {notifications.slice(0, 8).map((notification) => (
@@ -101,7 +103,7 @@ export function NotificationBell() {
                 </div>
                 <p className="mt-1 text-sm text-zinc-400">{notification.message}</p>
                 <span className="mt-1 block text-xs text-zinc-400">
-                  {formatDateTime(notification.createdAt)}
+                  {formatDateTime(notification.createdAt, locale)}
                 </span>
               </button>
             ))}
@@ -112,7 +114,7 @@ export function NotificationBell() {
             onClick={() => setOpen(false)}
             className="block min-h-11 border-t border-zinc-800 p-3 text-center text-sm font-bold text-ritual-accent"
           >
-            Ver todas
+            {t("notifications.viewAll")}
           </Link>
         </div>
       )}

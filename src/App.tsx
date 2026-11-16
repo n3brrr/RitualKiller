@@ -11,6 +11,7 @@ import { ErrorBoundary } from "./components/ui/ErrorBoundary";
 import { RouteError } from "./components/ui/RouteError";
 import { ProtectedRoute, AdminRoute } from "./components/auth/ProtectedRoute";
 import { AuthProvider } from "./features/auth/AuthProvider";
+import { useI18n, type TranslationKey } from "./i18n";
 import Loading from "./components/animations/Loading";
 import "./styles/main.css";
 
@@ -35,33 +36,39 @@ function page(node: React.ReactNode) {
   return <Suspense fallback={<Loading />}>{node}</Suspense>;
 }
 
-const PAGE_TITLES: Record<string, string> = {
-  "/": "RitualKiller — Convierte tu disciplina en un ritual",
-  "/login": "Entrar · RitualKiller",
-  "/reset-password": "Restablecer contraseña · RitualKiller",
-  "/auth/callback": "Verificando sesión · RitualKiller",
-  "/app/dashboard": "Altar · RitualKiller",
-  "/app/habits": "Rituales · RitualKiller",
-  "/app/goals": "Objetivos · RitualKiller",
-  "/app/social": "Coven · RitualKiller",
-  "/app/shop": "Mercado · RitualKiller",
-  "/app/inventory": "Inventario · RitualKiller",
-  "/app/analytics": "Analíticas · RitualKiller",
-  "/app/achievements": "Logros · RitualKiller",
-  "/app/settings": "Ajustes · RitualKiller",
-  "/app/notifications": "Notificaciones · RitualKiller",
-  "/app/admin": "Admin · RitualKiller",
+const PAGE_TITLES: Record<string, TranslationKey> = {
+  "/login": "auth.loginTitle",
+  "/reset-password": "auth.resetTitle",
+  "/auth/callback": "auth.verifying",
+  "/app/dashboard": "nav.dashboard",
+  "/app/habits": "nav.habits",
+  "/app/goals": "nav.goals",
+  "/app/social": "nav.social",
+  "/app/shop": "nav.shop",
+  "/app/inventory": "nav.inventory",
+  "/app/analytics": "nav.analytics",
+  "/app/achievements": "nav.achievements",
+  "/app/settings": "nav.settings",
+  "/app/notifications": "nav.notifications",
+  "/app/admin": "nav.admin",
 };
 
 function RootLayout() {
   const { pathname, hash } = useLocation();
+  const { t } = useI18n();
 
   useEffect(() => {
     if (!hash) window.scrollTo(0, 0);
-    document.title = pathname.startsWith("/app/profile/")
-      ? "Perfil · RitualKiller"
-      : (PAGE_TITLES[pathname] ?? "RitualKiller");
-  }, [pathname, hash]);
+    const key = pathname.startsWith("/app/profile/")
+      ? "profile.title"
+      : PAGE_TITLES[pathname];
+    document.title =
+      pathname === "/"
+        ? t("landing.title")
+        : key
+          ? `${t(key)} · RitualKiller`
+          : "RitualKiller";
+  }, [pathname, hash, t]);
 
   return <Outlet />;
 }

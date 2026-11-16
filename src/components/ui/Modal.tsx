@@ -2,6 +2,7 @@ import { useId, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { useFocusTrap } from "@/hooks/useFocusTrap";
+import { useI18n } from "@/i18n";
 
 interface ModalProps {
   open: boolean;
@@ -15,6 +16,7 @@ interface ModalProps {
 export function Modal({ open, onClose, title, children, footer, role = "dialog" }: ModalProps) {
   const titleId = useId();
   const panelRef = useFocusTrap<HTMLDivElement>(open, onClose);
+  const { t } = useI18n();
 
   if (!open) return null;
 
@@ -40,7 +42,7 @@ export function Modal({ open, onClose, title, children, footer, role = "dialog" 
           <button
             type="button"
             onClick={onClose}
-            aria-label="Cerrar"
+            aria-label={t("common.close")}
             className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-zinc-500 hover:bg-zinc-900 hover:text-zinc-200"
           >
             <X size={18} aria-hidden="true" />
