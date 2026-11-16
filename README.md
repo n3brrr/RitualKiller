@@ -60,13 +60,9 @@ cp .env.example .env
 # Rellena VITE_SUPABASE_URL y VITE_SUPABASE_ANON_KEY
 ```
 
-Aplica las migraciones en orden desde el SQL Editor de Supabase (o con `supabase db push`):
-
-```text
-supabase/migrations/20261113000100_schema.sql
-supabase/migrations/20261113000200_rls.sql
-supabase/migrations/20261113000300_functions.sql
-```
+Aplica **todas** las migraciones de `supabase/migrations/` en orden (con
+`supabase db push` o pegándolas en el SQL Editor), despliega las Edge Functions y
+revisa la configuración de Auth descrita en [`supabase/README.md`](supabase/README.md).
 
 Después arranca el cliente:
 
@@ -92,8 +88,12 @@ interfaz no muestra ningún punto de entrada de IA.
 docker compose up --build
 ```
 
-- Web: `http://localhost:8080`
-- El contenedor web sirve la SPA con fallback a `index.html`.
+- Web: `http://localhost:8080` (nginx sin privilegios de root, con `HEALTHCHECK` en `/healthz`).
+- El contenedor sirve la SPA con fallback a `index.html`, cabeceras de seguridad
+  (CSP, HSTS, Permissions-Policy) y `index.html` sin caché para que cada despliegue
+  se recoja al instante.
+- Si usas un dominio propio para Supabase, añádelo a `connect-src` en
+  `docker/security-headers.conf` y en `vercel.json`.
 
 ## 🧪 Scripts
 
@@ -103,9 +103,11 @@ pnpm build        # Build de producción
 pnpm preview      # Previsualizar el build
 pnpm typecheck    # TypeScript sin emisión
 pnpm lint         # ESLint
-pnpm test         # Vitest
+pnpm test         # Vitest (cliente)
+pnpm test:db      # Migraciones, RLS y RPC sobre Postgres en memoria (PGlite)
 pnpm format       # Prettier
-pnpm verify       # typecheck + lint + test + build
+pnpm analyze      # Informe del bundle en reports/ (no se publica)
+pnpm verify       # format:check + typecheck + lint + test + test:db + build
 ```
 
 ## 📁 Estructura
@@ -130,12 +132,28 @@ RitualKiller/
 
 ## 🔐 Seguridad
 
-- Row Level Security activo en todas las tablas.
-- Las mutaciones sensibles (completar/deshacer ritual, comprar/consumir, borrar datos, admin) pasan por funciones `SECURITY DEFINER` que validan `auth.uid()`.
-- El perfil protege `essence`, `is_admin` y `created_at` mediante trigger.
-- La `anon key` de Supabase es pública por diseño; la autorización real la aplica RLS.
-- No hay claves de Gemini ni de otros proveedores en el repositorio ni en el bundle.
-- Los errores de cliente se registran en `error_logs` (solo lectura para admins).
+- Row Level Security activo en todas las tablas. Los datos que afectan a la
+  economía o a la integridad del juego (inventario, ventajas, historial de
+  rituales, logros y notificaciones) **solo** los escriben funciones
+  `SECURITY DEFINER` que validan `auth.uid()`; el cliente no puede insertarlos.
+- La recompensa de un ritual, la fecha válida de completado (hoy o ayer en la zona
+  horaria del usuario), las rachas, los logros y los efectos de los objetos se
+  calculan en el servidor.
+- Los perfiles ajenos se leen a través de la vista `public_profiles`, que no expone
+  `is_admin` ni otros datos privados.
+- Límites de frecuencia en publicaciones, comentarios, reportes y follows, y
+  suspensión temporal de usuarios desde el panel de administración (con registro de
+  auditoría).
+- Las funciones no son ejecutables por usuarios anónimos salvo que se concedan
+  explícitamente.
+- "Eliminar cuenta" borra el usuario de Auth (Edge Function `delete-account`) y, en
+  cascada, todos sus datos.
+- La `anon key` de Supabase es pública por diseño; la autorización real la aplican RLS
+  y las funciones del servidor. No hay claves de proveedores de IA en el cliente.
+- Los errores de cliente se registran en `error_logs` (solo usuarios autenticados,
+  con límites de tamaño y de frecuencia; lectura solo para admins).
+- `pnpm test:db` reproduce los ataques conocidos (inventario o ventajas forjadas,
+  logros autoconcedidos, fechas arbitrarias...) y comprueba que se rechazan.
 
 ## 👤 Autores
 
