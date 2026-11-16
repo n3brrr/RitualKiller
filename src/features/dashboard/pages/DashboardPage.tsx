@@ -1,4 +1,5 @@
-import { lazy, Suspense, useMemo } from "react";
+import { Suspense, useMemo } from "react";
+import { lazyWithRetry } from "@/lib/lazyWithRetry";
 import { AlertCircle, Check, CheckCircle2, Flame, Package, Zap } from "lucide-react";
 import { Heatmap } from "@/components/Heatmap";
 import Loading from "@/components/animations/Loading";
@@ -12,10 +13,10 @@ import { completionReasonKey } from "@/utils/ritualMessages";
 import { errorMessage } from "@/lib/errors";
 import { useToast } from "@/hooks/useToast";
 
-const RitualCalendar = lazy(
+const RitualCalendar = lazyWithRetry(
   () => import("@/components/calendar/RitualCalendar"),
 );
-const ProductivityMetrics = lazy(
+const ProductivityMetrics = lazyWithRetry(
   () => import("@/components/productivity/ProductivityMetrics"),
 );
 

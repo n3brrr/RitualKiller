@@ -1,4 +1,4 @@
-import React, { lazy, Suspense, useEffect } from "react";
+import React, { Suspense, useEffect } from "react";
 import {
   createBrowserRouter,
   Navigate,
@@ -13,28 +13,41 @@ import { ProtectedRoute, AdminRoute } from "./components/auth/ProtectedRoute";
 import { AuthProvider } from "./features/auth/AuthProvider";
 import { useI18n, type TranslationKey } from "./i18n";
 import Loading from "./components/animations/Loading";
+import { lazyWithRetry, markChunksHealthy } from "./lib/lazyWithRetry";
 import "./styles/main.css";
 
-const LandingPage = lazy(() => import("./features/auth/pages/LandingPage"));
-const LoginPage = lazy(() => import("./features/auth/pages/LoginPage"));
-const ResetPasswordPage = lazy(() => import("./features/auth/pages/ResetPasswordPage"));
-const AuthCallbackPage = lazy(() => import("./features/auth/pages/AuthCallbackPage"));
-const DashboardPage = lazy(() => import("./features/dashboard/pages/DashboardPage"));
-const HabitsPage = lazy(() => import("./features/rituals/pages/HabitsPage"));
-const GoalsPage = lazy(() => import("./features/goals/pages/GoalsPage"));
-const SocialPage = lazy(() => import("./features/social/pages/SocialPage"));
-const ShopPage = lazy(() => import("./features/shop/pages/ShopPage"));
-const InventoryPage = lazy(() => import("./features/inventory/pages/InventoryPage"));
-const AnalyticsPage = lazy(() => import("./features/analytics/pages/AnalyticsPage"));
-const AchievementsPage = lazy(
+const LandingPage = lazyWithRetry(() => import("./features/auth/pages/LandingPage"));
+const LoginPage = lazyWithRetry(() => import("./features/auth/pages/LoginPage"));
+const ResetPasswordPage = lazyWithRetry(
+  () => import("./features/auth/pages/ResetPasswordPage"),
+);
+const AuthCallbackPage = lazyWithRetry(
+  () => import("./features/auth/pages/AuthCallbackPage"),
+);
+const DashboardPage = lazyWithRetry(
+  () => import("./features/dashboard/pages/DashboardPage"),
+);
+const HabitsPage = lazyWithRetry(() => import("./features/rituals/pages/HabitsPage"));
+const GoalsPage = lazyWithRetry(() => import("./features/goals/pages/GoalsPage"));
+const SocialPage = lazyWithRetry(() => import("./features/social/pages/SocialPage"));
+const ShopPage = lazyWithRetry(() => import("./features/shop/pages/ShopPage"));
+const InventoryPage = lazyWithRetry(
+  () => import("./features/inventory/pages/InventoryPage"),
+);
+const AnalyticsPage = lazyWithRetry(
+  () => import("./features/analytics/pages/AnalyticsPage"),
+);
+const AchievementsPage = lazyWithRetry(
   () => import("./features/gamification/pages/AchievementsPage"),
 );
-const SettingsPage = lazy(() => import("./features/settings/pages/SettingsPage"));
-const NotificationsPage = lazy(
+const SettingsPage = lazyWithRetry(
+  () => import("./features/settings/pages/SettingsPage"),
+);
+const NotificationsPage = lazyWithRetry(
   () => import("./features/notifications/pages/NotificationsPage"),
 );
-const AdminPage = lazy(() => import("./features/admin/pages/AdminPage"));
-const ProfilePage = lazy(() => import("./features/users/pages/ProfilePage"));
+const AdminPage = lazyWithRetry(() => import("./features/admin/pages/AdminPage"));
+const ProfilePage = lazyWithRetry(() => import("./features/users/pages/ProfilePage"));
 
 function page(node: React.ReactNode) {
   return <Suspense fallback={<Loading />}>{node}</Suspense>;
@@ -78,6 +91,10 @@ function RootLayout() {
       .querySelector('meta[name="description"]')
       ?.setAttribute("content", t("meta.description"));
   }, [pathname, hash, t]);
+
+  useEffect(() => {
+    markChunksHealthy();
+  }, [pathname]);
 
   return <Outlet />;
 }

@@ -6,12 +6,15 @@
  * mostrando un indicador mientras se obtiene el módulo.
  */
 
-import React, { lazy, Suspense } from "react";
+import React, { Suspense } from "react";
+import { lazyWithRetry } from "@/lib/lazyWithRetry";
 import Loading from "@/components/animations/Loading";
 import { useI18n } from "@/i18n";
 
 // Carga diferida del componente avanzado de analíticas
-const AdvancedAnalytics = lazy(() => import("@/components/analytics/AdvancedAnalytics"));
+const AdvancedAnalytics = lazyWithRetry(
+  () => import("@/components/analytics/AdvancedAnalytics"),
+);
 
 const AnalyticsPage = () => {
   const { t } = useI18n();

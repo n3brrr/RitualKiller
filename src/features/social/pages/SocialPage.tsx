@@ -1,7 +1,8 @@
-import React, { lazy, Suspense } from "react";
+import React, { Suspense } from "react";
+import { lazyWithRetry } from "@/lib/lazyWithRetry";
 import Loading from "@/components/animations/Loading";
 
-const EnhancedSocial = lazy(() => import("@/components/social/EnhancedSocial"));
+const EnhancedSocial = lazyWithRetry(() => import("@/components/social/EnhancedSocial"));
 
 const SocialPage = () => {
   return (

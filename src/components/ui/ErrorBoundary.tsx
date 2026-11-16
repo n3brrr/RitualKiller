@@ -2,6 +2,7 @@ import React from "react";
 import { AlertCircle } from "lucide-react";
 import { captureError } from "@/lib/observability";
 import { useI18n } from "@/i18n";
+import { isChunkLoadError } from "@/lib/lazyWithRetry";
 
 interface Props {
   children: React.ReactNode;
@@ -29,7 +30,7 @@ function ErrorFallback({
           <h2 className="text-xl font-bold text-white">{t("error.title")}</h2>
         </div>
         <p className="text-zinc-400 mb-4 break-words">
-          {error?.message ?? t("error.unknown")}
+          {isChunkLoadError(error) ? t("route.newVersion") : t("error.unknown")}
         </p>
         <button
           onClick={onReload}
