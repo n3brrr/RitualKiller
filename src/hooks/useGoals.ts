@@ -27,6 +27,7 @@ export function useGoals() {
     goals: query.data ?? [],
     isLoading: query.isLoading,
     error: (query.error as Error | null) ?? null,
+    refetch: query.refetch,
     createGoal: createMutation.mutateAsync,
     isCreating: createMutation.isPending,
     removeGoal: removeMutation.mutateAsync,
