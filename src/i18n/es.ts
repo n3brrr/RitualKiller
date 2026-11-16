@@ -622,4 +622,11 @@ export const es = {
   "habits.completedToast": "Ritual completado: +{essence} de esencia",
   "route.newVersion":
     "Hay una versión nueva de RitualKiller. Recarga la página para continuar.",
+  "shop.confirmTitle": "Confirmar compra",
+  "shop.confirmPrompt":
+    "¿Comprar «{name}» por {cost} de esencia? Te quedarán {remaining}.",
+  "inventory.confirmTitle": "Usar artefacto",
+  "inventory.confirmPrompt": "¿Usar «{name}»? Se consumirá una unidad.",
+  "goals.editTitle": "Editar objetivo",
+  "goals.editLabel": "Editar {name}",
 } as const;

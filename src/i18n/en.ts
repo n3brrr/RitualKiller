@@ -622,4 +622,11 @@ export const en: Record<TranslationKey, string> = {
   "habits.completedToast": "Ritual completed: +{essence} essence",
   "route.newVersion":
     "A new version of RitualKiller is available. Reload the page to continue.",
+  "shop.confirmTitle": "Confirm purchase",
+  "shop.confirmPrompt":
+    "Buy “{name}” for {cost} essence? You will have {remaining} left.",
+  "inventory.confirmTitle": "Use artifact",
+  "inventory.confirmPrompt": "Use “{name}”? One unit will be consumed.",
+  "goals.editTitle": "Edit goal",
+  "goals.editLabel": "Edit {name}",
 };

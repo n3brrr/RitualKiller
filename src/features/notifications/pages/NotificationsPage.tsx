@@ -1,6 +1,7 @@
 import { Bell, CheckCheck, Trash2 } from "lucide-react";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useI18n } from "@/i18n";
+import { useToast } from "@/hooks/useToast";
 import { errorMessage } from "@/lib/errors";
 import { notificationText } from "@/utils/notificationText";
 import { formatDateTime } from "@/utils/dates";
@@ -19,6 +20,15 @@ export default function NotificationsPage() {
     removeNotification,
   } = useNotifications();
   const { t, tn, locale } = useI18n();
+  const toast = useToast();
+  // Quick actions report failures instead of failing silently.
+  const run = async (action: () => Promise<unknown>) => {
+    try {
+      await action();
+    } catch (actionError) {
+      toast.error(errorMessage(actionError, t));
+    }
+  };
 
   if (isLoading) return <Loading />;
   if (error) {
@@ -47,7 +57,7 @@ export default function NotificationsPage() {
         {unreadCount > 0 && (
           <button
             type="button"
-            onClick={() => void markAllRead()}
+            onClick={() => void run(() => markAllRead())}
             className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-zinc-800 px-3 text-sm text-zinc-300 hover:border-ritual-accent hover:text-ritual-accent"
           >
             <CheckCheck size={16} aria-hidden="true" />
@@ -100,7 +110,7 @@ export default function NotificationsPage() {
                   {!notification.read && (
                     <button
                       type="button"
-                      onClick={() => void markRead(notification.id)}
+                      onClick={() => void run(() => markRead(notification.id))}
                       aria-label={t("notifications.markRead")}
                       className="inline-flex h-11 w-11 items-center justify-center rounded-full text-zinc-400 hover:text-ritual-accent"
                     >
@@ -109,7 +119,7 @@ export default function NotificationsPage() {
                   )}
                   <button
                     type="button"
-                    onClick={() => void removeNotification(notification.id)}
+                    onClick={() => void run(() => removeNotification(notification.id))}
                     aria-label={t("notifications.remove")}
                     className="inline-flex h-11 w-11 items-center justify-center rounded-full text-zinc-400 hover:text-red-500"
                   >

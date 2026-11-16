@@ -7,6 +7,7 @@ import { errorMessage } from "@/lib/errors";
 import { shopItemIcon } from "@/data/items";
 import Loading from "@/components/animations/Loading";
 import { ErrorState } from "@/components/ui/ErrorState";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import type { Rarity } from "@/types";
 
 const RARITY_STYLES: Record<Rarity, string> = {
@@ -25,6 +26,12 @@ export default function ShopPage() {
     text: string;
   } | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
+  // Purchases spend hundreds or thousands of essence: always confirm first.
+  const [confirmItem, setConfirmItem] = useState<{
+    id: string;
+    name: string;
+    cost: number;
+  } | null>(null);
 
   if (!user) return null;
   if (isLoading) return <Loading label={t("shop.loading")} />;
@@ -145,7 +152,7 @@ export default function ShopPage() {
                 </div>
                 <button
                   type="button"
-                  onClick={() => void handlePurchase(item.id, name, item.cost)}
+                  onClick={() => setConfirmItem({ id: item.id, name, cost: item.cost })}
                   disabled={
                     cantAfford || ownedForever || isPurchasing || selected === item.id
                   }
@@ -162,6 +169,28 @@ export default function ShopPage() {
           );
         })}
       </div>
+      <ConfirmDialog
+        open={Boolean(confirmItem)}
+        title={t("shop.confirmTitle")}
+        description={
+          confirmItem
+            ? t("shop.confirmPrompt", {
+                name: confirmItem.name,
+                cost: confirmItem.cost,
+                remaining: user.essence - confirmItem.cost,
+              })
+            : ""
+        }
+        confirmLabel={t("shop.buy")}
+        busy={isPurchasing}
+        onConfirm={() => {
+          if (!confirmItem) return;
+          const item = confirmItem;
+          setConfirmItem(null);
+          void handlePurchase(item.id, item.name, item.cost);
+        }}
+        onClose={() => setConfirmItem(null)}
+      />
     </div>
   );
 }

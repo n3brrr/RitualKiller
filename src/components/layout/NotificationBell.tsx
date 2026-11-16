@@ -4,12 +4,23 @@ import { Link, useNavigate } from "react-router-dom";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useFocusTrap } from "@/hooks/useFocusTrap";
 import { useI18n } from "@/i18n";
+import { errorMessage } from "@/lib/errors";
+import { useToast } from "@/hooks/useToast";
 import { notificationText } from "@/utils/notificationText";
 import { formatDateTime } from "@/utils/dates";
 
 export function NotificationBell() {
   const { notifications, unreadCount, markRead, markAllRead } = useNotifications();
   const { t, tn, locale } = useI18n();
+  const toast = useToast();
+  // Quick actions report failures instead of failing silently.
+  const run = async (action: () => Promise<unknown>) => {
+    try {
+      await action();
+    } catch (actionError) {
+      toast.error(errorMessage(actionError, t));
+    }
+  };
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const panelRef = useFocusTrap<HTMLDivElement>(open, () => setOpen(false));
@@ -61,7 +72,7 @@ export function NotificationBell() {
               {unreadCount > 0 && (
                 <button
                   type="button"
-                  onClick={() => void markAllRead()}
+                  onClick={() => void run(() => markAllRead())}
                   className="inline-flex min-h-11 items-center gap-1 rounded-lg px-2 text-xs text-zinc-400 hover:text-ritual-accent"
                 >
                   <CheckCheck size={14} /> {t("notifications.read")}
@@ -90,7 +101,7 @@ export function NotificationBell() {
                 key={notification.id}
                 type="button"
                 onClick={() => {
-                  if (!notification.read) void markRead(notification.id);
+                  if (!notification.read) void run(() => markRead(notification.id));
                   setOpen(false);
                   navigate("/app/notifications");
                 }}

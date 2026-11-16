@@ -8,6 +8,7 @@ import { shopItemIcon } from "@/data/items";
 import { formatDateTime } from "@/utils/dates";
 import Loading from "@/components/animations/Loading";
 import { ErrorState } from "@/components/ui/ErrorState";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 
 export default function InventoryPage() {
   const { items, quantities, buffs, isLoading, consume, error, refetch } = useShop();
@@ -17,6 +18,7 @@ export default function InventoryPage() {
     text: string;
   } | null>(null);
   const [pendingId, setPendingId] = useState<string | null>(null);
+  const [confirmUse, setConfirmUse] = useState<{ id: string; name: string } | null>(null);
 
   if (isLoading) return <Loading />;
   if (error) {
@@ -163,7 +165,7 @@ export default function InventoryPage() {
                 <button
                   type="button"
                   onClick={() =>
-                    void handleConsume(item.id, t(shopItemKey(item.id, "name")))
+                    setConfirmUse({ id: item.id, name: t(shopItemKey(item.id, "name")) })
                   }
                   disabled={pendingId === item.id}
                   className="mt-3 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg border border-zinc-700 text-sm font-bold text-zinc-200 hover:border-ritual-accent hover:text-ritual-accent disabled:cursor-not-allowed disabled:opacity-40"
@@ -180,6 +182,22 @@ export default function InventoryPage() {
           ))}
         </div>
       )}
+      <ConfirmDialog
+        open={Boolean(confirmUse)}
+        title={t("inventory.confirmTitle")}
+        description={
+          confirmUse ? t("inventory.confirmPrompt", { name: confirmUse.name }) : ""
+        }
+        confirmLabel={t("inventory.use")}
+        busy={Boolean(pendingId)}
+        onConfirm={() => {
+          if (!confirmUse) return;
+          const item = confirmUse;
+          setConfirmUse(null);
+          void handleConsume(item.id, item.name);
+        }}
+        onClose={() => setConfirmUse(null)}
+      />
     </div>
   );
 }

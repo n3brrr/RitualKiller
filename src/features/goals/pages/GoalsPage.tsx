@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Calendar, Plus, Target, Trash2 } from "lucide-react";
+import { Calendar, Pencil, Plus, Target, Trash2 } from "lucide-react";
 import { useGoals } from "@/hooks/useGoals";
 import { useRituals } from "@/hooks/useRituals";
 import { useI18n } from "@/i18n";
@@ -8,6 +8,16 @@ import { addDays, daysUntil, toDateKey } from "@/utils/dates";
 import Loading from "@/components/animations/Loading";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { ErrorState } from "@/components/ui/ErrorState";
+
+function emptyForm() {
+  return {
+    title: "",
+    description: "",
+    targetDate: toDateKey(addDays(new Date(), 30)),
+    targetValue: 30,
+    ritualIds: [] as string[],
+  };
+}
 
 export default function GoalsPage() {
   const { goals, isLoading, error, refetch, saveGoal, isSaving, removeGoal } = useGoals();
@@ -20,13 +30,8 @@ export default function GoalsPage() {
     null,
   );
   const [deleting, setDeleting] = useState(false);
-  const [form, setForm] = useState({
-    title: "",
-    description: "",
-    targetDate: toDateKey(addDays(new Date(), 30)),
-    targetValue: 30,
-    ritualIds: [] as string[],
-  });
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [form, setForm] = useState(emptyForm);
 
   if (isLoading) return <Loading />;
   if (error) {
@@ -40,6 +45,33 @@ export default function GoalsPage() {
       </div>
     );
   }
+
+  const openCreator = () => {
+    setEditingId(null);
+    setForm(emptyForm());
+    setFormError(null);
+    setShowCreator(true);
+  };
+
+  const openEditor = (goal: (typeof goals)[number]) => {
+    setEditingId(goal.id);
+    setForm({
+      title: goal.title,
+      description: goal.description,
+      targetDate: goal.target_date,
+      targetValue: goal.target_value,
+      ritualIds: goal.ritual_ids,
+    });
+    setFormError(null);
+    setShowCreator(true);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const closeForm = () => {
+    setShowCreator(false);
+    setEditingId(null);
+    setForm(emptyForm());
+  };
 
   const handleCreate = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -55,7 +87,7 @@ export default function GoalsPage() {
 
     try {
       await saveGoal({
-        id: null,
+        id: editingId,
         input: {
           title: form.title,
           description: form.description,
@@ -64,14 +96,7 @@ export default function GoalsPage() {
           ritualIds: form.ritualIds,
         },
       });
-      setForm({
-        title: "",
-        description: "",
-        targetDate: toDateKey(addDays(new Date(), 30)),
-        targetValue: 30,
-        ritualIds: [],
-      });
-      setShowCreator(false);
+      closeForm();
     } catch (createError) {
       setFormError(errorMessage(createError, t));
     }
@@ -115,7 +140,7 @@ export default function GoalsPage() {
         </div>
         <button
           type="button"
-          onClick={() => setShowCreator((value) => !value)}
+          onClick={() => (showCreator ? closeForm() : openCreator())}
           aria-expanded={showCreator}
           className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-ritual-accent px-4 font-bold text-black hover:bg-emerald-400"
         >
@@ -138,6 +163,9 @@ export default function GoalsPage() {
           onSubmit={handleCreate}
           className="space-y-4 rounded-xl border border-zinc-800 bg-zinc-950 p-4 sm:p-6"
         >
+          <h2 className="font-display text-lg font-bold text-white">
+            {editingId ? t("goals.editTitle") : t("goals.new")}
+          </h2>
           <label className="block">
             <span className="mb-1 block text-xs font-bold uppercase tracking-wider text-zinc-400">
               {t("goals.titleLabel")}
@@ -173,7 +201,7 @@ export default function GoalsPage() {
               <input
                 type="date"
                 value={form.targetDate}
-                min={toDateKey()}
+                min={editingId ? undefined : toDateKey()}
                 onChange={(event) => setForm({ ...form, targetDate: event.target.value })}
                 required
                 className="min-h-11 w-full rounded-lg border border-zinc-700 bg-black px-4 text-white outline-none focus:border-ritual-accent"
@@ -231,7 +259,11 @@ export default function GoalsPage() {
             disabled={isSaving}
             className="inline-flex min-h-11 w-full items-center justify-center rounded-lg bg-ritual-accent px-5 font-bold text-black hover:bg-emerald-400 disabled:opacity-50 sm:w-auto"
           >
-            {isSaving ? t("common.saving") : t("common.create")}
+            {isSaving
+              ? t("common.saving")
+              : editingId
+                ? t("common.save")
+                : t("common.create")}
           </button>
         </form>
       )}
@@ -247,7 +279,7 @@ export default function GoalsPage() {
           {!showCreator && (
             <button
               type="button"
-              onClick={() => setShowCreator(true)}
+              onClick={openCreator}
               className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-lg bg-ritual-accent px-4 text-sm font-bold text-black transition-colors hover:bg-emerald-400"
             >
               <Plus size={16} aria-hidden="true" /> {t("goals.new")}
@@ -283,14 +315,24 @@ export default function GoalsPage() {
                       <p className="mt-1 text-sm text-zinc-400">{goal.description}</p>
                     )}
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => handleDelete(goal.id, goal.title)}
-                    aria-label={`${t("common.delete")} ${goal.title}`}
-                    className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-zinc-400 hover:text-red-500"
-                  >
-                    <Trash2 size={16} aria-hidden="true" />
-                  </button>
+                  <div className="flex shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => openEditor(goal)}
+                      aria-label={t("goals.editLabel", { name: goal.title })}
+                      className="inline-flex h-11 w-11 items-center justify-center rounded-full text-zinc-400 hover:text-white"
+                    >
+                      <Pencil size={16} aria-hidden="true" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDelete(goal.id, goal.title)}
+                      aria-label={`${t("common.delete")} ${goal.title}`}
+                      className="inline-flex h-11 w-11 items-center justify-center rounded-full text-zinc-400 hover:text-red-500"
+                    >
+                      <Trash2 size={16} aria-hidden="true" />
+                    </button>
+                  </div>
                 </div>
 
                 <div className="mb-1 flex justify-between text-xs text-zinc-400">
