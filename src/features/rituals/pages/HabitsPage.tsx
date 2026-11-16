@@ -5,7 +5,7 @@ import RitualLibrary from "@/components/rituals/RitualLibrary";
 import Loading from "@/components/animations/Loading";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { ErrorState } from "@/components/ui/ErrorState";
-import { useAuth } from "@/features/auth/AuthProvider";
+import { useAuth } from "@/features/auth/useAuth";
 import { useRituals } from "@/hooks/useRituals";
 import { difficultyKeys, frequencyKeys, useI18n } from "@/i18n";
 import type { Difficulty, Frequency, Ritual } from "@/types";

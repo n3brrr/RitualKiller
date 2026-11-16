@@ -18,7 +18,7 @@ import {
   X,
   Flame,
 } from "lucide-react";
-import { useAuth } from "@/features/auth/AuthProvider";
+import { useAuth } from "@/features/auth/useAuth";
 import { translateRank, useI18n, type TranslationKey } from "@/i18n";
 import { getRank, rankProgress } from "@/utils/rank";
 import { useQueryClient } from "@tanstack/react-query";

@@ -10,7 +10,7 @@ import {
   Users,
   Flag,
 } from "lucide-react";
-import { useAuth } from "@/features/auth/AuthProvider";
+import { useAuth } from "@/features/auth/useAuth";
 import { useSocial } from "@/hooks/useSocial";
 import { useI18n } from "@/i18n";
 import { formatDateTime } from "@/utils/dates";

@@ -1,7 +1,7 @@
 import React from "react";
 import { Navigate } from "react-router-dom";
 import { AlertCircle } from "lucide-react";
-import { useAuth } from "@/features/auth/AuthProvider";
+import { useAuth } from "@/features/auth/useAuth";
 import { useI18n } from "@/i18n";
 import Loading from "@/components/animations/Loading";
 

@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link, useParams } from "react-router-dom";
 import { Settings, Shield, User as UserIcon, Zap } from "lucide-react";
-import { useAuth } from "@/features/auth/AuthProvider";
+import { useAuth } from "@/features/auth/useAuth";
 import { profileService } from "@/services/profileService";
 import { translateRank, useI18n } from "@/i18n";
 import { formatDateTime } from "@/utils/dates";

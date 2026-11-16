@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { ShoppingBag, Zap } from "lucide-react";
-import { useAuth } from "@/features/auth/AuthProvider";
+import { useAuth } from "@/features/auth/useAuth";
 import { useShop } from "@/hooks/useShop";
 import { rarityKeys, shopItemKey, useI18n } from "@/i18n";
 import { shopItemIcon } from "@/data/items";

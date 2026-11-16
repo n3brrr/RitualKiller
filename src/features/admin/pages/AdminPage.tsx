@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { AlertTriangle, Check, ShieldCheck, ShieldOff, Users, X } from "lucide-react";
 import { useAdmin } from "@/hooks/useAdmin";
-import { useAuth } from "@/features/auth/AuthProvider";
+import { useAuth } from "@/features/auth/useAuth";
 import { useI18n } from "@/i18n";
 import { formatDateTime } from "@/utils/dates";
 import Loading from "@/components/animations/Loading";

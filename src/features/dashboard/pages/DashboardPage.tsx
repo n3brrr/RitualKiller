@@ -3,7 +3,7 @@ import { AlertCircle, Check, CheckCircle2, Flame, Package, Zap } from "lucide-re
 import { Heatmap } from "@/components/Heatmap";
 import Loading from "@/components/animations/Loading";
 import { ErrorState } from "@/components/ui/ErrorState";
-import { useAuth } from "@/features/auth/AuthProvider";
+import { useAuth } from "@/features/auth/useAuth";
 import { useRituals } from "@/hooks/useRituals";
 import { useI18n } from "@/i18n";
 import { DAILY_QUOTES } from "@/data/quotes";

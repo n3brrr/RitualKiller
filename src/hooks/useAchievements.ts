@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useAuth } from "@/features/auth/AuthProvider";
+import { useAuth } from "@/features/auth/useAuth";
 import { useStats } from "@/hooks/useStats";
 import { achievementService } from "@/services/achievementService";
 import { ACHIEVEMENTS, EMPTY_STATS, achievementProgress } from "@/data/achievements";

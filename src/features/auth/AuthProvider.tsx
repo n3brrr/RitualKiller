@@ -1,31 +1,14 @@
-import React, {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { profileService } from "@/services/profileService";
-import type { User } from "@/types";
-
-interface AuthContextValue {
-  session: Session | null;
-  user: User | null;
-  loading: boolean;
-  error: Error | null;
-  refreshProfile: () => Promise<void>;
-  signOut: () => Promise<void>;
-}
-
-const AuthContext = createContext<AuthContextValue | undefined>(undefined);
+import { AuthContext, type AuthContextValue } from "./useAuth";
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [initializing, setInitializing] = useState(true);
+  const [passwordRecovery, setPasswordRecovery] = useState(false);
   const queryClient = useQueryClient();
 
   useEffect(() => {
@@ -40,7 +23,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+    } = supabase.auth.onAuthStateChange((event, nextSession) => {
+      // Only a recovery link may set a new password without the current one.
+      if (event === "PASSWORD_RECOVERY") setPasswordRecovery(true);
+      if (event === "SIGNED_OUT") setPasswordRecovery(false);
       setSession(nextSession);
       setInitializing(false);
       if (!nextSession) {
@@ -74,6 +60,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     await supabase.auth.signOut();
     queryClient.clear();
     setSession(null);
+    setPasswordRecovery(false);
   }, [queryClient]);
 
   const value = useMemo<AuthContextValue>(
@@ -82,6 +69,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       user: profileQuery.data ?? null,
       loading: initializing || (Boolean(session) && profileQuery.isLoading),
       error: (profileQuery.error as Error | null) ?? null,
+      passwordRecovery,
       refreshProfile,
       signOut,
     }),
@@ -91,6 +79,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       profileQuery.isLoading,
       profileQuery.error,
       initializing,
+      passwordRecovery,
       refreshProfile,
       signOut,
     ],
@@ -98,9 +87,3 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
-
-export function useAuth(): AuthContextValue {
-  const context = useContext(AuthContext);
-  if (!context) throw new Error("useAuth must be used inside AuthProvider");
-  return context;
-}
