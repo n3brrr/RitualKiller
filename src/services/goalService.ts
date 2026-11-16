@@ -67,12 +67,4 @@ export const goalService = {
     const { error } = await supabase.from("goals").delete().eq("id", id);
     if (error) throw error;
   },
-
-  async updateProgress(id: string, progress: number): Promise<void> {
-    const { error } = await supabase
-      .from("goals")
-      .update({ progress: Math.max(0, Math.floor(progress)) })
-      .eq("id", id);
-    if (error) throw error;
-  },
 };

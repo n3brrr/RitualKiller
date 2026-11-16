@@ -197,11 +197,6 @@ export const RITUAL_LIBRARY: RitualTemplate[] = [
   },
 ];
 
-// Obtiene rituales según una categoría dada
-export const getRitualsByCategory = (category: RitualCategory): RitualTemplate[] => {
-  return RITUAL_LIBRARY.filter((r) => r.category === category);
-};
-
 // Obtiene rituales marcados como populares
 export const getPopularRituals = (): RitualTemplate[] => {
   return RITUAL_LIBRARY.filter((r) => r.popular);

@@ -1,4 +1,3 @@
-import type { ReactNode } from "react";
 import { useI18n } from "@/i18n";
 import "./Loading.css";
 
@@ -13,15 +12,6 @@ export default function Loading({ label }: { label?: string }) {
       <span className="font-display text-xs uppercase tracking-[0.3em] text-zinc-400">
         {label ?? t("common.loading")}
       </span>
-    </div>
-  );
-}
-
-export function PageLoading({ children }: { children?: ReactNode }) {
-  return (
-    <div className="flex min-h-[60vh] items-center justify-center">
-      <Loading />
-      {children}
     </div>
   );
 }

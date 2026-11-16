@@ -206,9 +206,3 @@ export function calculateAchievementProgress(
       return 0;
   }
 }
-
-export function getUnlockedAchievements(achievements: Achievement[]): Achievement[] {
-  return achievements.filter(
-    (achievement) => achievement.progress >= achievement.target && achievement.unlockedAt,
-  );
-}
