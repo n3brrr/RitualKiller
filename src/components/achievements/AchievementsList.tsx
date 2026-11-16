@@ -1,6 +1,6 @@
-import { Lock, Trophy, Unlock } from "lucide-react";
+import { AlertCircle, Lock, Trophy, Unlock } from "lucide-react";
 import { useAchievements } from "@/hooks/useAchievements";
-import { useI18n } from "@/i18n";
+import { useI18n, type TranslationKey } from "@/i18n";
 import { formatDateTime } from "@/utils/dates";
 import type { Achievement } from "@/types";
 import Loading from "@/components/animations/Loading";
@@ -11,21 +11,39 @@ const RARITY_STYLES = {
   legendary: "border-yellow-500/40 text-yellow-400",
 } as const;
 
-const CATEGORY_LABELS: Record<Achievement["category"], string> = {
-  streak: "Rachas",
-  essence: "Esencia",
-  rituals: "Rituales",
-  social: "Comunidad",
-  special: "Especiales",
+const CATEGORY_LABELS: Record<Achievement["category"], TranslationKey> = {
+  streak: "achievements.category.streak",
+  essence: "achievements.category.essence",
+  rituals: "achievements.category.rituals",
+  social: "achievements.category.social",
+  special: "achievements.category.special",
 };
 
 export function AchievementsList() {
-  const { achievements, unlockedCount, isLoading, error } = useAchievements();
-  const { t } = useI18n();
+  const { achievements, unlockedCount, isLoading, error, refetch } = useAchievements();
+  const { t, locale } = useI18n();
 
   if (isLoading) return <Loading />;
   if (error) {
-    return <p className="text-sm text-red-400">No se pudieron cargar los logros: {error.message}</p>;
+    return (
+      <div
+        role="alert"
+        className="rounded-xl border border-red-500/30 bg-red-500/5 p-6 text-center"
+      >
+        <AlertCircle className="mx-auto mb-2 text-red-500" size={24} aria-hidden="true" />
+        <h2 className="font-display text-lg font-bold text-white">
+          {t("achievements.errorTitle")}
+        </h2>
+        <p className="mt-1 text-sm text-red-400">{error.message}</p>
+        <button
+          type="button"
+          onClick={() => void refetch()}
+          className="mt-4 inline-flex min-h-11 items-center rounded-lg border border-zinc-700 px-4 text-sm text-zinc-200 transition-colors hover:border-ritual-accent hover:text-ritual-accent"
+        >
+          {t("common.retry")}
+        </button>
+      </div>
+    );
   }
 
   return (
@@ -39,9 +57,9 @@ export function AchievementsList() {
         if (items.length === 0) return null;
 
         return (
-          <section key={category} aria-label={CATEGORY_LABELS[category]}>
-            <h2 className="mb-3 text-xs font-bold uppercase tracking-widest text-zinc-500">
-              {CATEGORY_LABELS[category]}
+          <section key={category} aria-label={t(CATEGORY_LABELS[category])}>
+            <h2 className="mb-3 text-xs font-bold uppercase tracking-widest text-zinc-400">
+              {t(CATEGORY_LABELS[category])}
             </h2>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               {items.map((achievement) => {
@@ -79,12 +97,12 @@ export function AchievementsList() {
                             />
                           )}
                         </div>
-                        <p className="mt-1 text-sm text-zinc-500">{achievement.description}</p>
+                        <p className="mt-1 text-sm text-zinc-400">{achievement.description}</p>
                       </div>
                     </div>
 
                     <div className="mt-3">
-                      <div className="mb-1 flex justify-between text-xs uppercase tracking-wider text-zinc-500">
+                      <div className="mb-1 flex justify-between text-xs uppercase tracking-wider text-zinc-400">
                         <span>
                           {achievement.progress} / {achievement.target}
                         </span>
@@ -97,9 +115,9 @@ export function AchievementsList() {
                         />
                       </div>
                       {achievement.unlockedAt && (
-                        <p className="mt-2 flex items-center gap-1 text-xs text-zinc-500">
+                        <p className="mt-2 flex items-center gap-1 text-xs text-zinc-400">
                           <Trophy size={10} aria-hidden="true" />
-                          {formatDateTime(achievement.unlockedAt)}
+                          {formatDateTime(achievement.unlockedAt, locale)}
                         </p>
                       )}
                     </div>

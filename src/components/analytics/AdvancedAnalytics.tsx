@@ -14,7 +14,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { Calendar, Download, TrendingUp, Target } from "lucide-react";
+import { AlertCircle, Calendar, Download, TrendingUp, Target } from "lucide-react";
 import { useRituals } from "@/hooks/useRituals";
 import { useI18n } from "@/i18n";
 import {
@@ -31,20 +31,23 @@ const RANGES = [7, 30, 90] as const;
 const COLORS = ["#22c55e", "#eab308", "#ef4444"];
 
 export function AdvancedAnalytics() {
-  const { rituals, logs, isLoading } = useRituals();
-  const { t } = useI18n();
+  const { rituals, logs, isLoading, error, refetch } = useRituals();
+  const { t, locale } = useI18n();
   const [range, setRange] = useState<(typeof RANGES)[number]>(7);
 
   const filteredLogs = useMemo(() => filterLogsByDays(logs, range), [logs, range]);
   const dailySeries = useMemo(
-    () => buildDailySeries(logs, range, new Date(), "es"),
-    [logs, range],
+    () => buildDailySeries(logs, range, new Date(), locale),
+    [logs, range, locale],
   );
   const difficultySeries = useMemo(
-    () => buildDifficultySeries(rituals, filteredLogs),
-    [rituals, filteredLogs],
+    () => buildDifficultySeries(rituals, filteredLogs, locale),
+    [rituals, filteredLogs, locale],
   );
-  const weekdaySeries = useMemo(() => buildWeekdaySeries(filteredLogs), [filteredLogs]);
+  const weekdaySeries = useMemo(
+    () => buildWeekdaySeries(filteredLogs, locale),
+    [filteredLogs, locale],
+  );
   const completionRate = useMemo(
     () => calculateCompletionRate(rituals, filteredLogs, range),
     [rituals, filteredLogs, range],
@@ -56,6 +59,27 @@ export function AdvancedAnalytics() {
   };
 
   if (isLoading) return <Loading />;
+  if (error) {
+    return (
+      <div
+        role="alert"
+        className="rounded-xl border border-red-500/30 bg-red-500/5 p-6 text-center"
+      >
+        <AlertCircle className="mx-auto mb-2 text-red-500" size={24} aria-hidden="true" />
+        <h2 className="font-display text-lg font-bold text-white">
+          {t("analytics.errorTitle")}
+        </h2>
+        <p className="mt-1 text-sm text-red-400">{error.message}</p>
+        <button
+          type="button"
+          onClick={() => void refetch()}
+          className="mt-4 inline-flex min-h-11 items-center rounded-lg border border-zinc-700 px-4 text-sm text-zinc-200 transition-colors hover:border-ritual-accent hover:text-ritual-accent"
+        >
+          {t("common.retry")}
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -73,7 +97,7 @@ export function AdvancedAnalytics() {
                   : "border-zinc-800 bg-zinc-950 text-zinc-400 hover:text-white"
               }`}
             >
-              {value} días
+              {value} {t("productivity.days")}
             </button>
           ))}
         </div>
@@ -88,30 +112,32 @@ export function AdvancedAnalytics() {
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
         <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-4">
-          <div className="mb-1 flex items-center gap-2 text-xs uppercase tracking-wider text-zinc-500">
-            <Target size={14} aria-hidden="true" /> Tasa
+          <div className="mb-1 flex items-center gap-2 text-xs uppercase tracking-wider text-zinc-400">
+            <Target size={14} aria-hidden="true" /> {t("analytics.rate")}
           </div>
           <div className="font-mono text-2xl text-ritual-accent">
             {Math.round(completionRate)}%
           </div>
         </div>
         <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-4">
-          <div className="mb-1 flex items-center gap-2 text-xs uppercase tracking-wider text-zinc-500">
-            <TrendingUp size={14} aria-hidden="true" /> Completados
+          <div className="mb-1 flex items-center gap-2 text-xs uppercase tracking-wider text-zinc-400">
+            <TrendingUp size={14} aria-hidden="true" /> {t("analytics.completed")}
           </div>
           <div className="font-mono text-2xl text-white">{filteredLogs.length}</div>
         </div>
         <div className="col-span-2 rounded-xl border border-zinc-800 bg-zinc-950 p-4 sm:col-span-1">
-          <div className="mb-1 flex items-center gap-2 text-xs uppercase tracking-wider text-zinc-500">
-            <Calendar size={14} aria-hidden="true" /> Rango
+          <div className="mb-1 flex items-center gap-2 text-xs uppercase tracking-wider text-zinc-400">
+            <Calendar size={14} aria-hidden="true" /> {t("analytics.range")}
           </div>
-          <div className="font-mono text-2xl text-white">{range} días</div>
+          <div className="font-mono text-2xl text-white">
+            {range} {t("productivity.days")}
+          </div>
         </div>
       </div>
 
       <section className="rounded-xl border border-zinc-800 bg-zinc-950 p-4">
         <h2 className="mb-4 text-sm font-bold uppercase tracking-wider text-zinc-300">
-          Completados por día
+          {t("analytics.daily")}
         </h2>
         <div className="h-64 w-full">
           <ResponsiveContainer width="100%" height="100%">
@@ -125,6 +151,7 @@ export function AdvancedAnalytics() {
               <Line
                 type="monotone"
                 dataKey="Completions"
+                name={t("analytics.completed")}
                 stroke="#22c55e"
                 strokeWidth={2}
                 dot={false}
@@ -137,7 +164,7 @@ export function AdvancedAnalytics() {
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <section className="rounded-xl border border-zinc-800 bg-zinc-950 p-4">
           <h2 className="mb-4 text-sm font-bold uppercase tracking-wider text-zinc-300">
-            Por día de la semana
+            {t("analytics.weekday")}
           </h2>
           <div className="h-56 w-full">
             <ResponsiveContainer width="100%" height="100%">
@@ -148,7 +175,12 @@ export function AdvancedAnalytics() {
                 <Tooltip
                   contentStyle={{ background: "#09090b", border: "1px solid #27272a" }}
                 />
-                <Bar dataKey="Completions" fill="#22c55e" radius={[4, 4, 0, 0]} />
+                <Bar
+                  dataKey="Completions"
+                  name={t("analytics.completed")}
+                  fill="#22c55e"
+                  radius={[4, 4, 0, 0]}
+                />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -156,12 +188,10 @@ export function AdvancedAnalytics() {
 
         <section className="rounded-xl border border-zinc-800 bg-zinc-950 p-4">
           <h2 className="mb-4 text-sm font-bold uppercase tracking-wider text-zinc-300">
-            Por dificultad
+            {t("analytics.byDifficulty")}
           </h2>
           {difficultySeries.length === 0 ? (
-            <p className="py-12 text-center text-sm text-zinc-500">
-              Sin datos en este rango.
-            </p>
+            <p className="py-12 text-center text-sm text-zinc-400">{t("analytics.noData")}</p>
           ) : (
             <div className="h-56 w-full">
               <ResponsiveContainer width="100%" height="100%">

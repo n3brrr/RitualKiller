@@ -8,6 +8,7 @@
 
 import React, { lazy, Suspense } from "react";
 import Loading from "@/components/animations/Loading";
+import { useI18n } from "@/i18n";
 
 // Carga diferida del componente avanzado de analíticas
 const AdvancedAnalytics = lazy(
@@ -15,15 +16,14 @@ const AdvancedAnalytics = lazy(
 );
 
 const AnalyticsPage = () => {
+  const { t } = useI18n();
   return (
     <div className="space-y-8 animate-fade-in">
       <header>
-        <h2 className="text-3xl font-display font-bold text-white mb-1">
-          Analíticas Avanzadas
-        </h2>
-        <p className="text-zinc-500">
-          Profundiza en tus datos y optimiza tu rendimiento.
-        </p>
+        <h1 className="mb-1 font-display text-2xl font-bold text-white sm:text-3xl">
+          {t("analytics.title")}
+        </h1>
+        <p className="text-sm text-zinc-400">{t("analytics.subtitle")}</p>
       </header>
 
       {/* Renderiza el componente avanzado con fallback de carga */}

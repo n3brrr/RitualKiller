@@ -83,5 +83,6 @@ export function useAchievements() {
     unlockedCount: achievements.filter((achievement) => achievement.unlockedAt).length,
     isLoading: ritualsLoading || unlockedQuery.isLoading || postsQuery.isLoading,
     error: (unlockedQuery.error as Error | null) ?? null,
+    refetch: unlockedQuery.refetch,
   };
 }
