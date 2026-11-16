@@ -143,7 +143,7 @@ export const profileService = {
         } catch {
           throw new Error("La URL del avatar no es válida");
         }
-        if (!["http:", "https:"].includes(parsed.protocol) || value.length > 500) {
+        if (parsed.protocol !== "https:" || value.length > 500) {
           throw new Error("La URL del avatar no es válida");
         }
         payload.avatar_url = value;
@@ -159,15 +159,19 @@ export const profileService = {
     if (error) throw error;
   },
 
+  /** Other users are read through the public_profiles view (no private columns). */
   async getByUsername(username: string): Promise<User | null> {
     const { data, error } = await supabase
-      .from("profiles")
-      .select("*")
+      .from("public_profiles")
+      .select("id, username, avatar_url, essence, created_at")
       .eq("username", username)
       .maybeSingle();
     if (error) throw error;
     if (!data) return null;
-    const profile = data as ProfileRow;
+    const profile = data as Pick<
+      ProfileRow,
+      "id" | "username" | "avatar_url" | "essence" | "created_at"
+    >;
     return {
       id: profile.id,
       username: profile.username,
@@ -175,9 +179,9 @@ export const profileService = {
       rank: mapRole(profile.essence),
       inventory: [],
       avatar_url: profile.avatar_url,
-      locale: (profile.locale === "en" ? "en" : "es") as Locale,
+      locale: "es",
       created_at: profile.created_at,
-      isAdmin: profile.is_admin,
+      isAdmin: false,
       active_buffs: [],
     };
   },

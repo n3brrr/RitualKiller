@@ -73,7 +73,7 @@ export const socialService = {
       ]),
     );
     const { data: profilesData, error: profilesError } = await supabase
-      .from("profiles")
+      .from("public_profiles")
       .select("id, username, avatar_url")
       .in("id", authorIds);
     if (profilesError) throw profilesError;

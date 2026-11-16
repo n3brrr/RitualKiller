@@ -39,7 +39,6 @@ export interface CreateRitualInput {
   description: string;
   difficulty: Difficulty;
   frequency: Frequency;
-  essenceReward: number;
 }
 
 function mapRitual(row: RitualRow): Ritual {
@@ -99,7 +98,6 @@ export const ritualService = {
         description: input.description.trim(),
         difficulty: input.difficulty,
         frequency: input.frequency,
-        essence_reward: input.essenceReward,
       })
       .select("*")
       .single();
@@ -148,7 +146,6 @@ export const ritualService = {
           description: (ritual.description ?? "").slice(0, 500),
           difficulty: ritual.difficulty,
           frequency: ritual.frequency,
-          essence_reward: Math.min(1000, Math.max(0, ritual.essenceReward)),
         })
         .select("id")
         .single();

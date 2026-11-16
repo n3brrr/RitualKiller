@@ -373,6 +373,7 @@ const es = {
   "achievements.category.rituals": "Rituales",
   "achievements.category.social": "Comunidad",
   "achievements.category.special": "Especiales",
+  "habits.masterLocked": "requiere el Contrato Vinculante",
 } as const;
 
 export type TranslationKey = keyof typeof es;
@@ -776,6 +777,7 @@ const en: Record<TranslationKey, string> = {
   "achievements.category.rituals": "Rituals",
   "achievements.category.social": "Community",
   "achievements.category.special": "Special",
+  "habits.masterLocked": "requires the Binding Contract",
 };
 
 const dictionaries: Record<Locale, Record<TranslationKey, string>> = { es, en };

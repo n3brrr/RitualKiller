@@ -61,6 +61,8 @@ export default function HabitsPage() {
     );
   }
 
+  // Master rituals require the Binding Contract (enforced again by the database).
+  const canUseMaster = user.isAdmin || user.inventory.includes("binding_contract");
   const todayKey = toDateKey();
   const reward = BASE_REWARD[form.difficulty] * (form.frequency === "weekly" ? 3 : 1);
   const pending = rituals.filter(
@@ -89,7 +91,6 @@ export default function HabitsPage() {
         description: form.description,
         difficulty: form.difficulty,
         frequency: form.frequency,
-        essenceReward: reward,
       });
       setForm({ title: "", description: "", difficulty: "novice", frequency: "daily" });
       setShowCreator(false);
@@ -106,7 +107,6 @@ export default function HabitsPage() {
         description: template.description,
         difficulty: template.difficulty,
         frequency: template.frequency,
-        essenceReward: template.essenceReward,
       });
     } catch (error) {
       handleError(error);
@@ -238,11 +238,15 @@ export default function HabitsPage() {
                   }
                   className="min-h-11 w-full rounded-lg border border-zinc-700 bg-black px-4 text-white outline-none focus:border-ritual-accent"
                 >
-                  {DIFFICULTIES.map((value) => (
-                    <option key={value} value={value}>
-                      {t(difficultyKeys[value])}
-                    </option>
-                  ))}
+                  {DIFFICULTIES.map((value) => {
+                    const locked = value === "master" && !canUseMaster;
+                    return (
+                      <option key={value} value={value} disabled={locked}>
+                        {t(difficultyKeys[value])}
+                        {locked ? ` (${t("habits.masterLocked")})` : ""}
+                      </option>
+                    );
+                  })}
                 </select>
               </Field>
 

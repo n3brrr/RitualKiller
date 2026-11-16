@@ -57,7 +57,7 @@ export const adminService = {
         .select("*")
         .order("created_at", { ascending: false })
         .limit(100),
-      supabase.from("profiles").select("id, username"),
+      supabase.from("public_profiles").select("id, username"),
     ]);
     if (reportsResult.error) throw reportsResult.error;
     if (profilesResult.error) throw profilesResult.error;
