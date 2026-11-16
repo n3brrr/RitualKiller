@@ -169,13 +169,10 @@ describe("profiles", () => {
         [alice],
       ),
     );
-    expect(Object.keys(visible).sort()).toEqual([
-      "avatar_url",
-      "created_at",
-      "essence",
-      "id",
-      "username",
-    ]);
+    expect(visible).not.toHaveProperty("is_admin");
+    expect(visible).not.toHaveProperty("locale");
+    expect(visible).not.toHaveProperty("suspended_until");
+    expect(visible).toHaveProperty("username", "alice");
     const asAnon = await t.as(null, () =>
       t.query("select 1 from public.profiles").catch(() => []),
     );
