@@ -1,22 +1,53 @@
-import { Bell, CheckCheck, Trash2 } from "lucide-react";
+import { AlertCircle, Bell, CheckCheck, Trash2 } from "lucide-react";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useI18n } from "@/i18n";
 import { formatDateTime } from "@/utils/dates";
 import Loading from "@/components/animations/Loading";
 
 export default function NotificationsPage() {
-  const { notifications, unreadCount, isLoading, markAllRead, markRead, removeNotification } =
-    useNotifications();
-  const { t } = useI18n();
+  const {
+    notifications,
+    unreadCount,
+    isLoading,
+    error,
+    refetch,
+    markAllRead,
+    markRead,
+    removeNotification,
+  } = useNotifications();
+  const { t, locale } = useI18n();
 
   if (isLoading) return <Loading />;
+  if (error) {
+    return (
+      <div className="mx-auto max-w-2xl">
+        <div
+          role="alert"
+          className="rounded-xl border border-red-500/30 bg-red-500/5 p-6 text-center"
+        >
+          <AlertCircle className="mx-auto mb-2 text-red-500" size={24} aria-hidden="true" />
+          <h1 className="font-display text-lg font-bold text-white">
+            {t("notifications.errorTitle")}
+          </h1>
+          <p className="mt-1 text-sm text-red-400">{error.message}</p>
+          <button
+            type="button"
+            onClick={() => void refetch()}
+            className="mt-4 inline-flex min-h-11 items-center rounded-lg border border-zinc-700 px-4 text-sm text-zinc-200 transition-colors hover:border-ritual-accent hover:text-ritual-accent"
+          >
+            {t("common.retry")}
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto max-w-2xl space-y-4">
       <header className="flex items-center justify-between gap-3">
         <div>
           <h1 className="font-display text-2xl font-bold sm:text-3xl">{t("notifications.title")}</h1>
-          <p className="text-sm text-zinc-500">
+          <p className="text-sm text-zinc-400">
             {unreadCount} {t("notifications.unread")}
           </p>
         </div>
@@ -33,9 +64,10 @@ export default function NotificationsPage() {
       </header>
 
       {notifications.length === 0 ? (
-        <p className="rounded-xl border border-dashed border-zinc-800 p-8 text-center text-sm text-zinc-500">
-          {t("notifications.empty")}
-        </p>
+        <div className="rounded-xl border border-dashed border-zinc-800 p-8 text-center text-sm text-zinc-400">
+          <Bell className="mx-auto mb-3 text-ritual-accent/60" size={28} aria-hidden="true" />
+          <p>{t("notifications.empty")}</p>
+        </div>
       ) : (
         <ul className="space-y-2">
           {notifications.map((notification) => (
@@ -57,7 +89,7 @@ export default function NotificationsPage() {
                   </div>
                   <p className="mt-1 text-sm text-zinc-400">{notification.message}</p>
                   <p className="mt-1 text-xs uppercase tracking-wider text-zinc-400">
-                    {formatDateTime(notification.createdAt)}
+                    {formatDateTime(notification.createdAt, locale)}
                   </p>
                 </div>
                 <div className="flex shrink-0 gap-1">
@@ -65,8 +97,8 @@ export default function NotificationsPage() {
                     <button
                       type="button"
                       onClick={() => void markRead(notification.id)}
-                      aria-label="Marcar como leída"
-                      className="inline-flex h-11 w-11 items-center justify-center rounded-full text-zinc-500 hover:text-ritual-accent"
+                      aria-label={t("notifications.markRead")}
+                      className="inline-flex h-11 w-11 items-center justify-center rounded-full text-zinc-400 hover:text-ritual-accent"
                     >
                       <Bell size={16} aria-hidden="true" />
                     </button>
@@ -74,7 +106,7 @@ export default function NotificationsPage() {
                   <button
                     type="button"
                     onClick={() => void removeNotification(notification.id)}
-                    aria-label="Eliminar notificación"
+                    aria-label={t("notifications.remove")}
                     className="inline-flex h-11 w-11 items-center justify-center rounded-full text-zinc-400 hover:text-red-500"
                   >
                     <Trash2 size={16} aria-hidden="true" />

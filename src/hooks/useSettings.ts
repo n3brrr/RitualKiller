@@ -28,6 +28,7 @@ export function useSettings() {
     settings: query.data ?? null,
     isLoading: query.isLoading,
     error: (query.error as Error | null) ?? null,
+    refetch: query.refetch,
     updateSettings: updateMutation.mutateAsync,
     isUpdating: updateMutation.isPending,
   };

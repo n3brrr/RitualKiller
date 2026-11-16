@@ -62,6 +62,12 @@ export function useAdmin() {
       (usersQuery.error as Error | null) ??
       (reportsQuery.error as Error | null) ??
       null,
+    refetch: () => {
+      void metricsQuery.refetch();
+      void usersQuery.refetch();
+      void reportsQuery.refetch();
+      void errorsQuery.refetch();
+    },
     resolveReport: resolveMutation.mutateAsync,
     setAdmin: adminMutation.mutateAsync,
   };

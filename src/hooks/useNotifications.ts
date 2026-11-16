@@ -38,6 +38,8 @@ export function useNotifications() {
     notifications,
     unreadCount: notifications.filter((notification) => !notification.read).length,
     isLoading: query.isLoading,
+    error: (query.error as Error | null) ?? null,
+    refetch: query.refetch,
     markRead: markReadMutation.mutateAsync,
     markAllRead: markAllMutation.mutateAsync,
     removeNotification: removeMutation.mutateAsync,

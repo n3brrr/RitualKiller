@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Download, KeyRound, LogOut, Save, Trash2, Upload } from "lucide-react";
+import { AlertCircle, Download, KeyRound, LogOut, Save, Trash2, Upload } from "lucide-react";
 import { useAuth } from "@/features/auth/AuthProvider";
 import { useSettings } from "@/hooks/useSettings";
 import { useRituals } from "@/hooks/useRituals";
@@ -14,7 +14,8 @@ import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 
 export default function SettingsPage() {
   const { user, refreshProfile, signOut } = useAuth();
-  const { settings, isLoading, updateSettings, isUpdating } = useSettings();
+  const { settings, isLoading, error: settingsError, refetch: refetchSettings, updateSettings, isUpdating } =
+    useSettings();
   const { rituals, logs, importBackup } = useRituals();
   const { t, locale, setLocale } = useI18n();
   const navigate = useNavigate();
@@ -72,7 +73,7 @@ export default function SettingsPage() {
       await refreshProfile();
       flash(t("settings.updated"));
     } catch (saveError) {
-      setError(saveError instanceof Error ? saveError.message : "No se pudieron guardar los ajustes");
+      setError(saveError instanceof Error ? saveError.message : t("settings.saveError"));
     } finally {
       setBusy(false);
     }
@@ -85,7 +86,7 @@ export default function SettingsPage() {
       await updateSettings({ locale: next });
       await refreshProfile();
     } catch (languageError) {
-      setError(languageError instanceof Error ? languageError.message : "No se pudo cambiar el idioma");
+      setError(languageError instanceof Error ? languageError.message : t("settings.languageError"));
     }
   };
 
@@ -113,11 +114,13 @@ export default function SettingsPage() {
     try {
       const text = await file.text();
       const backup = importData(text);
-      if (!backup) throw new Error("El archivo no es un backup válido de RitualKiller");
+      if (!backup) throw new Error(t("settings.invalidBackup"));
       const result = await importBackup(backup);
-      flash(`${t("settings.imported")} ${result.rituals} rituales, ${result.logs} registros.`);
+      flash(
+        `${t("settings.imported")} ${result.rituals} ${t("settings.ritualsUnit")}, ${result.logs} ${t("settings.logsUnit")}.`,
+      );
     } catch (importError) {
-      setError(importError instanceof Error ? importError.message : "No se pudo importar");
+      setError(importError instanceof Error ? importError.message : t("settings.importError"));
     } finally {
       setBusy(false);
       if (fileInput.current) fileInput.current.value = "";
@@ -128,7 +131,7 @@ export default function SettingsPage() {
     event.preventDefault();
     const validation = validatePassword(newPassword);
     if (!validation.valid) {
-      setError(validation.message ?? "Contraseña inválida");
+      setError(validation.message ?? t("settings.invalidPassword"));
       return;
     }
 
@@ -139,9 +142,9 @@ export default function SettingsPage() {
       const { error: updateError } = await updatePassword(newPassword);
       if (updateError) throw updateError;
       setNewPassword("");
-      flash("Contraseña actualizada.");
+      flash(t("settings.passwordUpdated"));
     } catch (passwordError) {
-      setError(passwordError instanceof Error ? passwordError.message : "No se pudo actualizar");
+      setError(passwordError instanceof Error ? passwordError.message : t("settings.passwordError"));
     } finally {
       setBusy(false);
     }
@@ -156,7 +159,7 @@ export default function SettingsPage() {
       await signOut();
       navigate("/login", { replace: true });
     } catch (deleteError) {
-      setError(deleteError instanceof Error ? deleteError.message : "No se pudieron borrar");
+      setError(deleteError instanceof Error ? deleteError.message : t("settings.deleteError"));
       setBusy(false);
     }
   };
@@ -170,8 +173,28 @@ export default function SettingsPage() {
     <div className="mx-auto max-w-3xl space-y-6">
       <header>
         <h1 className="font-display text-2xl font-bold sm:text-3xl">{t("settings.title")}</h1>
-        <p className="text-sm text-zinc-500">Perfil, preferencias y control de tus datos.</p>
+        <p className="text-sm text-zinc-400">{t("settings.subtitle")}</p>
       </header>
+
+      {settingsError && (
+        <div
+          role="alert"
+          className="rounded-xl border border-red-500/30 bg-red-500/5 p-6 text-center"
+        >
+          <AlertCircle className="mx-auto mb-2 text-red-500" size={24} aria-hidden="true" />
+          <h2 className="font-display text-lg font-bold text-white">
+            {t("settings.errorTitle")}
+          </h2>
+          <p className="mt-1 text-sm text-red-400">{settingsError.message}</p>
+          <button
+            type="button"
+            onClick={() => void refetchSettings()}
+            className="mt-4 inline-flex min-h-11 items-center rounded-lg border border-zinc-700 px-4 text-sm text-zinc-200 transition-colors hover:border-ritual-accent hover:text-ritual-accent"
+          >
+            {t("common.retry")}
+          </button>
+        </div>
+      )}
 
       {(message || error) && (
         <p
@@ -193,7 +216,7 @@ export default function SettingsPage() {
           </h2>
           <div className="space-y-4">
             <label className="block">
-              <span className="mb-1 block text-xs font-bold uppercase tracking-wider text-zinc-500">
+              <span className="mb-1 block text-xs font-bold uppercase tracking-wider text-zinc-400">
                 {t("auth.username")}
               </span>
               <input
@@ -207,7 +230,7 @@ export default function SettingsPage() {
             </label>
 
             <label className="block">
-              <span className="mb-1 block text-xs font-bold uppercase tracking-wider text-zinc-500">
+              <span className="mb-1 block text-xs font-bold uppercase tracking-wider text-zinc-400">
                 {t("settings.avatar")}
               </span>
               <input
@@ -228,7 +251,7 @@ export default function SettingsPage() {
           </h2>
           <div className="space-y-4">
             <fieldset>
-              <legend className="mb-2 text-xs font-bold uppercase tracking-wider text-zinc-500">
+              <legend className="mb-2 text-xs font-bold uppercase tracking-wider text-zinc-400">
                 {t("settings.language")}
               </legend>
               <div className="flex gap-2">
@@ -261,7 +284,7 @@ export default function SettingsPage() {
             </label>
 
             <label className="block">
-              <span className="mb-1 block text-xs font-bold uppercase tracking-wider text-zinc-500">
+              <span className="mb-1 block text-xs font-bold uppercase tracking-wider text-zinc-400">
                 {t("settings.reminder")}
               </span>
               <input
@@ -372,16 +395,14 @@ export default function SettingsPage() {
 
       <ConfirmDialog
         open={confirmDelete}
-        title="Borrar todos tus datos"
+        title={t("settings.deleteConfirmTitle")}
         description={
           <>
             {t("settings.deleteWarning")}{" "}
-            <strong className="text-red-400">
-              Esta acción es definitiva y no se puede deshacer.
-            </strong>
+            <strong className="text-red-400">{t("settings.deleteIrreversible")}</strong>
           </>
         }
-        confirmLabel="Borrar todo"
+        confirmLabel={t("settings.deleteConfirmLabel")}
         destructive
         busy={busy}
         onConfirm={() => void handleDeleteData()}
