@@ -37,6 +37,12 @@ export function useAdmin(userSearch = "", userPage = 0) {
     enabled,
   });
 
+  const moderationQuery = useQuery({
+    queryKey: ["admin", "moderation"],
+    queryFn: () => adminService.getModerationLog(),
+    enabled,
+  });
+
   const invalidate = () => {
     void queryClient.invalidateQueries({ queryKey: ["admin"] });
     void queryClient.invalidateQueries({ queryKey: ["social"] });
@@ -85,18 +91,21 @@ export function useAdmin(userSearch = "", userPage = 0) {
     usersFetching: usersQuery.isFetching,
     reports: reportsQuery.data ?? [],
     errorLogs: errorsQuery.data ?? [],
+    moderationLog: moderationQuery.data ?? [],
     isLoading: metricsQuery.isLoading || reportsQuery.isLoading || errorsQuery.isLoading,
     error:
       (metricsQuery.error as Error | null) ??
       (usersQuery.error as Error | null) ??
       (reportsQuery.error as Error | null) ??
       (errorsQuery.error as Error | null) ??
+      (moderationQuery.error as Error | null) ??
       null,
     refetch: () => {
       void metricsQuery.refetch();
       void usersQuery.refetch();
       void reportsQuery.refetch();
       void errorsQuery.refetch();
+      void moderationQuery.refetch();
     },
     resolveReport: resolveMutation.mutateAsync,
     setAdmin: adminMutation.mutateAsync,

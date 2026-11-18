@@ -34,6 +34,14 @@ export interface AdminErrorLog {
   userId: string | null;
 }
 
+export interface ModerationEntry {
+  id: string;
+  action: "delete_post" | "delete_comment" | "suspend" | "unsuspend";
+  adminName: string | null;
+  targetName: string | null;
+  createdAt: string;
+}
+
 export const ADMIN_USERS_PAGE = 25;
 
 /** Escapes LIKE wildcards so a search for "a_b" does not match "axb". */
@@ -141,6 +149,49 @@ export const adminService = {
       p_is_admin: isAdmin,
     });
     if (error) throw error;
+  },
+
+  /** Latest moderation actions with the names of the moderator and the target. */
+  async getModerationLog(): Promise<ModerationEntry[]> {
+    const { data, error } = await supabase
+      .from("moderation_actions")
+      .select("id, action, admin_id, target_user_id, created_at")
+      .order("created_at", { ascending: false })
+      .limit(50);
+    if (error) throw error;
+    const rows = (data ?? []) as Array<{
+      id: string;
+      action: ModerationEntry["action"];
+      admin_id: string | null;
+      target_user_id: string | null;
+      created_at: string;
+    }>;
+    const ids = [
+      ...new Set(
+        rows.flatMap((row) => [row.admin_id, row.target_user_id]).filter(Boolean),
+      ),
+    ] as string[];
+    const names = new Map<string, string>();
+    if (ids.length > 0) {
+      const { data: profiles, error: profilesError } = await supabase
+        .from("profiles")
+        .select("id, username")
+        .in("id", ids);
+      if (profilesError) throw profilesError;
+      for (const profile of (profiles ?? []) as Array<{
+        id: string;
+        username: string;
+      }>) {
+        names.set(profile.id, profile.username);
+      }
+    }
+    return rows.map((row) => ({
+      id: row.id,
+      action: row.action,
+      adminName: row.admin_id ? (names.get(row.admin_id) ?? null) : null,
+      targetName: row.target_user_id ? (names.get(row.target_user_id) ?? null) : null,
+      createdAt: row.created_at,
+    }));
   },
 
   async getErrorLogs(): Promise<AdminErrorLog[]> {

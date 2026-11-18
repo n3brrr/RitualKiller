@@ -44,6 +44,11 @@ function parseDateKey(key: string): Date | null {
   return new Date(year, month - 1, day);
 }
 
+/** Local Date for a `YYYY-MM-DD` key; falls back to the device date if invalid. */
+export function dateFromKey(key: string): Date {
+  return parseDateKey(key) ?? new Date();
+}
+
 export function isSameWeek(a: string, b: string): boolean {
   const first = parseDateKey(a);
   const second = parseDateKey(b);

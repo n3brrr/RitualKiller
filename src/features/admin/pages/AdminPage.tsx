@@ -47,6 +47,7 @@ export default function AdminPage() {
     usersFetching,
     reports,
     errorLogs,
+    moderationLog,
     isLoading,
     error,
     refetch,
@@ -85,7 +86,10 @@ export default function AdminPage() {
       case "grant":
       case "revoke":
         void run(() =>
-          setAdmin({ userId: pending.user.id, isAdmin: pending.kind === "grant" }),
+          setAdmin({
+            userId: pending.user.id,
+            isAdmin: pending.kind === "grant",
+          }),
         );
         break;
       case "deletePost":
@@ -379,6 +383,41 @@ export default function AdminPage() {
             <ChevronRight size={16} aria-hidden="true" />
           </button>
         </nav>
+      </section>
+
+      <section className="rounded-xl border border-zinc-800 bg-zinc-950 p-4">
+        <h2 className="mb-3 text-sm font-bold uppercase tracking-wider text-zinc-300">
+          {t("admin.moderationLog")} ({moderationLog.length})
+        </h2>
+        {moderationLog.length === 0 ? (
+          <p className="py-4 text-center text-sm text-zinc-400">
+            {t("admin.moderationEmpty")}
+          </p>
+        ) : (
+          <ul className="space-y-2">
+            {moderationLog.map((entry) => (
+              <li
+                key={entry.id}
+                className="rounded-lg border border-zinc-900 p-3 text-sm text-zinc-300"
+              >
+                <p>
+                  {t(`admin.moderationAction.${entry.action}`)}
+                  {entry.targetName && (
+                    <>
+                      {" · "}
+                      {t("admin.moderationTarget")}{" "}
+                      <span className="font-mono">{entry.targetName}</span>
+                    </>
+                  )}
+                </p>
+                <p className="mt-1 text-xs uppercase tracking-wider text-zinc-400">
+                  {formatDateTime(entry.createdAt, locale)} · {t("admin.moderationBy")}{" "}
+                  <span className="font-mono normal-case">{entry.adminName ?? "—"}</span>
+                </p>
+              </li>
+            ))}
+          </ul>
+        )}
       </section>
 
       <section className="rounded-xl border border-zinc-800 bg-zinc-950 p-4">

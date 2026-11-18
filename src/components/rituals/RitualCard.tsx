@@ -1,5 +1,5 @@
 import type { Ritual } from "@/types";
-import { Archive, Check, Pencil, Zap } from "lucide-react";
+import { Archive, Check, History, Pencil, Zap } from "lucide-react";
 import { difficultyKeys, frequencyKeys, useI18n } from "@/i18n";
 
 interface RitualCardProps {
@@ -9,6 +9,9 @@ interface RitualCardProps {
   onToggle: (ritual: Ritual) => void;
   onEdit?: (ritual: Ritual) => void;
   onDelete: (id: string) => void;
+  /** Daily rituals whose previous day is still open can be filled in. */
+  canMarkYesterday?: boolean;
+  onMarkYesterday?: (ritual: Ritual) => void;
 }
 
 const DIFFICULTY_STYLES = {
@@ -24,6 +27,8 @@ export function RitualCard({
   onToggle,
   onEdit,
   onDelete,
+  canMarkYesterday = false,
+  onMarkYesterday,
 }: RitualCardProps) {
   const { t, tn } = useI18n();
   return (
@@ -91,6 +96,18 @@ export function RitualCard({
         >
           <Check size={20} aria-hidden="true" />
         </button>
+        {canMarkYesterday && onMarkYesterday && (
+          <button
+            type="button"
+            onClick={() => onMarkYesterday(ritual)}
+            disabled={busy}
+            title={t("habits.markYesterday")}
+            aria-label={t("habits.markYesterdayLabel", { name: ritual.title })}
+            className="inline-flex h-11 w-11 items-center justify-center rounded-full text-zinc-400 transition-colors hover:text-ritual-accent disabled:cursor-wait disabled:opacity-60"
+          >
+            <History size={18} aria-hidden="true" />
+          </button>
+        )}
         {onEdit && (
           <button
             type="button"

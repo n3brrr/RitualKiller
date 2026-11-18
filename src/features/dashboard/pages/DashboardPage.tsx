@@ -4,6 +4,7 @@ import { AlertCircle, Check, CheckCircle2, Flame, Package, Zap } from "lucide-re
 import { Heatmap } from "@/components/Heatmap";
 import Loading from "@/components/animations/Loading";
 import { ErrorState } from "@/components/ui/ErrorState";
+import { ProgressBar } from "@/components/ui/ProgressBar";
 import { useAuth } from "@/features/auth/useAuth";
 import { useRituals } from "@/hooks/useRituals";
 import { useI18n } from "@/i18n";
@@ -25,6 +26,7 @@ export default function DashboardPage() {
   const {
     rituals,
     logs,
+    todayDate,
     completionIndex,
     isLoading,
     error,
@@ -51,9 +53,8 @@ export default function DashboardPage() {
     );
   }
 
-  const now = new Date();
   const pendingRituals = rituals.filter(
-    (ritual) => !isCompletedIn(completionIndex, ritual, now),
+    (ritual) => !isCompletedIn(completionIndex, ritual, todayDate),
   );
 
   // Completing from the dashboard reports the reward (undo lives in Rituals).
@@ -72,7 +73,7 @@ export default function DashboardPage() {
     }
   };
   const completedCount = rituals.length - pendingRituals.length;
-  const bestStreak = Math.max(...rituals.map((ritual) => ritual.streak), 0);
+  const bestStreak = Math.max(...rituals.map((ritual) => ritual.bestStreak), 0);
 
   return (
     <div className="space-y-6 animate-fade-in sm:space-y-8">
@@ -110,6 +111,26 @@ export default function DashboardPage() {
           icon={<Package size={16} />}
         />
       </div>
+
+      {rituals.length > 0 && (
+        <div className="rounded-xl border border-zinc-800/50 bg-zinc-900/40 p-4">
+          <div className="mb-2 flex items-center justify-between gap-2 text-xs uppercase tracking-wider text-zinc-400">
+            <span>{t("dashboard.todayProgress")}</span>
+            <span className="font-mono text-ritual-accent">
+              {t("dashboard.todayCount", {
+                done: completedCount,
+                total: rituals.length,
+              })}
+            </span>
+          </div>
+          <ProgressBar
+            label={t("dashboard.todayProgress")}
+            value={completedCount}
+            max={rituals.length}
+            className="h-2"
+          />
+        </div>
+      )}
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <section className="rounded-2xl border border-zinc-900 bg-zinc-950/50 p-4 sm:p-6 lg:col-span-2">

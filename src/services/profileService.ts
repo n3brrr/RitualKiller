@@ -10,6 +10,7 @@ interface ProfileRow {
   username: string;
   avatar_url: string | null;
   essence: number;
+  lifetime_essence: number;
   is_admin: boolean;
   locale: string;
   created_at: string;
@@ -21,6 +22,7 @@ interface PublicProfileRow {
   username: string;
   avatar_url: string | null;
   essence: number;
+  lifetime_essence?: number;
   created_at: string;
   shadow_amulet: boolean;
   best_streak: number;
@@ -89,7 +91,8 @@ export const profileService = {
       id: profile.id,
       username: profile.username,
       essence: profile.essence,
-      rank: mapRole(profile.essence),
+      lifetimeEssence: profile.lifetime_essence,
+      rank: mapRole(profile.lifetime_essence),
       inventory: inventoryIds,
       avatar_url: profile.avatar_url,
       locale: (profile.locale === "en" ? "en" : "es") as Locale,
@@ -152,7 +155,7 @@ export const profileService = {
       username: row.username,
       avatarUrl: row.avatar_url,
       essence: row.essence,
-      rank: mapRole(row.essence),
+      rank: mapRole(row.lifetime_essence ?? row.essence),
       createdAt: row.created_at,
       shadowAmulet: row.shadow_amulet,
       bestStreak: row.best_streak,
