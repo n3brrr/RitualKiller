@@ -21,6 +21,7 @@ import {
 import { useAuth } from "@/features/auth/useAuth";
 import { translateRank, useI18n, type TranslationKey } from "@/i18n";
 import { ProgressBar } from "@/components/ui/ProgressBar";
+import { isCompletedIn } from "@/utils/analytics";
 import { getRank } from "@/utils/rank";
 import { useQueryClient } from "@tanstack/react-query";
 import { notificationService } from "@/services/notificationService";
@@ -60,7 +61,12 @@ const NAV_ITEMS: NavItem[] = [
     icon: <CheckSquare size={20} />,
     group: "main",
   },
-  { to: "/app/goals", labelKey: "nav.goals", icon: <Target size={20} />, group: "main" },
+  {
+    to: "/app/goals",
+    labelKey: "nav.goals",
+    icon: <Target size={20} />,
+    group: "main",
+  },
   {
     to: "/app/social",
     labelKey: "nav.social",
@@ -104,7 +110,7 @@ const MOBILE_QUICK = [NAV_ITEMS[0]!, NAV_ITEMS[1]!, NAV_ITEMS[2]!, NAV_ITEMS[3]!
 export const AppLayout: React.FC = () => {
   const { user, signOut } = useAuth();
   const { t, locale, setLocale } = useI18n();
-  const { rituals } = useRituals();
+  const { rituals, completionIndex, todayDate } = useRituals();
   const navigate = useNavigate();
   const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -145,7 +151,9 @@ export const AppLayout: React.FC = () => {
       }
       await notificationService.ensureReminder().catch(() => undefined);
       if (!cancelled) {
-        void queryClient.invalidateQueries({ queryKey: ["notifications", userId] });
+        void queryClient.invalidateQueries({
+          queryKey: ["notifications", userId],
+        });
       }
     })();
     return () => {
@@ -155,8 +163,13 @@ export const AppLayout: React.FC = () => {
 
   if (!user) return null;
 
-  const rank = getRank(user.essence);
-  const bestStreak = Math.max(...rituals.map((ritual) => ritual.streak), 0);
+  // The rank follows lifetime essence, so spending in the shop never lowers it.
+  const rank = getRank(user.lifetimeEssence);
+  const isTopRank = user.lifetimeEssence >= rank.next;
+  const bestStreak = Math.max(...rituals.map((ritual) => ritual.bestStreak), 0);
+  const doneToday = rituals.filter((ritual) =>
+    isCompletedIn(completionIndex, ritual, todayDate),
+  ).length;
   const navItems = user.isAdmin
     ? [
         ...NAV_ITEMS,
@@ -254,14 +267,40 @@ export const AppLayout: React.FC = () => {
             <div className="mb-1 flex justify-between text-xs uppercase tracking-wider text-zinc-400">
               <span>{t("shell.progress")}</span>
               <span>
-                {user.essence} / {rank.next}
+                {isTopRank
+                  ? user.lifetimeEssence
+                  : `${user.lifetimeEssence} / ${rank.next}`}
               </span>
             </div>
             <ProgressBar
               label={t("shell.rankProgress")}
-              value={progressMounted ? user.essence - rank.current : 0}
+              value={
+                progressMounted
+                  ? isTopRank
+                    ? rank.next - rank.current
+                    : user.lifetimeEssence - rank.current
+                  : 0
+              }
               max={rank.next - rank.current}
             />
+            {rituals.length > 0 && (
+              <div className="mt-3">
+                <div className="mb-1 flex justify-between text-xs uppercase tracking-wider text-zinc-400">
+                  <span>{t("dashboard.todayProgress")}</span>
+                  <span>
+                    {t("dashboard.todayCount", {
+                      done: doneToday,
+                      total: rituals.length,
+                    })}
+                  </span>
+                </div>
+                <ProgressBar
+                  label={t("dashboard.todayProgress")}
+                  value={doneToday}
+                  max={rituals.length}
+                />
+              </div>
+            )}
           </div>
 
           <button
@@ -311,6 +350,14 @@ export const AppLayout: React.FC = () => {
               <Flame size={11} aria-hidden="true" />
               {bestStreak}
             </span>
+            {rituals.length > 0 && (
+              <span className="text-zinc-400">
+                {t("dashboard.todayCount", {
+                  done: doneToday,
+                  total: rituals.length,
+                })}
+              </span>
+            )}
           </span>
         </NavLink>
         <NotificationBell />

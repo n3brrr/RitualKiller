@@ -7,6 +7,8 @@ export interface User {
   id: string;
   username: string;
   essence: number;
+  /** Essence earned over time (never reduced by shop purchases); drives the rank. */
+  lifetimeEssence: number;
   rank: string;
   inventory: string[];
   avatar_url?: string | null;

@@ -1,6 +1,6 @@
 import { supabase } from "@/lib/supabase";
 import { fetchAllPages } from "@/lib/paginate";
-import { lastNDays } from "@/utils/dates";
+import { lastNDays, toDateKey } from "@/utils/dates";
 import type { Difficulty, Frequency, Ritual, RitualLog } from "@/types";
 import type { ExportData } from "@/utils/exportImport";
 
@@ -34,11 +34,15 @@ export interface RitualBundle {
   /** Archived rituals: hidden from the lists, kept for history and exports. */
   archived: Ritual[];
   logs: RitualLog[];
+  /** "Today" (YYYY-MM-DD) in the user's server-side time zone. */
+  today: string;
 }
 
 export interface CompleteResult {
   success: boolean;
   reason?: string;
+  log_id?: string;
+  date?: string;
   essence_gained?: number;
   streak?: number;
 }
@@ -92,7 +96,7 @@ function mapLog(row: LogRow): RitualLog {
 export const ritualService = {
   async list(userId: string): Promise<RitualBundle> {
     const since = lastNDays(HISTORY_DAYS)[0];
-    const [ritualsResult, archivedResult, logRows] = await Promise.all([
+    const [ritualsResult, archivedResult, todayResult, logRows] = await Promise.all([
       supabase
         .from("rituals_with_streak")
         .select("*")
@@ -102,7 +106,10 @@ export const ritualService = {
         .from("rituals")
         .select("*")
         .eq("user_id", userId)
-        .not("archived_at", "is", null),
+        .not("archived_at", "is", null)
+        .order("archived_at", { ascending: false }),
+      // The server decides "today" (user time zone) so every device agrees.
+      supabase.rpc("user_today", { p_user_id: userId }),
       fetchAllPages<LogRow>((from, to) => {
         let query = supabase
           .from("ritual_logs")
@@ -129,6 +136,10 @@ export const ritualService = {
         streak: 0,
       })),
       logs: logRows.map(mapLog),
+      today:
+        typeof todayResult.data === "string" && !todayResult.error
+          ? todayResult.data.slice(0, 10)
+          : toDateKey(),
     };
   },
 
@@ -171,15 +182,32 @@ export const ritualService = {
     if (error) throw error;
   },
 
-  /** The server decides the date ("today" in the user's time zone). */
-  async complete(id: string): Promise<CompleteResult> {
-    const { data, error } = await supabase.rpc("complete_ritual", { p_ritual_id: id });
+  /** Brings an archived ritual back to the active list. */
+  async restore(id: string): Promise<void> {
+    const { error } = await supabase
+      .from("rituals")
+      .update({ archived_at: null })
+      .eq("id", id);
+    if (error) throw error;
+  },
+
+  /**
+   * Without a date the server uses "today" in the user's time zone; it also
+   * accepts yesterday (`date` as YYYY-MM-DD) and rejects anything else.
+   */
+  async complete(id: string, date?: string): Promise<CompleteResult> {
+    const { data, error } = await supabase.rpc("complete_ritual", {
+      p_ritual_id: id,
+      ...(date ? { p_date: date } : {}),
+    });
     if (error) throw error;
     return data as CompleteResult;
   },
 
   async undo(id: string): Promise<CompleteResult> {
-    const { data, error } = await supabase.rpc("undo_ritual", { p_ritual_id: id });
+    const { data, error } = await supabase.rpc("undo_ritual", {
+      p_ritual_id: id,
+    });
     if (error) throw error;
     return data as CompleteResult;
   },

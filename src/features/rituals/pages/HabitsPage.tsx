@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { BookOpen, Check, Plus, Sparkles, X } from "lucide-react";
+import { Archive, BookOpen, Check, Plus, RotateCcw, Sparkles, X } from "lucide-react";
 import RitualCard from "@/components/rituals/RitualCard";
 import RitualLibrary from "@/components/rituals/RitualLibrary";
 import Loading from "@/components/animations/Loading";
@@ -15,6 +15,7 @@ import { templateText, type RitualTemplate } from "@/data/ritualLibrary";
 import { ritualReward } from "@/utils/rewards";
 import { isCompletedIn } from "@/utils/analytics";
 import { completionReasonKey } from "@/utils/ritualMessages";
+import { addDays, toDateKey } from "@/utils/dates";
 import { validateRitual } from "@/utils/validation";
 
 const DIFFICULTIES: Difficulty[] = ["novice", "adept", "master"];
@@ -38,6 +39,8 @@ export default function HabitsPage() {
   const { user } = useAuth();
   const {
     rituals,
+    archivedRituals,
+    todayDate,
     completionIndex,
     isLoading,
     error,
@@ -47,7 +50,9 @@ export default function HabitsPage() {
     updateRitual,
     isUpdating,
     archiveRitual,
+    restoreRitual,
     completeRitual,
+    completeYesterday,
     undoRitual,
     isPending,
   } = useRituals();
@@ -60,6 +65,7 @@ export default function HabitsPage() {
   const [message, setMessage] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Ritual | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [showArchived, setShowArchived] = useState(false);
   const [form, setForm] = useState<RitualForm>(EMPTY_FORM);
 
   if (!user) return null;
@@ -84,8 +90,14 @@ export default function HabitsPage() {
     editTarget?.difficulty === "master";
   const reward = ritualReward(form.difficulty, form.frequency);
   const existingTitles = new Set(rituals.map((ritual) => ritual.title.toLowerCase()));
-  const now = new Date();
-  const isDone = (ritual: Ritual) => isCompletedIn(completionIndex, ritual, now);
+  const isDone = (ritual: Ritual) => isCompletedIn(completionIndex, ritual, todayDate);
+  const yesterdayKey = toDateKey(addDays(todayDate, -1));
+  // Only daily rituals that already existed yesterday and have no log for it.
+  // The server validates the date again (today or yesterday only).
+  const canMarkYesterday = (ritual: Ritual) =>
+    ritual.frequency === "daily" &&
+    toDateKey(new Date(ritual.created_at)) <= yesterdayKey &&
+    !completionIndex.get(ritual.id)?.has(yesterdayKey);
   const pending = rituals.filter((ritual) => !isDone(ritual));
   const completed = rituals.filter(isDone);
 
@@ -170,6 +182,30 @@ export default function HabitsPage() {
     }
   };
 
+  const handleMarkYesterday = async (ritual: Ritual) => {
+    try {
+      const result = await completeYesterday(ritual.id);
+      if (result.success) {
+        toast.success(
+          t("habits.yesterdayToast", { essence: result.essence_gained ?? 0 }),
+        );
+      } else {
+        toast.error(t(completionReasonKey(result.reason)));
+      }
+    } catch (yesterdayError) {
+      toast.error(errorMessage(yesterdayError, t));
+    }
+  };
+
+  const handleRestore = async (ritual: Ritual) => {
+    try {
+      await restoreRitual(ritual.id);
+      toast.success(t("habits.restored"));
+    } catch (restoreError) {
+      toast.error(errorMessage(restoreError, t));
+    }
+  };
+
   const confirmDelete = async () => {
     if (!deleteTarget) return;
     setDeleting(true);
@@ -188,6 +224,8 @@ export default function HabitsPage() {
     isPending,
     onToggle: (ritual: Ritual) => void handleToggle(ritual),
     onEdit: openEditor,
+    canMarkYesterday,
+    onMarkYesterday: (ritual: Ritual) => void handleMarkYesterday(ritual),
     onDelete: (id: string) =>
       setDeleteTarget(rituals.find((ritual) => ritual.id === id) ?? null),
   };
@@ -282,7 +320,10 @@ export default function HabitsPage() {
                 <select
                   value={form.difficulty}
                   onChange={(event) =>
-                    setForm({ ...form, difficulty: event.target.value as Difficulty })
+                    setForm({
+                      ...form,
+                      difficulty: event.target.value as Difficulty,
+                    })
                   }
                   className="min-h-11 w-full rounded-lg border border-zinc-700 bg-black px-4 text-white outline-none focus:border-ritual-accent"
                 >
@@ -302,7 +343,10 @@ export default function HabitsPage() {
                 <select
                   value={form.frequency}
                   onChange={(event) =>
-                    setForm({ ...form, frequency: event.target.value as Frequency })
+                    setForm({
+                      ...form,
+                      frequency: event.target.value as Frequency,
+                    })
                   }
                   className="min-h-11 w-full rounded-lg border border-zinc-700 bg-black px-4 text-white outline-none focus:border-ritual-accent"
                 >
@@ -369,10 +413,53 @@ export default function HabitsPage() {
         />
       )}
 
+      {archivedRituals.length > 0 && (
+        <section>
+          <button
+            type="button"
+            onClick={() => setShowArchived((open) => !open)}
+            aria-expanded={showArchived}
+            className="inline-flex min-h-11 items-center gap-2 text-sm text-zinc-400 transition-colors hover:text-white"
+          >
+            <Archive size={16} aria-hidden="true" />
+            {showArchived
+              ? t("habits.hideArchived")
+              : t("habits.showArchived", { count: archivedRituals.length })}
+          </button>
+          {showArchived && (
+            <div className="mt-2 space-y-2">
+              <p className="text-sm text-zinc-400">{t("habits.archivedHint")}</p>
+              <h2 className="sr-only">{t("habits.archivedTitle")}</h2>
+              {archivedRituals.map((ritual) => (
+                <div
+                  key={ritual.id}
+                  className="flex items-center justify-between gap-3 rounded-xl border border-zinc-800 bg-zinc-950 p-3"
+                >
+                  <span className="min-w-0 truncate text-zinc-300">{ritual.title}</span>
+                  <button
+                    type="button"
+                    onClick={() => void handleRestore(ritual)}
+                    aria-label={t("habits.restoreLabel", {
+                      name: ritual.title,
+                    })}
+                    className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-lg border border-zinc-700 px-3 text-sm text-zinc-300 transition-colors hover:border-ritual-accent hover:text-ritual-accent"
+                  >
+                    <RotateCcw size={16} aria-hidden="true" />
+                    {t("habits.restore")}
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
+
       <ConfirmDialog
         open={Boolean(deleteTarget)}
         title={t("habits.deleteTitle")}
-        description={t("habits.archivePrompt", { name: deleteTarget?.title ?? "" })}
+        description={t("habits.archivePrompt", {
+          name: deleteTarget?.title ?? "",
+        })}
         confirmLabel={t("habits.archive")}
         destructive
         busy={deleting}
@@ -404,6 +491,8 @@ function RitualList({
   onToggle,
   onEdit,
   onDelete,
+  canMarkYesterday,
+  onMarkYesterday,
 }: {
   title: string;
   empty: React.ReactNode;
@@ -414,6 +503,8 @@ function RitualList({
   onToggle: (ritual: Ritual) => void;
   onEdit: (ritual: Ritual) => void;
   onDelete: (id: string) => void;
+  canMarkYesterday: (ritual: Ritual) => boolean;
+  onMarkYesterday: (ritual: Ritual) => void;
 }) {
   return (
     <section>
@@ -436,6 +527,8 @@ function RitualList({
             onToggle={onToggle}
             onEdit={onEdit}
             onDelete={onDelete}
+            canMarkYesterday={canMarkYesterday(ritual)}
+            onMarkYesterday={onMarkYesterday}
           />
         ))}
       </div>

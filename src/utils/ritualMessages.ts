@@ -5,6 +5,8 @@ export function completionReasonKey(reason: string | undefined): TranslationKey 
   switch (reason) {
     case "invalid_date":
       return "habits.invalidDate";
+    case "already_completed":
+      return "habits.alreadyCompleted";
     case "essence_spent":
       return "habits.essenceSpent";
     default:
