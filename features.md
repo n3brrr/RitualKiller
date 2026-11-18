@@ -1,654 +1,137 @@
-# Auditoría de RitualKiller: UI/UX, calidad del código y seguridad
+# Propuestas de mejora y nuevas funcionalidades
 
-Fecha de la auditoría: 2026-11-16 · Rama: `master` (commit `466b5da`)
+Revisión del código de RitualKiller (2026-11-17). Cada punto indica qué es, qué parte del código afecta y por qué sería valioso.
 
-Este documento recoge solo lo que hay que cambiar. Cada hallazgo indica qué hay que cambiar (con archivo y línea cuando aplica), el impacto, la gravedad y el estado.
+Estado: `[ ]` pendiente · `[x]` hecho.
 
-**Escala de gravedad**
-
-| Gravedad | Criterio                                                                                                    |
-| -------- | ----------------------------------------------------------------------------------------------------------- |
-| Crítica  | Explotable hoy por cualquier usuario registrado, o rompe la integridad del sistema de juego o de los datos. |
-| Alta     | Fallo funcional visible o riesgo de seguridad importante con condiciones realistas.                         |
-| Media    | Degrada la experiencia, la mantenibilidad o la seguridad, pero hay mitigación parcial.                      |
-| Baja     | Mejora recomendable con impacto limitado.                                                                   |
-
-**Estado:** `Pendiente` = sin corregir · `Realizado` = corregido en la rama `fix/audit-remediation` (un commit por grupo de cambios, cada mensaje cita los IDs que resuelve).
-
-> **Pasos manuales tras desplegar** (no se pueden versionar): aplicar las migraciones
-> `20261116*`, desplegar las Edge Functions `delete-account` (y opcionalmente
-> `ai-suggest-rituals`) y activar en el panel de Supabase Auth la longitud mínima de 8,
-> "Leaked password protection" y "Secure password change" (ver `supabase/README.md`).
+Los hallazgos de la auditoría anterior (SEC-, COD-, UX-) se han retirado de este archivo porque estaban resueltos. Siguen disponibles en el historial de git.
 
 ---
 
-## Resumen
+## 1. Rituales y rachas
 
-| ID     | Área      | Hallazgo                                                                         | Gravedad | Estado    |
-| ------ | --------- | -------------------------------------------------------------------------------- | -------- | --------- |
-| SEC-01 | Seguridad | `complete_ritual` acepta cualquier fecha enviada por el cliente                  | Crítica  | Realizado |
-| SEC-02 | Seguridad | RLS permite escribir el inventario directamente                                  | Crítica  | Realizado |
-| SEC-03 | Seguridad | RLS permite crear buffs con multiplicador arbitrario                             | Crítica  | Realizado |
-| SEC-04 | Seguridad | El cliente fija `essence_reward` y `streak` de los rituales                      | Alta     | Realizado |
-| SEC-05 | Seguridad | El cliente puede insertar, editar y borrar `ritual_logs`                         | Alta     | Realizado |
-| SEC-06 | Seguridad | Logros autoconcedidos desde el cliente                                           | Alta     | Realizado |
-| SEC-07 | Seguridad | Proxy `/ollama` expone toda la API de Ollama sin autenticación                   | Alta     | Realizado |
-| SEC-08 | Seguridad | Un usuario puede publicar posts marcados como "sistema"                          | Media    | Realizado |
-| SEC-09 | Seguridad | "Borrar mis datos" no elimina la cuenta y el perfil se recrea                    | Media    | Realizado |
-| SEC-10 | Seguridad | Faltan cabeceras de seguridad (CSP, HSTS) y nginx pierde cabeceras en `/assets/` | Media    | Realizado |
-| SEC-11 | Seguridad | `avatar_url` admite cualquier URL externa y solo se valida en cliente            | Media    | Realizado |
-| SEC-12 | Seguridad | Cambio de contraseña sin reautenticación                                         | Media    | Realizado |
-| SEC-13 | Seguridad | Política de contraseñas débil (mínimo 6 caracteres)                              | Media    | Realizado |
-| SEC-14 | Seguridad | `error_logs` acepta inserciones anónimas y sin límites                           | Media    | Realizado |
-| SEC-15 | Seguridad | Sin límites de frecuencia en posts, comentarios y reportes                       | Baja     | Realizado |
-| SEC-16 | Seguridad | `profiles` expone `is_admin` y metadatos de cualquier usuario                    | Baja     | Realizado |
-| SEC-17 | Seguridad | Funciones `SECURITY DEFINER` ejecutables por `anon`/`PUBLIC`                     | Baja     | Realizado |
-| SEC-18 | Seguridad | `stats.html` del visualizador se publica en producción                           | Baja     | Realizado |
-| SEC-19 | Seguridad | Completar, gastar y deshacer conserva parte de lo comprado                       | Baja     | Realizado |
-| SEC-20 | Seguridad | Imágenes Docker sin versión fija y nginx como root                               | Baja     | Realizado |
-| COD-01 | Código    | Truncamiento silencioso a 1000 filas (logs y perfiles)                           | Alta     | Realizado |
-| COD-02 | Código    | Cálculo de rachas incorrecto (semanales, sin reinicio, deshacer)                 | Alta     | Realizado |
-| COD-03 | Código    | Tres de los cuatro objetos de la tienda no tienen efecto                         | Alta     | Realizado |
-| COD-04 | Código    | Catálogo de la tienda duplicado en cliente y BD                                  | Media    | Realizado |
-| COD-05 | Código    | Zona horaria inconsistente entre cliente y servidor                              | Media    | Realizado |
-| COD-06 | Código    | Logros calculados en cliente y solo al visitar su página                         | Media    | Realizado |
-| COD-07 | Código    | Progreso de objetivos mal calculado y columna `progress` sin uso                 | Media    | Realizado |
-| COD-08 | Código    | Métricas tratan los rituales semanales como diarios                              | Media    | Realizado |
-| COD-09 | Código    | Importación de backup no transaccional, duplica y valida poco                    | Media    | Realizado |
-| COD-10 | Código    | Código muerto, dependencias sin uso y 7,8 MB de fuentes huérfanas                | Media    | Realizado |
-| COD-11 | Código    | `pnpm lint`/`verify` fallan en local y el formato no se comprueba en CI          | Media    | Realizado |
-| COD-12 | Código    | Cobertura de tests insuficiente en lo crítico                                    | Media    | Realizado |
-| COD-13 | Código    | Lógica de BD duplicada en cliente y `locale` en tres sitios                      | Media    | Realizado |
-| COD-14 | Código    | Borrar un ritual elimina todo su historial                                       | Media    | Realizado |
-| COD-15 | Código    | Eliminar la integración de IA actual y dejar una base extensible                 | Media    | Realizado |
-| COD-16 | Código    | Rendimiento: recorridos O(n) repetidos e invalidaciones excesivas                | Baja     | Realizado |
-| COD-17 | Código    | Tras un despliegue, los chunks antiguos fallan sin recuperación                  | Baja     | Realizado |
-| COD-18 | Código    | `localStorage` sin `try/catch` puede romper el arranque                          | Baja     | Realizado |
-| COD-19 | Código    | Configuración TS/ESLint con restos y sin reglas de a11y                          | Baja     | Realizado |
-| COD-20 | Código    | La esencia nunca aumentaba para usuarios no admin (trigger del perfil)           | Crítica  | Realizado |
-| UX-01  | UI/UX     | Landing, `index.html` y login sin traducir ni selector de idioma                 | Media    | Realizado |
-| UX-02  | UI/UX     | Contraste insuficiente en la landing (`text-zinc-500/600`)                       | Media    | Realizado |
-| UX-03  | UI/UX     | Contenido estático y textos de servicios/BD sin traducir                         | Media    | Realizado |
-| UX-04  | UI/UX     | Formularios de autenticación sin `<label>`                                       | Media    | Realizado |
-| UX-05  | UI/UX     | Errores técnicos crudos mostrados al usuario                                     | Media    | Realizado |
-| UX-06  | UI/UX     | Acciones sin feedback de error ni actualización optimista                        | Media    | Realizado |
-| UX-07  | UI/UX     | Acciones costosas o sensibles sin confirmación                                   | Media    | Realizado |
-| UX-08  | UI/UX     | Moderación incompleta en el panel de administración                              | Media    | Realizado |
-| UX-09  | UI/UX     | Social: seguir no hace nada y el perfil no es descubrible                        | Media    | Realizado |
-| UX-10  | UI/UX     | No se pueden editar rituales ni objetivos; la IA crea sin previsualizar          | Media    | Realizado |
-| UX-11  | UI/UX     | Perfil público con datos engañosos                                               | Baja     | Realizado |
-| UX-12  | UI/UX     | Problemas de accesibilidad en calendario, heatmap, progreso y pestañas           | Baja     | Realizado |
-| UX-13  | UI/UX     | Flujos de autenticación con casos mal resueltos                                  | Baja     | Realizado |
-| UX-14  | UI/UX     | i18n sin interpolación ni plurales                                               | Baja     | Realizado |
-| UX-15  | UI/UX     | Ajustes con modelo de guardado inconsistente                                     | Baja     | Realizado |
-| UX-16  | UI/UX     | Recordatorios solo in-app y solo al abrir la app                                 | Baja     | Realizado |
+- [x] **Marcar "ayer" desde la interfaz.** `complete_ritual` ya acepta `p_date` igual a hoy o ayer, pero `ritualService.complete` no lo envía. _Afecta:_ `ritualService.ts`, `RitualCard`, `RitualCalendar`. _Valor:_ quien olvida marcar un ritual por la noche puede recuperar la racha sin depender de la Poción de Olvido.
+- [ ] **Frecuencias flexibles** (días concretos o "N veces por semana"). _Afecta:_ `check` de `rituals.frequency`, `ritual_period_start`, `compute_streak`, `isCompletedIn` en `utils/analytics.ts` y el formulario de `HabitsPage`. _Valor:_ hoy no se pueden representar hábitos como "gimnasio 3 veces por semana".
+- [ ] **Rituales cuantitativos** (contador o temporizador: "8 vasos de agua", "20 minutos"). _Afecta:_ nuevas columnas `rituals.target_amount` y `rituals.unit`, `ritual_logs.amount`, `RitualCard`. _Valor:_ hoy todo es sí o no y se pierde el progreso parcial.
+- [ ] **Nota o estado de ánimo al completar.** _Afecta:_ columna `ritual_logs.note`, campo opcional en la compleción y `complete_ritual`. _Valor:_ añade un diario ligero y es la base de varias funciones de IA.
+- [ ] **Orden manual, etiquetas y momento del día** (mañana, tarde, noche). _Afecta:_ `rituals.position` y `rituals.tags`, `ritualService.list` (hoy ordena por `created_at`), `HabitsPage`. _Valor:_ con muchos rituales la lista se vuelve difícil de usar.
+- [x] **Ver y restaurar rituales archivados.** `archivedRituals` solo se usa en analíticas y exportación. _Afecta:_ `HabitsPage` (sección "Archivados") y `ritualService.update` para poner `archived_at = null`. _Valor:_ el archivado no tiene forma de deshacerse en la interfaz.
+- [ ] **Pausa o "modo vacaciones"** sin romper la racha. _Afecta:_ nueva RPC, `compute_streak`, `consume_item` y `ritual_logs.protected`. _Valor:_ hoy la única protección es la Poción de Olvido, que es de pago y solo cubre un día.
 
----
+## 2. Dashboard y analíticas
 
-## 1. Seguridad
+- [x] **Etiqueta "Mejor racha" con dato incorrecto.** `DashboardPage.tsx` calcula el máximo con `ritual.streak` (racha actual), no con `bestStreak`. _Afecta:_ `DashboardPage.tsx`. _Valor:_ la etiqueta y el dato deben coincidir.
+- [x] **Un único "hoy" entre cliente y servidor.** _(El bundle de rituales trae `today` desde `user_today()` y lo usan Dashboard, Rituales, AppLayout y la actualización optimista. `syncTimezone` no se ha tocado.)_ El cliente usa la hora del dispositivo (`toDateKey`, `useRituals` en la actualización optimista) y el servidor usa `user_settings.timezone`. Con dos dispositivos en zonas distintas, `syncTimezone` alterna el valor. _Afecta:_ `utils/dates.ts`, `useRituals.ts`, `settingsService.syncTimezone`. _Valor:_ evita que el check aparezca y desaparezca cerca de medianoche. Basta con devolver `user_today()` en el bundle de rituales.
+- [ ] **Página de detalle por ritual** (`/app/habits/:id`): historial, cumplimiento, mejor racha y calendario propio. _Afecta:_ nueva página, `App.tsx`, `PAGE_TITLES`, `useRituals`. _Valor:_ las analíticas actuales son solo agregadas y no dicen qué ritual se falla.
+- [x] **Progreso del día** ("3/5 hoy") en el Dashboard y en la cabecera de `AppLayout`. _Afecta:_ `DashboardPage.tsx`, `AppLayout.tsx`. _Valor:_ recompensa visual inmediata con poco coste.
+- [ ] **Resumen semanal o mensual** (cumplimiento, comparación con la semana anterior, ritual más débil). _Afecta:_ nueva RPC de agregados y `AnalyticsPage`. _Valor:_ favorece la retención y sirve de base al coach de IA.
 
-### SEC-01 · `complete_ritual` acepta cualquier fecha enviada por el cliente
+## 3. Objetivos
 
-- **Decisión (confirmada):** se aceptan hoy y ayer, en la zona horaria del usuario.
-- **Qué cambiar:** `supabase/migrations/20261113000300_functions.sql:2` recibe `p_date` del cliente (`src/services/ritualService.ts:115`) sin validarlo. Hay que eliminar el parámetro y usar la fecha actual del usuario calculada en el servidor (con su zona horaria, ver COD-05), o como mínimo restringirlo a `hoy` o `ayer` (`p_date between v_today - 1 and v_today`). Aplicar lo mismo a `undo_ritual`.
-- **Impacto:** cualquier usuario puede llamar a la RPC en bucle con fechas pasadas o futuras (cientos o miles de días) y obtener esencia ilimitada, subir de rango, comprar todo e inflar rachas y logros. Además, al completar fechas desordenadas la racha suma +1 en cada llamada. Rompe la economía del juego y el ranking social.
-- **Gravedad:** Crítica
-- **Estado:** Realizado
+- [ ] **Tipos de objetivo distintos de "N compleciones"**: racha de X días, porcentaje de cumplimiento en un periodo o hitos intermedios. _Afecta:_ `goals_with_progress`, `save_goal`, `GoalsPage.tsx`. _Valor:_ contar compleciones no refleja objetivos como "no fallar en 30 días".
+- [ ] **Sugerir `target_value`** a partir de los rituales vinculados, su frecuencia y los días restantes. _Afecta:_ `GoalsPage.tsx`, `utils/validation.ts`. _Valor:_ evita metas imposibles que el usuario calcula mal a mano.
+- [ ] **Notificaciones de objetivo cumplido o vencido**, y archivado de objetivos terminados. _Afecta:_ `save_goal`/triggers, `utils/notificationText.ts`, `GoalsPage.tsx`. _Valor:_ cierra el ciclo del objetivo. Hoy solo existen los tipos `achievement` y `reminder`.
 
-### SEC-02 · RLS permite escribir el inventario directamente
+## 4. Gamificación: rangos, logros, tienda e inventario
 
-- **Qué cambiar:** la política `inventory_write_own` (`supabase/migrations/20261113000200_rls.sql:103-104`) es `FOR ALL`. Hay que dejar solo `SELECT` para el usuario y hacer todas las escrituras a través de `purchase_item`/`consume_item` (`SECURITY DEFINER`).
-- **Impacto:** con la anon key pública basta un `supabase.from("inventory").upsert({ item_id: "binding_contract", quantity: 999 })` para obtener cualquier objeto gratis, sin pasar por `purchase_item`. Además, el README (§ Seguridad) afirma que comprar y consumir solo pasa por funciones seguras, algo que hoy no es cierto.
-- **Gravedad:** Crítica
-- **Estado:** Realizado
+- [x] **El rango se calcula con la esencia gastable.** `getRank(user.essence)` se usa en `AppLayout.tsx` y `profileService.ts`, así que comprar en la tienda puede bajar de rango. Además, por encima de 10 000 la barra puede desbordarse, porque el último tramo de `utils/rank.ts` tiene `next: 10000`. _Afecta:_ `utils/rank.ts`, `AppLayout.tsx`, `profileService.ts`. _Valor:_ va contra la economía del juego. `profiles.lifetime_essence` ya existe y es el dato correcto.
+- [ ] **Más logros** (seguidores, likes recibidos, objetivos cumplidos, rituales semanales, logros ocultos). _Afecta:_ `user_stats`, `achievement_definitions`, `data/achievements.ts`. _Valor:_ 13 logros se agotan pronto y la tabla ya está orientada a datos.
+- [ ] **Ampliar la tienda**: cosméticos visibles (marcos de avatar, temas, títulos), que la Poción de Olvido sirva también para rituales semanales (hoy solo restaura diarios) y decidir si los buffs se acumulan (hoy se aplica `max(multiplier)`). _Afecta:_ `consume_item`, `data/items.ts`, `ShopPage`, `InventoryPage`. _Valor:_ la esencia necesita usos con sentido a largo plazo.
+- [ ] **Retos temporales** con recompensa (eventos semanales). _Afecta:_ nueva tabla `challenges`, evaluación en el servidor como los logros, nueva página. _Valor:_ novedad recurrente sin crear contenido cada vez.
 
-### SEC-03 · RLS permite crear buffs con multiplicador arbitrario
+## 5. Comunidad (social)
 
-- **Qué cambiar:** la política `buffs_write_own` (`rls.sql:107-108`) es `FOR ALL`. Hay que dejar solo `SELECT` y crear los buffs exclusivamente desde `consume_item`. Conviene añadir también un `check (multiplier <= 3)` o similar en `active_buffs`.
-- **Impacto:** un usuario puede insertar un buff con `multiplier = 99.99` y `expires_at` en el año 2100. `complete_ritual` (`functions.sql:50-54`) usa `max(multiplier)`, así que cada ritual otorga ~100× esencia de forma permanente.
-- **Gravedad:** Crítica
-- **Estado:** Realizado
+- [x] **Notificaciones sociales** de likes, comentarios y seguidores. _Afecta:_ triggers sobre `post_likes`, `comments` y `follows`, `utils/notificationText.ts`, `NotificationsPage.tsx`. _Valor:_ hoy nadie se entera de las interacciones, y eso es el motor de cualquier feed.
+- [ ] **Compartir un hito** (logro o racha) como publicación prellenada. _Afecta:_ `AchievementsPage`, notificaciones, `socialService.createPost`. _Valor:_ genera contenido en el feed de forma natural.
+- [ ] **Clasificación entre seguidos**, semanal y basada en compleciones y no en esencia acumulada. _Afecta:_ nueva RPC sobre `public_profiles` y `ritual_logs`, nueva vista o sección en `SocialPage`. _Valor:_ competencia sana y accesible también para usuarios nuevos.
+- [ ] **Compañero de rendición de cuentas** o rituales compartidos entre dos usuarios. _Afecta:_ nueva tabla de vínculos, RLS, `SocialPage`. _Valor:_ el compromiso social es de lo que más ayuda a la constancia.
+- [ ] **Bloquear o silenciar usuarios.** Hoy solo se puede reportar. _Afecta:_ nueva tabla `blocks`, filtros en `getFeedPage` y en las RLS de lectura. _Valor:_ control del usuario sobre su experiencia.
+- [ ] **Consultas del feed escalables.** `getFeedPage` descarga las filas de `post_likes` y `comments` de las 20 publicaciones de la página solo para contarlas, y PostgREST puede truncar en silencio al llegar a su límite de filas. _Afecta:_ `socialService.ts` (`getFeedPage`). _Valor:_ recuentos correctos y escalables. Se resuelve con una vista de recuentos y comentarios paginados.
+- [ ] **Supabase Realtime** para el feed y las notificaciones, en lugar del sondeo cada 60 s. _Afecta:_ `hooks/useNotifications.ts`, `hooks/useSocial.ts`, `NotificationBell.tsx`. _Valor:_ actualizaciones inmediatas y menos peticiones.
 
-### SEC-04 · El cliente fija `essence_reward` y `streak` de los rituales
+## 6. Notificaciones y recordatorios
 
-- **Qué cambiar:** `rituals_insert_own`/`rituals_update_own_or_admin` (`rls.sql:81-85`) permiten escribir cualquier columna. La recompensa se envía desde el cliente (`src/features/rituals/pages/HabitsPage.tsx:20,71,94`, `ritualService.ts:102`). Hay que calcular `essence_reward` en un trigger `BEFORE INSERT/UPDATE` a partir de `difficulty` y `frequency`, e impedir que el cliente modifique `streak` (trigger que conserve `old.streak` cuando `auth.uid()` no es admin, como `protect_profile_fields`, o `REVOKE UPDATE (streak, essence_reward)`).
-- **Impacto:** cualquiera puede crear rituales "novato" con 1000 de esencia por completado, o poner `streak = 100` y desbloquear los logros de racha. Combinado con SEC-01, el abuso es ilimitado.
-- **Gravedad:** Alta
-- **Estado:** Realizado
+- [ ] **Recordatorios reales** con Web Push o email, programados con `pg_cron`. _Afecta:_ `ensure_ritual_reminder` (hoy solo se ejecuta al montar `AppLayout`), `notificationService.ts`, Edge Function nueva. _Valor:_ el recordatorio hace falta justo cuando el usuario no ha entrado en la app.
+- [ ] **Hora de recordatorio por ritual**, además de la global de `user_settings.reminder_time`. _Afecta:_ `rituals`, `ensure_ritual_reminder`, `SettingsPage.tsx`. _Valor:_ no todos los hábitos ocurren a la misma hora.
+- [ ] **Retención y paginación de notificaciones.** _(Hecha solo la paginación con "Cargar más"; falta la limpieza con `pg_cron`, ver pendientes.)_ Hoy `list` usa `limit(50)` y nunca se limpian. _Afecta:_ `notificationService.ts`, nueva limpieza con `pg_cron`, `NotificationsPage.tsx`. _Valor:_ la tabla crece sin control y el listado se corta sin paginar.
 
-### SEC-05 · El cliente puede insertar, editar y borrar `ritual_logs`
+## 7. Cuenta, ajustes y datos
 
-- **Qué cambiar:** eliminar `logs_insert_own`, `logs_update_own_or_admin` y `logs_delete_own_or_admin` (`rls.sql:92-98`) y dejar las escrituras solo a `complete_ritual`/`undo_ritual`. La importación de backups (`ritualService.ts:157-171`), que inserta logs con `essence_gained` arbitrario, debe pasar a una RPC `import_backup` que fuerce `essence_gained = 0` o marque los logs como importados (ver COD-09).
-- **Impacto:** se puede falsificar el historial (heatmap, analíticas, progreso de objetivos, logros como "1000 completados") e insertar logs con `essence_gained` inventado que no cuadran con la esencia del perfil. Además, borrar un log de hoy permite volver a completar el ritual y cobrar dos veces.
-- **Gravedad:** Alta
-- **Estado:** Realizado
+- [ ] **Inicio de sesión con OAuth** (Google o GitHub), enlace mágico y MFA (TOTP). _Afecta:_ `authService.ts`, `LoginPage.tsx`, `SettingsPage.tsx`, configuración de Auth en Supabase. _Valor:_ menos fricción al registrarse y más seguridad.
+- [ ] **Avatar en Supabase Storage** en lugar de una URL `https` externa. _Afecta:_ `profileService.updateProfile`, `SettingsPage.tsx`, `Avatar.tsx`, políticas de Storage. _Valor:_ no depende de terceros y evita enlaces que se rompen.
+- [ ] **Exportación completa**: objetivos, logros, inventario y publicaciones. Hoy `exportData` solo incluye rituales y registros. _Afecta:_ `utils/exportImport.ts`, `ritualService.listAllLogs`, `SettingsPage.tsx`. _Valor:_ portabilidad real de los datos del usuario.
 
-### SEC-06 · Logros autoconcedidos desde el cliente
+## 8. Administración
 
-- **Qué cambiar:** `achievements_insert_own` (`rls.sql:156-157`) permite insertar cualquier `achievement_id`, y los logros se calculan en el navegador (`src/hooks/useAchievements.ts`, `src/services/achievementService.ts:44`). Hay que mover la evaluación y concesión a una función de servidor (llamada desde `complete_ritual` y la creación de posts) y quitar el `INSERT` directo. Igual con `notifications_insert_own` (`rls.sql:163`): las notificaciones de sistema deben crearse solo en el servidor.
-- **Impacto:** los logros (y su fecha) no son fiables. Cualquiera puede conseguir "Invincible" o "Demi-God" con una sola petición, lo que invalida el componente de gamificación.
-- **Gravedad:** Alta
-- **Estado:** Realizado
+- [ ] **Gestionar desde el panel el catálogo de la tienda y las definiciones de logros.** Hoy solo se puede cambiar por SQL. _Afecta:_ nuevas RPC `admin_*`, `adminService.ts`, pestaña nueva en `AdminPage.tsx`. _Valor:_ operar el juego sin tocar la base de datos a mano.
+- [x] **Mostrar el registro de `moderation_actions`.** La tabla existe, pero `AdminPage` no la muestra. _Afecta:_ `adminService.ts`, `AdminPage.tsx`. _Valor:_ trazabilidad entre moderadores.
+- [ ] **Métricas con series temporales** (usuarios activos diarios, retención a 7 y 30 días), **errores agrupados** por mensaje (hoy son los últimos 25 de `getErrorLogs`) y **paginación de reportes** (hoy `limit(100)`). _Afecta:_ `admin_metrics`, `adminService.ts`, `AdminPage.tsx`. _Valor:_ detectar problemas y escalar la moderación.
 
-### SEC-07 · Proxy `/ollama` expone toda la API de Ollama sin autenticación
+## 9. Rendimiento y arquitectura
 
-- **Qué cambiar:**
-  - `docker/nginx.conf:14-21` reenvía `/ollama/*` completo. Hay que limitarlo a `location = /ollama/api/generate` con `limit_except POST { deny all; }`, `limit_req` (rate limiting), un `client_max_body_size` pequeño y, si es posible, validar el JWT de Supabase (o mover la llamada a una Edge Function autenticada).
-  - En el servicio `ollama`, `docker-compose.yml:16-17` publica `11434` en todas las interfaces. Hay que quitar `ports` o usar `127.0.0.1:11434:11434`, y fijar el modelo permitido en el servidor, porque hoy el cliente elige `model`.
-  - `vite.config.ts:11,22` expone el servidor de desarrollo y el proxy en `0.0.0.0` (toda la LAN).
-  - **Resolución prevista:** se resuelve eliminando la integración de Ollama (ver COD-15). Si en el futuro se añade IA, debe hacerse mediante una Edge Function autenticada y con rate limiting, nunca con un proxy abierto. Las medidas anteriores solo aplican si se decide mantener Ollama.
-- **Impacto:** cualquiera en Internet puede usar `/ollama/api/pull` para descargar modelos de decenas de GB, `/api/delete` para borrar modelos, `/api/create` o lanzar generaciones costosas en bucle (DoS de CPU/GPU y disco del servidor).
-- **Gravedad:** Alta
-- **Estado:** Realizado
+- [x] **Reescribir `compute_streak`** con la técnica de _gaps-and-islands_ que ya usa `longest_full_day_run`. Hoy hace una consulta `EXISTS` por periodo y `rituals_with_streak` la llama para cada ritual en cada carga. _Afecta:_ migración nueva con `compute_streak`, `refresh_ritual_streak` y la vista. _Valor:_ el coste crece con rituales × racha y se nota con rachas largas.
+- [x] **Reducir las invalidaciones tras cada check.** `useRituals` invalida seis consultas, y una de ellas vuelve a descargar 400 días de registros paginados. _Afecta:_ `hooks/useRituals.ts`. _Valor:_ es la acción más frecuente de la app. La RPC ya devuelve `essence_gained` y `streak`, así que basta con `setQueryData` y una invalidación más perezosa.
+- [ ] **Evaluar logros solo por las métricas afectadas.** `evaluate_achievements` recalcula todo `user_stats` (incluido `longest_full_day_run`) en cada inserción de registro. _Afecta:_ migración nueva con `evaluate_achievements` y sus triggers. _Valor:_ menos carga en cada check.
+- [ ] **Tipos generados** con `supabase gen types typescript` en lugar de las interfaces `*Row` escritas a mano en cada servicio. _Afecta:_ `src/services/*.ts`, `src/types/index.ts`. _Valor:_ evita desajustes silenciosos entre esquema y cliente.
 
-### SEC-08 · Un usuario puede publicar posts marcados como "sistema"
+## 10. Calidad, tests y DevOps
 
-- **Qué cambiar:** `posts_insert_own` y `posts_update_own_or_admin` (`rls.sql:119-123`) no restringen `is_system`. Hay que añadir `and is_system = false` al `with check` para no admins (o un trigger que lo fuerce) y el mismo control en `UPDATE`.
-- **Impacto:** suplantación de mensajes oficiales (la UI muestra la etiqueta "Sistema" en `src/components/social/EnhancedSocial.tsx:179`), útil para phishing o desinformación dentro de la comunidad.
-- **Gravedad:** Media
-- **Estado:** Realizado
+- [ ] **Tests de componentes y páginas** con Testing Library para `HabitsPage`, `GoalsPage` y `SettingsPage`. _Afecta:_ `src/features/*/pages`, `src/test`. _Valor:_ hoy no hay ningún test de página.
+- [ ] **Tests E2E con Playwright** de los flujos críticos (registro, crear ritual, completar, comprar). _Afecta:_ nueva carpeta `e2e/`, `ci.yml`. _Valor:_ detecta regresiones de extremo a extremo.
+- [ ] **Tests de las Edge Functions** con `deno test`. _Afecta:_ `supabase/functions/*`, `ci.yml`. _Valor:_ hoy `delete-account` y `ai-suggest-rituals` no tienen tests.
+- [ ] **Umbral de cobertura y chequeo de accesibilidad automático** (axe o Lighthouse CI) en `ci.yml`. _Afecta:_ `vitest.config.ts`, `ci.yml`. _Valor:_ respalda la promesa de WCAG 2.1 AA del README.
 
-### SEC-09 · "Borrar mis datos" no elimina la cuenta y el perfil se recrea
+## 11. PWA, accesibilidad e i18n
 
-- **Qué cambiar:** `delete_my_data` (`functions.sql:201-213`) solo borra `profiles` y mantiene el usuario en `auth.users` (email incluido). Si la persona vuelve a iniciar sesión, `profileService.getProfile` → `createProfile` (`src/services/profileService.ts:41-70,81`) recrea el perfil.
-- **Decisión (confirmada):** el botón debe eliminar la cuenta entera.
-- **Qué cambiar (detalle):**
-  - **Edge Function:** crear `supabase/functions/delete-account`, que valide el JWT y llame a `auth.admin.deleteUser(uid)` con service role. Las filas de `public.*` se borran en cascada desde `profiles`.
-  - **Cliente:** sustituir la llamada a `delete_my_data` en `profileService.deleteMyData` y actualizar los textos de Ajustes ("Eliminar cuenta").
-  - **Perfil:** eliminar `createProfile` del cliente (ver COD-13) para que nunca se recree un perfil por accidente.
-- **Impacto:** el derecho de supresión (art. 17 RGPD) queda incumplido: el email y los metadatos (`raw_user_meta_data.username`) persisten. El usuario cree haber borrado su cuenta y puede volver a entrar.
-- **Gravedad:** Media
-- **Estado:** Realizado
-
-### SEC-10 · Faltan cabeceras de seguridad (CSP, HSTS) y nginx pierde cabeceras en `/assets/`
-
-- **Qué cambiar:**
-  - Añadir `Content-Security-Policy` (`default-src 'self'; connect-src 'self' https://*.supabase.co wss://*.supabase.co; img-src 'self' https: data:; frame-ancestors 'none'; …`) en `docker/nginx.conf` y `vercel.json`.
-  - Añadir `Strict-Transport-Security` y `Permissions-Policy` en nginx.
-  - En nginx, `add_header Cache-Control` dentro de `location /assets/` (`nginx.conf:23-27`) hace que **no se hereden** las cabeceras del bloque `server`. Hay que repetirlas o usar un `include` común.
-- **Impacto:** sin CSP, cualquier XSS futuro (o una dependencia comprometida) puede robar el token de Supabase guardado en `localStorage`. Los JS y CSS servidos desde `/assets/` salen sin `nosniff`.
-- **Gravedad:** Media
-- **Estado:** Realizado
-
-### SEC-11 · `avatar_url` admite cualquier URL externa y solo se valida en cliente
-
-- **Qué cambiar:** la validación está solo en `profileService.ts:133-148`. La tabla (`schema.sql:7`) no tiene `check`. Hay que añadir `check (avatar_url is null or (avatar_url ~ '^https://' and char_length(avatar_url) <= 500))`, aceptar solo `https:`, añadir `referrerPolicy="no-referrer"` y `loading="lazy"` a los `<img>` (`src/components/layout/AppLayout.tsx:162`, `src/features/users/pages/ProfilePage.tsx:52`) y, preferiblemente, subir los avatares a Supabase Storage.
-- **Impacto:** quien abre un perfil hace una petición a un servidor de terceros (seguimiento de IP, "tracking pixel"), puede haber contenido mixto `http:` y se pueden enlazar imágenes inapropiadas sin moderación. Con la API directa se salta la validación del cliente.
-- **Gravedad:** Media
-- **Estado:** Realizado
-
-### SEC-12 · Cambio de contraseña sin reautenticación
-
-- **Qué cambiar:** `src/features/settings/pages/SettingsPage.tsx:131-152` y `src/features/auth/pages/ResetPasswordPage.tsx` (usable con cualquier sesión, no solo con el evento `PASSWORD_RECOVERY`) llaman a `updateUser({ password })` sin pedir la contraseña actual. Hay que activar "Secure password change" en Supabase Auth o usar `supabase.auth.reauthenticate()` con nonce, y en `/reset-password` exigir que la sesión venga del evento `PASSWORD_RECOVERY`.
-- **Impacto:** una sesión robada (equipo compartido, XSS) permite cambiar la contraseña y apropiarse de la cuenta.
-- **Gravedad:** Media
-- **Estado:** Realizado
-
-### SEC-13 · Política de contraseñas débil (mínimo 6 caracteres)
-
-- **Qué cambiar:** `src/utils/validation.ts:15` y los `minLength={6}` (`LoginPage.tsx:138`, `ResetPasswordPage.tsx:86,96`, `SettingsPage.tsx:308`). Hay que subir a ≥ 8–10 caracteres en cliente y en la configuración de Supabase Auth, y activar "Leaked password protection".
-- **Impacto:** cuentas vulnerables a ataques de diccionario o credenciales filtradas.
-- **Gravedad:** Media
-- **Estado:** Realizado
-
-### SEC-14 · `error_logs` acepta inserciones anónimas y sin límites
-
-- **Qué cambiar:**
-  - `error_logs_insert_own` (`rls.sql:180-181`) permite `user_id is null`, así que cualquier usuario no autenticado puede insertar. Hay que exigir `auth.uid() is not null and user_id = auth.uid()`.
-  - Añadir `check (char_length(message) <= 2000)`, `check (char_length(stack) <= 10000)` y limitar el tamaño de `context`.
-  - En `src/lib/observability.ts:18-35`, deduplicar y limitar la frecuencia de envío y no enviar `context` con datos personales.
-- **Impacto:** se puede llenar la base de datos (coste y cuota de Supabase) y ocultar errores reales en el panel de admin. Un bucle de errores en el cliente genera miles de filas.
-- **Gravedad:** Media
-- **Estado:** Realizado
-
-### SEC-15 · Sin límites de frecuencia en posts, comentarios y reportes
-
-- **Qué cambiar:** no hay control de frecuencia en `posts`, `comments`, `reports` ni `follows`, y un mismo usuario puede reportar el mismo post infinitas veces. Hay que añadir `unique (reporter_id, post_id)` y `unique (reporter_id, target_user_id)` en `reports`, y triggers que limiten las inserciones por minuto y usuario (o pasar por RPC con control de frecuencia).
-- **Impacto:** spam en el feed, saturación de la cola de moderación e inflado artificial del logro social.
-- **Gravedad:** Baja
-- **Estado:** Realizado
-
-### SEC-16 · `profiles` expone `is_admin` y metadatos de cualquier usuario
-
-- **Decisión (confirmada):** la esencia de los demás usuarios **sí** es pública; `is_admin` no debe serlo.
-- **Qué cambiar:** `profiles_select_authenticated` (`rls.sql:68-69`) junto con `select("*")` (`profileService.ts:76,161`) devuelven `is_admin`, `locale` y `updated_at` de cualquier usuario. Hay que crear una vista `public_profiles` con solo `id`, `username`, `avatar_url`, `essence` y `created_at` (o permisos por columna) para leer perfiles ajenos, limitar la lectura completa de `profiles` al propio usuario y a los admins, y pedir columnas concretas en `getByUsername` y en `socialService`. La insignia "Admin" del perfil público (`ProfilePage.tsx:61-65`) tendría que desaparecer o depender de un rol público explícito (por ejemplo "moderador").
-- **Impacto:** hoy se puede enumerar a los administradores (objetivo de ingeniería social) y se exponen metadatos (`locale`, `updated_at`) que no se usan en la UI.
-- **Gravedad:** Baja
-- **Estado:** Realizado
-
-### SEC-17 · Funciones `SECURITY DEFINER` ejecutables por `anon`/`PUBLIC`
-
-- **Qué cambiar:** ninguna migración hace `revoke execute on function … from public, anon`. Hay que revocar y conceder `execute` solo a `authenticated` en `complete_ritual`, `undo_ritual`, `purchase_item`, `consume_item`, `delete_my_data`, `admin_metrics`, `set_admin`, `ensure_ritual_reminder` e `is_admin`.
-- **Impacto:** hoy las funciones comprueban `auth.uid()`, pero cualquier función futura que olvide la comprobación quedaría expuesta a usuarios anónimos. Es defensa en profundidad.
-- **Gravedad:** Baja
-- **Estado:** Realizado
-
-### SEC-18 · `stats.html` del visualizador se publica en producción
-
-- **Qué cambiar:** `vite.config.ts:33-38` escribe `dist/stats.html` en cada build, y `Dockerfile:16` y Vercel publican `dist` completo. Hay que activar el visualizador solo con una variable (`ANALYZE=1`) o escribirlo fuera de `dist`.
-- **Impacto:** se publica la estructura interna de módulos y las versiones de dependencias (reconocimiento para un atacante) y aumenta el peso del despliegue.
-- **Gravedad:** Baja
-- **Estado:** Realizado
-
-### SEC-19 · Completar, gastar y deshacer conserva parte de lo comprado
-
-- **Qué cambiar:** `undo_ritual` (`functions.sql:111-113`) resta la esencia con `greatest(…, 0)`. Si entre completar y deshacer se gastó la esencia, el usuario conserva el objeto y solo pierde lo que le queda. Hay que impedir el deshacer cuando `essence < essence_gained`, o permitir esencia negativa o deuda.
-- **Impacto:** pequeña ganancia indebida repetible (menor si se corrige SEC-01).
-- **Gravedad:** Baja
-- **Estado:** Realizado
-
-### SEC-20 · Imágenes Docker sin versión fija y nginx como root
-
-- **Qué cambiar:** `docker-compose.yml:15,23` usa `ollama/ollama:latest`. Hay que fijar la versión (o el digest). El contenedor web usa `nginx:1.27-alpine` como root; conviene `nginxinc/nginx-unprivileged` y añadir un `HEALTHCHECK`.
-- **Impacto:** builds no reproducibles y exposición a cambios o compromisos de la imagen `latest`. Superficie mayor si nginx se ve comprometido.
-- **Gravedad:** Baja
-- **Estado:** Realizado
+- [ ] **PWA instalable**: manifest y service worker (por ejemplo con `vite-plugin-pwa`). _Afecta:_ `public/` (hoy solo tiene `favicon.svg`, `og.png` y `locale-init.js`), `vite.config.ts`, `index.html`. _Valor:_ instalación como app y requisito para Web Push en iOS.
+- [ ] **Completar sin conexión**: cola de mutaciones persistida (persistencia de TanStack Query) que se sincroniza al recuperar la red. _Afecta:_ `src/index.tsx`, `hooks/useRituals.ts`. _Valor:_ el check diario no debería perderse por falta de cobertura.
+- [ ] **Más idiomas.** Los diccionarios tipados (`Record<TranslationKey, string>`) hacen que añadir uno sea un trabajo mecánico. _Afecta:_ `src/i18n/`, `utils/notificationText.ts`, `data/`. _Valor:_ llegar a más usuarios.
 
 ---
 
-## 2. Calidad del código (incluye fallos funcionales)
+## 12. Integraciones y funciones de IA
 
-### COD-01 · Truncamiento silencioso a 1000 filas (logs y perfiles)
+**Situación actual:** la infraestructura existe (`AiProvider`, `edgeFunctionProvider`, `sanitizeSuggestions`, cuota en `consume_ai_quota` y la Edge Function `ai-suggest-rituals`), pero no está conectada a ninguna pantalla. `getAiProvider()` no se usa en ningún sitio, y `generateSuggestions` devuelve `null` en `supabase/functions/ai-suggest-rituals/index.ts`. El primer paso es cerrar ese circuito.
 
-- **Qué cambiar:** `ritualService.list` (`src/services/ritualService.ts:77-81`) pide **todos** los `ritual_logs` del usuario ordenados de forma **ascendente** y sin paginar. PostgREST/Supabase limita por defecto la respuesta a 1000 filas, así que, superado ese número, se pierden los logs **más recientes**. Hay que:
-  - pedir solo el rango necesario (por ejemplo, los últimos 365 días) con `order desc`;
-  - mover los agregados (totales, logros, analítica) a RPC o vistas;
-  - paginar la exportación.
+- [ ] **Sugerencias de rituales a partir de un objetivo.** Implementar `generateSuggestions` con un proveedor y salida JSON estructurada. En `HabitsPage` o `RitualLibrary`, mostrar vista previa con casillas antes de crear nada (UX-10 de la auditoría anterior). Pasar al modelo los títulos existentes para evitar duplicados y respetar el bloqueo de dificultad `master`. _Valor:_ es el uso para el que se preparó la base, con coste bajo.
+- [ ] **Alta rápida en lenguaje natural.** "Leer 20 min cada noche" se convierte en `{title, frequency, difficulty}` y rellena el formulario sin guardarlo. _Afecta:_ `HabitsPage`, `utils/validation.ts`, la Edge Function. _Valor:_ menos fricción al crear rituales, con un modelo pequeño.
+- [ ] **Plan para un objetivo.** Desde `GoalsPage`, el modelo propone rituales vinculados, un `target_value` y una fecha razonables. El usuario confirma antes de llamar a `save_goal`. _Valor:_ convierte una intención vaga en algo medible.
+- [ ] **Coach semanal personalizado.** La Edge Function recibe solo agregados (`my_stats`, cumplimiento por ritual y día de la semana), nunca nombres de usuario ni texto libre, y genera un resumen breve en el idioma del usuario. Se guarda una vez por semana para acotar el coste. _Valor:_ retención, con la privacidad controlada.
+- [ ] **Detección de riesgo de abandono y ajuste de dificultad.** Sin modelo de lenguaje: heurísticas sobre los registros (cumplimiento decreciente, hora habitual de compleción). Sugiere dividir un ritual, bajar su dificultad o mover el recordatorio. Opcionalmente, un modelo redacta el mensaje. _Valor:_ IA barata, explicable y fácil de probar.
+- [ ] **Moderación asistida.** Clasificar en una Edge Function las publicaciones reportadas y priorizarlas en la cola de `report_details` de `AdminPage`. Nunca borrar automáticamente: siempre decide un moderador. _Valor:_ escala la moderación sin quitar el control humano.
+- [ ] **Resumen mensual del diario** (si se implementan las notas al completar). Opcional y con consentimiento explícito, porque son datos sensibles. _Valor:_ valor emocional para el usuario.
+- [ ] **Traducción ES↔EN de publicaciones** bajo demanda. _Valor:_ la comunidad es bilingüe por diseño.
 
-  El mismo problema afecta a `adminService.getReports` (`src/services/adminService.ts:56`), que carga **todos** los perfiles para resolver nombres; hay que usar un join (`reports(*, reporter:profiles(username))`).
+**Requisitos comunes para cualquier función de IA:**
 
-- **Impacto:** a partir de unos 1000 completados (≈ 3 rituales durante 1 año), hoy aparece como "no completado", el heatmap, el calendario, las analíticas y el progreso de objetivos son erróneos, y **el backup JSON/CSV queda incompleto sin aviso**. En admin, los reportes acaban mostrando "unknown" como autor.
-- **Gravedad:** Alta
-- **Estado:** Realizado
-
-### COD-02 · Cálculo de rachas incorrecto (semanales, sin reinicio, deshacer)
-
-- **Qué cambiar:** en `complete_ritual` (`functions.sql:40-48`):
-  - Para rituales **semanales** se comprueba `p_date - 1` (el día anterior), así que la racha semanal solo crece si se completa en días consecutivos. Debe comprobar la semana anterior.
-  - La racha guardada en `rituals.streak` **nunca se reinicia** al saltarse días; solo se recalcula al completar. Dashboard, cabecera móvil y tarjetas (`DashboardPage.tsx:47`, `AppLayout.tsx:89`, `RitualCard.tsx:38`) muestran una racha "viva" que ya está rota.
-  - `undo_ritual` (`functions.sql:115`) decrementa aunque la racha se hubiese reiniciado a 1 al completar.
-
-  Hay que calcular la racha a partir de los logs en el servidor (función o vista `ritual_streaks`) y que el cliente la lea de ahí.
-
-- **Impacto:** el dato central de la app ("sostén tu racha") es incorrecto, los rituales semanales nunca acumulan racha y los logros de racha son inconsistentes.
-- **Gravedad:** Alta
-- **Estado:** Realizado
-
-### COD-03 · Tres de los cuatro objetos de la tienda no tienen efecto
-
-- **Decisiones (confirmadas):** la Potion of Oblivion rellena el día de ayer (sin esencia) en los rituales diarios cuya racha se rompería; los rituales maestro existentes se mantienen y el Binding Contract solo se exige al crear o cambiar a maestro.
-- **Qué cambiar:** `consume_item` (`functions.sql:185-194`) solo implementa `essence_boost`. "Potion of Oblivion" (1000), "Shadow Amulet" (2500, "visible para otros") y "Binding Contract" (5000, "desbloquea rituales maestros") se **consumen y desaparecen sin hacer nada**, y cualquiera puede crear rituales `master` sin el contrato (`HabitsPage.tsx:21`). Hay que:
-  - implementar `restore_streak` (requiere COD-02);
-  - tratar los objetos cosméticos o permanentes como pasivos, sin botón "Usar" en `src/features/inventory/pages/InventoryPage.tsx`, y mostrar el amuleto en el perfil;
-  - aplicar `unlock_master` validando en el servidor (trigger en `rituals`) que `difficulty = 'master'` requiere el objeto.
-- **Impacto:** el usuario pierde hasta 5000 de esencia por objetos inútiles, la tienda engaña y se pierde la progresión prevista.
-- **Gravedad:** Alta
-- **Estado:** Realizado
-
-### COD-04 · Catálogo de la tienda duplicado en cliente y BD
-
-- **Qué cambiar:** `src/data/items.ts` replica nombres, costes, efectos y duraciones de la tabla `shop_items` (`schema.sql:161-166`). La UI muestra el coste local y bloquea la compra con él (`ShopPage.tsx:37`). Hay que leer `shop_items` desde Supabase (query `shop`) y dejar en el cliente solo el mapa `id → icono`. Las descripciones de `items.ts` (en inglés) no se usan porque la UI traduce con `shopItemKey`.
-- **Impacto:** cualquier cambio de precio o efecto en la BD desincroniza la UI (precio mostrado distinto del cobrado, botones deshabilitados por error).
-- **Gravedad:** Media
-- **Estado:** Realizado
-
-### COD-05 · Zona horaria inconsistente entre cliente y servidor
-
-- **Qué cambiar:** el cliente usa la fecha local (`src/utils/dates.ts:3`), pero `ensure_ritual_reminder` (`functions.sql:272,278,288`) usa `localtime`/`current_date` del servidor (UTC), y `complete_ritual` tiene `default current_date`. Hay que guardar la zona horaria del usuario (`user_settings.timezone`, inicializada con `Intl.DateTimeFormat().resolvedOptions().timeZone`) y calcular "hoy" con `now() at time zone tz` en todas las funciones.
-- **Impacto:** en España (UTC+1/+2) el recordatorio de las 20:00 llega a las 21:00 o 22:00. Cerca de medianoche, "pendientes hoy" se evalúa sobre el día equivocado. Si se corrige SEC-01 sin esto, los completados de madrugada caerían en otro día.
-- **Gravedad:** Media
-- **Estado:** Realizado
-
-### COD-06 · Logros calculados en cliente y solo al visitar su página
-
-- **Qué cambiar:**
-  - `useAchievements` solo se monta en `src/components/achievements/AchievementsList.tsx`, así que los logros no se desbloquean ni se notifican hasta visitar `/app/achievements`.
-  - Los logros de esencia ("Accumulate 1,000 essence") usan la esencia **actual** (`src/data/achievements.ts:177`), que baja al comprar, en lugar de la acumulada.
-  - "First Week" dice "completa todos tus rituales 7 días seguidos", pero se calcula con la racha máxima de un solo ritual (`achievements.ts:173`).
-  - El logro "Demi-God" (50 000) choca con el rango "Demi-God" (5000, `src/utils/rank.ts:13`).
-  - Los logros cumplidos pero aún no guardados muestran como fecha "ahora" (`useAchievements.ts:44-45`).
-
-  Hay que mover la evaluación al servidor (ver SEC-06), añadir `profiles.lifetime_essence` y alinear nombres y descripciones.
-
-- **Impacto:** notificaciones de logro tardías o inexistentes, descripciones que no cumplen lo que prometen y fechas falsas.
-- **Gravedad:** Media
-- **Estado:** Realizado
-
-### COD-07 · Progreso de objetivos mal calculado y columna `progress` sin uso
-
-- **Qué cambiar:**
-  - `progressFor` (`src/features/goals/pages/GoalsPage.tsx:83-89`) cuenta **todos** los logs históricos, incluidos los anteriores a la creación del objetivo, y si el objetivo no tiene rituales vinculados cuenta cualquier ritual.
-  - La columna `goals.progress` y `goalService.updateProgress` (`src/services/goalService.ts:71`) no se usan.
-  - `ritual_ids uuid[]` (`schema.sql:70`) no tiene integridad referencial: al borrar un ritual quedan ids huérfanos que siguen contando en "N rituales".
-
-  Hay que filtrar por `created_at ≤ date ≤ target_date`, usar una tabla `goal_rituals` con FK `on delete cascade` y eliminar o usar `progress`.
-
-- **Impacto:** un objetivo nuevo puede aparecer completado al crearlo y los datos de objetivos son engañosos.
-- **Gravedad:** Media
-- **Estado:** Realizado
-
-### COD-08 · Métricas tratan los rituales semanales como diarios
-
-- **Qué cambiar:** `ProductivityMetrics` (`src/components/productivity/ProductivityMetrics.tsx:30-33`) y `calculateCompletionRate` (`src/utils/analytics.ts:106-114`) usan `rituals.length * días` como denominador. Un ritual semanal completado cuenta 1/7. `RitualCalendar` (`src/components/calendar/RitualCalendar.tsx:89`) usa el número **actual** de rituales para días pasados. Hay que calcular las oportunidades por ritual según su frecuencia y su fecha de creación.
-- **Impacto:** porcentajes de eficiencia y de tasa de completado artificialmente bajos o incoherentes, que desmotivan y confunden.
-- **Gravedad:** Media
-- **Estado:** Realizado
-
-### COD-09 · Importación de backup no transaccional, duplica y valida poco
-
-- **Qué cambiar:** `ritualService.importBackup` (`src/services/ritualService.ts:134-174`) hace una petición por ritual y por log de forma secuencial (N+1) y sin transacción. Si falla a mitad, deja datos parciales. Cada importación **duplica** los rituales (no deduplica por título). `validateImportData` (`src/utils/validation.ts:133-170`) no valida `essenceReward`, `description` ni longitudes (`Math.min(1000, Math.max(0, undefined))` → `NaN` → error de `NOT NULL`), y no hay límite de tamaño del archivo (`SettingsPage.tsx:116`). Hay que crear una RPC `import_backup(jsonb)` transaccional con validación (zod en cliente y comprobaciones en SQL), deduplicación y límites.
-- **Impacto:** importaciones a medias, rituales duplicados, bloqueos con archivos grandes y errores crípticos.
-- **Gravedad:** Media
-- **Estado:** Realizado
-
-### COD-10 · Código muerto, dependencias sin uso y 7,8 MB de fuentes huérfanas
-
-- **Qué cambiar:**
-  - **Componentes sin uso:** `src/components/ui/Button.tsx`, `Reveal.tsx`, `FeatureCard.tsx`, `Divider.tsx` y `ScrollIn.tsx`. El índice de git lo tiene como `ScrollIn.tsx` y el disco como `Scrollin.tsx`; en Linux/CI la diferencia de mayúsculas rompería cualquier import futuro.
-  - **Funciones sin uso:** `PageLoading` (`Loading.tsx:20`), `getRitualsByCategory`, `getUnlockedAchievements` y `goalService.updateProgress`.
-  - **Dependencias sin uso:** `react-window`, `@types/react-window`, `@tanstack/react-query-devtools` y `zustand` (CLAUDE.md dice que se usa, pero no se importa). `framer-motion` solo lo usan los componentes muertos y `MotionConfig` en `src/index.tsx`, pero entra en el chunk `vendor-ui` que carga **todas** las páginas.
-  - **Fuentes:** `src/styles/fonts.css` no se importa y los 7,8 MB de TTF de `src/assets/fonts/` no se usan (las fuentes vienen de `@fontsource`).
-  - **Tipos:** `global.d.ts` declara `gsap` como `any`, aunque gsap incluye sus propios tipos.
-- **Impacto:** bundle inicial más pesado (framer-motion ≈ 100 KB+), repositorio inflado, confusión para quien mantenga el proyecto y documentación (CLAUDE.md) incorrecta.
-- **Decisión (confirmada):** no están reservados para trabajo futuro; se pueden borrar.
-- **Gravedad:** Media
-- **Estado:** Realizado
-
-### COD-11 · `pnpm lint`/`verify` fallan en local y el formato no se comprueba en CI
-
-- **Qué cambiar:**
-  - `eslint.config.js:8-16` no ignora `.claude/`, así que `pnpm lint` falla en local con 136 errores (scripts JS de `.claude/skills`) y `pnpm verify` queda roto. Hay que añadir `.claude` a `ignores` y a `.prettierignore`.
-  - `pnpm format:check` falla en 84 archivos de `src/`. Hay que ejecutar `pnpm format` y añadir `format:check` al workflow `.github/workflows/ci.yml`.
-- **Impacto:** el flujo de verificación documentado no funciona en local y el formato del código diverge sin control.
-- **Gravedad:** Media
-- **Estado:** Realizado
-
-### COD-12 · Cobertura de tests insuficiente en lo crítico
-
-- **Qué cambiar:** solo hay tests de `utils`, `data` y `ollamaService` (34 tests). No hay tests de:
-  - funciones SQL ni políticas RLS (donde están la economía y la seguridad, ver SEC-01 a SEC-06);
-  - servicios, hooks ni componentes.
-
-  Además, `test:coverage` y `test:ui` (`package.json:17-18`) requieren `@vitest/coverage-v8` y `@vitest/ui`, que no están instalados. Hay que añadir tests de BD (pgTAP o `supabase test db`) para RLS y RPC, tests de servicios con el cliente simulado y tests de componentes con Testing Library para los flujos principales.
-
-- **Impacto:** las regresiones en la lógica de negocio y en la seguridad no se detectan; los fallos de SEC y COD de este informe habrían salido en tests básicos.
-- **Gravedad:** Media
-- **Estado:** Realizado
-
-### COD-13 · Lógica de BD duplicada en cliente y `locale` en tres sitios
-
-- **Qué cambiar:**
-  - `profileService.createProfile` (`profileService.ts:41-70`) reimplementa `handle_new_user` con otra estrategia de sufijos (aleatoria frente a incremental).
-  - `settingsService.get` (`src/services/settingsService.ts:21-25`) hace un `upsert` en **cada lectura**.
-  - El idioma se guarda en `profiles.locale`, `user_settings.locale` y `localStorage`, y `SettingsPage` escribe en ambas tablas (`SettingsPage.tsx:64-73,86-87`).
-
-  Hay que confiar en el trigger (o usar una RPC `ensure_profile`), leer los ajustes sin escribir y dejar una única fuente de verdad para el idioma.
-
-- **Impacto:** escrituras innecesarias, comportamientos divergentes al crear perfiles y riesgo de que el idioma se desincronice.
-- **Gravedad:** Media
-- **Estado:** Realizado
-
-### COD-14 · Borrar un ritual elimina todo su historial
-
-- **Qué cambiar:** `ritual_logs.ritual_id … on delete cascade` (`schema.sql:33`) y `ritualService.remove` hacen un borrado físico. Hay que añadir `rituals.archived_at` (borrado lógico), ocultar los archivados en la lista y conservar sus logs en heatmap, analíticas y logros.
-- **Impacto:** al borrar un ritual desaparecen días del heatmap, baja el total de completados y se pueden perder logros. La esencia se conserva, así que los datos quedan incoherentes.
-- **Gravedad:** Media
-- **Estado:** Realizado
-
-### COD-15 · Integración de IA actual: eliminarla y dejar una base extensible
-
-- **Problema actual:**
-  - **No funciona en Vercel:** `vercel.json` reescribe todo a `/index.html` y no hay proxy para `/ollama`, así que `fetch("/ollama/api/generate")` (`src/services/ai/ollamaService.ts:80`) recibe HTML y siempre cae al fallback local.
-  - **Idioma:** el fallback está solo en español (`ollamaService.ts:11-30`) y el prompt pide la respuesta en inglés (`ollamaService.ts:71-74`).
-  - **Seguridad:** la integración es la causa de SEC-07.
-- **Decisión (confirmada):** eliminar por completo la integración de IA actual y dejar preparada una base para añadir funciones de IA más adelante.
-- **Qué cambiar:**
-  1. **Eliminar la integración actual:**
-     - **Código:** `src/services/ai/ollamaService.ts` y su test `src/services/ai/test/ollamaService.test.ts`; en `HabitsPage.tsx`, el modo "IA" (pestañas manual/IA, `handleAiCreate`, `goalInput`, `isGenerating`, líneas 18, 43-45 y 103-127 y 222-342) y las claves `habits.ai*`/`habits.invok*`/`habits.goalPlaceholder` de `src/i18n/index.tsx`.
-     - **Infraestructura:** el proxy `/ollama` de `vite.config.ts:12-18,23-29` y `docker/nginx.conf:14-21`, los servicios `ollama` y `ollama-pull` de `docker-compose.yml`, `VITE_OLLAMA_MODEL` de `.env.example` y `OLLAMA_URL`.
-     - **Documentación:** las secciones de Ollama del README y del CLAUDE.md.
-  2. **Dejar una base extensible:**
-     - **Interfaz:** definir `src/services/ai/types.ts` con una interfaz de proveedor (`AiProvider` con, por ejemplo, `suggestRituals(goal, locale)`) y una implementación `disabled` por defecto.
-     - **Feature flag:** `VITE_AI_ENABLED`, que oculte cualquier punto de entrada de IA en la UI cuando está desactivado.
-     - **Servidor:** documentar que las llamadas al modelo deben hacerse **solo en el servidor** (Edge Function de Supabase en `supabase/functions/ai-*`, que valide el JWT, limite la frecuencia por usuario y guarde la clave del proveedor como secreto), nunca desde el navegador ni con un proxy abierto.
-     - **Validación:** mantener la validación o saneado de la salida del modelo (equivalente a `sanitizeSuggestions`) como utilidad reutilizable y con tests.
-     - **Idioma:** pasar siempre el idioma del usuario al proveedor.
-- **Impacto:** hoy la función de IA anunciada no funciona en producción (Vercel), expone un servicio sin autenticación en Docker (SEC-07) y mezcla idiomas. Eliminarla quita superficie de ataque y código no usado; la base extensible evita repetir estos errores cuando se añada IA.
-- **Gravedad:** Media
-- **Estado:** Realizado
-
-### COD-16 · Rendimiento: recorridos O(n) repetidos e invalidaciones excesivas
-
-- **Qué cambiar:**
-  - `isRitualCompleted` (`src/utils/analytics.ts:93-104`) recorre todos los logs por ritual y se llama 3 o más veces por ritual en cada render (`HabitsPage.tsx:72-73,457`, `DashboardPage.tsx:43`, `ProductivityMetrics.tsx:26`). Hay que construir un `Map<ritualId, Set<date>>` memoizado.
-  - Cada completar o deshacer invalida 5 queries, entre ellas la recarga completa de logs (`src/hooks/useRituals.ts:21-27`). Hay que usar `setQueryData` o actualizaciones optimistas.
-  - `isToggling` es global y bloquea los botones de todos los rituales mientras se procesa uno (`useRituals.ts:67`).
-- **Impacto:** la latencia percibida crece con el historial y bloquea la interacción al marcar varios rituales seguidos.
-- **Gravedad:** Baja
-- **Estado:** Realizado
-
-### COD-17 · Tras un despliegue, los chunks antiguos fallan sin recuperación
-
-- **Qué cambiar:** todas las páginas se cargan con `lazy` (`src/App.tsx:18-33`). Tras un nuevo despliegue, los hashes antiguos devuelven 404 ("Failed to fetch dynamically imported module") y se muestra `RouteError` sin reintento. nginx no envía `Cache-Control: no-cache` para `index.html`. Hay que envolver `lazy` con reintento y recarga única ante `ChunkLoadError`, y añadir `location = /index.html { add_header Cache-Control "no-cache"; }`.
-- **Impacto:** quien tenga la app abierta durante un despliegue ve una pantalla de error al navegar.
-- **Gravedad:** Baja
-- **Estado:** Realizado
-
-### COD-18 · `localStorage` sin `try/catch` puede romper el arranque
-
-- **Qué cambiar:** `src/i18n/index.tsx:810,822` accede a `localStorage` sin protección. En algunos modos privados o con el almacenamiento bloqueado lanza una excepción y la app no arranca. Hay que envolverlo en `try/catch` y usar `navigator.language` como valor inicial.
-- **Impacto:** pantalla en blanco para una parte (pequeña) de los usuarios. Además, el idioma inicial no respeta el del navegador.
-- **Gravedad:** Baja
-- **Estado:** Realizado
-
-### COD-19 · Configuración TS/ESLint con restos y sin reglas de a11y
-
-- **Qué cambiar:**
-  - **`tsconfig.json`:** tiene opciones de otra plantilla (`experimentalDecorators`, `useDefineForClassFields: false`, `allowJs`) que hay que quitar.
-  - **ESLint:** `eslint-plugin-react-refresh` está instalado pero no configurado. Falta `eslint-plugin-jsx-a11y` y `no-explicit-any` está desactivado.
-  - **`vite.config.ts:38`:** usa `as any`.
-  - **Comentarios:** mezcla de español e inglés en comentarios y código (`items.ts`, `ritualLibrary.ts`, `AnalyticsPage.tsx`).
-- **Impacto:** errores de accesibilidad y de tipado que no se detectan automáticamente, y configuración confusa.
-- **Gravedad:** Baja
-- **Estado:** Realizado
-
-### COD-20 · La esencia nunca aumentaba para usuarios no admin
-
-- **Hallazgo nuevo**, detectado al escribir los tests de base de datos.
-- **Qué cambiar:** `protect_profile_fields` (`supabase/migrations/20261113000200_rls.sql:13-28`) restauraba `essence` siempre que `auth.uid() = old.id`, condición que también se cumple dentro de `complete_ritual` y `purchase_item` (`SECURITY DEFINER` no cambia `auth.uid()`). Hay que proteger los campos solo en escrituras directas desde la API (`is_api_role()`).
-- **Impacto:** completar rituales devolvía `essence_gained`, pero la esencia del perfil se quedaba igual: la economía, los rangos y la tienda no funcionaban para ningún usuario normal.
-- **Gravedad:** Crítica
-- **Estado:** Realizado
+- Cuota por función: añadir una columna `feature` a `ai_usage`, porque hoy hay un único límite global de 20 por hora.
+- Tope de gasto diario por usuario.
+- Consentimiento y activación desde Ajustes.
+- Volver a sanear la salida también en el servidor (hoy solo se hace en el cliente).
+- No enviar datos personales al proveedor.
+- Mantener `VITE_AI_ENABLED` como interruptor general.
 
 ---
 
-## 3. UI/UX
+## Prioridad recomendada
 
-### UX-01 · Landing, `index.html` y login sin traducir ni selector de idioma
+1. Calcular el rango con `lifetime_essence` (sección 4).
+2. Permitir marcar "ayer" desde la interfaz (sección 1).
+3. Corregir la etiqueta "Mejor racha" (sección 2).
+4. Ver y restaurar rituales archivados (sección 1).
+5. Notificaciones sociales (sección 5).
+6. Reescribir `compute_streak` y reducir las invalidaciones tras cada check (sección 9).
+7. Conectar las sugerencias de IA (sección 12, primeros dos puntos).
 
-- **Qué cambiar:**
-  - **Landing:** `src/features/auth/pages/LandingPage.tsx` tiene todo el texto en español fijo (`CTA_LABEL` en línea 13, secciones, `RITUALS`, maquetas) y no usa `useI18n`.
-  - **`index.html`:** el título, la descripción y las etiquetas OG/Twitter están solo en español (`lang="es"` fijo hasta que React lo cambia).
-  - **Selector de idioma:** no existe fuera de Ajustes, así que un visitante en inglés no puede cambiarlo antes de registrarse.
+---
 
-  Hay que pasar la landing a i18n y añadir un selector ES/EN en la landing y el login.
+## Pendiente de decisión (no implementado en esta iteración)
 
-- **Impacto:** la primera impresión, y la conversión, para usuarios en inglés es mala; además es incoherente con el resto de la app, ya traducida.
-- **Gravedad:** Media
-- **Estado:** Realizado
+No se han asumido interpretaciones. Estos puntos quedan a la espera de respuesta:
 
-### UX-02 · Contraste insuficiente en la landing (`text-zinc-500/600`)
-
-- **Qué cambiar:** la landing (y `FeatureCard.tsx`) usa `text-zinc-500` (#71717a, ≈ 4,1:1 sobre #0a0a0a) y `text-zinc-600` (#52525b, ≈ 2,6:1) para etiquetas y textos de apoyo (21 apariciones). El resto de la app ya se subió a `zinc-400` (commit `466b5da`). Hay que usar `text-zinc-400` como mínimo en texto.
-- **Impacto:** no cumple WCAG 2.1 AA (4,5:1) y cuesta leer en móvil o con mucho brillo.
-- **Gravedad:** Media
-- **Estado:** Realizado
-
-### UX-03 · Contenido estático y textos de servicios/BD sin traducir
-
-- **Qué cambiar:**
-  - **Contenido estático:**
-    - Logros (`src/data/achievements.ts`), biblioteca de rituales (`src/data/ritualLibrary.ts`) y citas diarias (`src/data/quotes.ts`) están solo en inglés. Además, hay una errata en `quotes.ts:4` ("weights tons" → "weighs tons").
-    - Las etiquetas de dificultad están duplicadas en `src/utils/analytics.ts:20-23` en lugar de usar i18n.
-    - "ADMIN"/"Admin" está fijo en `AppLayout.tsx:176` y `ProfilePage.tsx:63`.
-  - **Textos generados fuera de la UI:**
-    - Notificación "Logro desbloqueado" (`src/services/achievementService.ts:57`) y recordatorio en inglés (`functions.sql:295`).
-    - Errores de servicios en español: `profileService.ts:69,140,143` y `settingsService.ts:46`.
-    - Errores de `validateImportData` (`validation.ts:139-164`).
-    - Cabeceras de CSV en español (`src/utils/exportImport.ts:55`).
-
-  Hay que guardar claves (o `type` + parámetros) en las notificaciones y traducirlas al mostrarlas, y añadir claves i18n para el contenido.
-
-- **Impacto:** la app mezcla idiomas en ambos locales (logros en inglés para usuarios en español, notificaciones en español para usuarios en inglés).
-- **Gravedad:** Media
-- **Estado:** Realizado
-
-### UX-04 · Formularios de autenticación sin `<label>`
-
-- **Qué cambiar:**
-  - **Etiquetas:** los inputs de usuario, email y contraseña de `LoginPage.tsx:110-143`, `ResetPasswordPage.tsx:82-101` y el de contraseña de `SettingsPage.tsx:304-313` solo tienen `placeholder`. Hay que añadir `<label>` (visible o `sr-only`).
-  - **Contraseña:** falta el botón mostrar/ocultar y la indicación de requisitos.
-  - **Errores:** el `role="alert"` debe asociarse con `aria-describedby` y `aria-invalid`.
-- **Impacto:** los lectores de pantalla anuncian campos sin nombre fiable, la etiqueta desaparece al escribir y se incumple WCAG 1.3.1 / 3.3.2.
-- **Gravedad:** Media
-- **Estado:** Realizado
-
-### UX-05 · Errores técnicos crudos mostrados al usuario
-
-- **Qué cambiar:** se muestra `error.message` de Supabase o Postgres tal cual en:
-  - `ProtectedRoute.tsx:29`;
-  - las `ErrorState` de todas las páginas;
-  - `SettingsPage.tsx:77`, por ejemplo "duplicate key value violates unique constraint profiles_username_lower_idx" al elegir un nombre ya usado;
-  - `LoginPage.tsx:73`, por ejemplo "Invalid login credentials" en inglés.
-
-  Hay que crear un `mapError(error) → TranslationKey` (códigos `23505`, `PGRST*`, `AuthApiError` con `code`) y mostrar el detalle técnico solo en consola o en `error_logs`.
-
-- **Impacto:** mensajes incomprensibles, en otro idioma, que además filtran detalles internos (nombres de restricciones o tablas).
-- **Gravedad:** Media
-- **Estado:** Realizado
-
-### UX-06 · Acciones sin feedback de error ni actualización optimista
-
-- **Qué cambiar:** varias mutaciones se lanzan con `void` sin `catch` ni feedback:
-  - completar desde el Dashboard (`DashboardPage.tsx:129`);
-  - like y seguir (`EnhancedSocial.tsx:195,219`);
-  - resolver reportes (`AdminPage.tsx:108,115`);
-  - marcar o borrar notificaciones (`NotificationsPage.tsx:88,97`; `NotificationBell.tsx:61,90`).
-
-  Si fallan, el usuario no se entera (el error solo llega a `error_logs` como `unhandledrejection`). Hay que añadir un sistema de toasts global y actualizaciones optimistas con rollback (`onMutate`/`onError` de TanStack Query).
-
-- **Impacto:** acciones que "no hacen nada" sin explicación, dobles clics y sensación de lentitud.
-- **Gravedad:** Media
-- **Estado:** Realizado
-
-### UX-07 · Acciones costosas o sensibles sin confirmación
-
-- **Qué cambiar:**
-  - **Compras:** se compra al primer clic objetos de 500 a 5000 de esencia (`ShopPage.tsx:131`).
-  - **Usar objetos:** se usan sin confirmar, incluidos los permanentes (`InventoryPage.tsx`, ver COD-03).
-  - **Rol de admin:** **conceder** el rol se hace sin confirmación, mientras que revocarlo sí la pide (`AdminPage.tsx:158`); el riesgo está invertido.
-  - **Importar backup:** no avisa de que duplica rituales (`SettingsPage.tsx:110`).
-
-  Hay que usar `ConfirmDialog` en todos estos casos.
-
-- **Impacto:** compras accidentales irreversibles, escalada de privilegios por un clic erróneo y datos duplicados.
-- **Gravedad:** Media
-- **Estado:** Realizado
-
-### UX-08 · Moderación incompleta en el panel de administración
-
-- **Qué cambiar:**
-  - **Reportes:** solo muestran el id truncado del post (`AdminPage.tsx:99-101`); no se ve el contenido ni el usuario reportado. Desde el panel no se puede borrar el post o comentario ni suspender usuarios.
-  - **Usuarios:** la lista está limitada a 200 (`adminService.ts:42`), sin búsqueda ni paginación.
-  - **Errores:** el registro no muestra `stack` ni usuario.
-  - **Errores de carga:** se ignora el error de la query de errores (`useAdmin.ts:60-64`).
-
-  Hay que añadir la vista previa del contenido reportado, acciones de borrar, ocultar y suspender (con RPC y auditoría), búsqueda y paginación.
-
-- **Impacto:** el administrador no puede moderar de verdad, así que los reportes no sirven para nada.
-- **Gravedad:** Media
-- **Estado:** Realizado
-
-### UX-09 · Social: seguir no hace nada y el perfil no es descubrible
-
-- **Qué cambiar:**
-  - **Seguir:** no tiene efecto visible. El feed es global (`socialService.ts:38-42`), sin filtro "Siguiendo" ni contador de seguidores.
-  - **Perfiles:** los nombres de autor no enlazan al perfil; solo se llega copiando el enlace del botón "compartir" (`EnhancedSocial.tsx:252-270`), que además copia el perfil y no el post.
-  - **Comentarios:** no se pueden borrar los propios (la política existe).
-  - **Feed:** no muestra avatares (`authorAvatar` no se usa) y no tiene paginación (50 posts).
-  - **Accesibilidad:** el botón de enviar comentario es solo un icono sin `aria-label` (`EnhancedSocial.tsx:320-325`).
-- **Impacto:** funcionalidad social incompleta y confusa, y un fallo de accesibilidad en una acción principal.
-- **Gravedad:** Media
-- **Estado:** Realizado
-
-### UX-10 · No se pueden editar rituales ni objetivos; la IA crea sin previsualizar
-
-- **Qué cambiar:**
-  - **Edición:** rituales y objetivos solo se pueden crear y borrar. Hay que añadir la edición.
-  - **IA:** la creación con IA (`HabitsPage.tsx:103-127`) crea **todas** las sugerencias directamente, una a una. Si falla a mitad quedan rituales sueltos y el usuario no puede elegir cuáles quiere. Hay que mostrar las sugerencias con casillas antes de crearlas.
-  - **Biblioteca:** importar una plantilla dos veces la duplica sin aviso, y al escribir una búsqueda se ignora el filtro "Populares" (`RitualLibrary.tsx:50-54`).
-- **Impacto:** para corregir una errata hay que borrar el ritual, y con él su historial (ver COD-14); la IA llena el grimorio de rituales no deseados.
-- **Gravedad:** Media
-- **Estado:** Realizado
-
-### UX-11 · Perfil público con datos engañosos
-
-- **Qué cambiar:**
-  - **Inventario:** en perfiles ajenos siempre muestra 0, porque `getByUsername` devuelve `inventory: []` (`profileService.ts:172`) y RLS impide leerlo. Hay que quitar la tarjeta o mostrar datos públicos reales (rituales activos, mejor racha, logros).
-  - **Fecha:** "Miembro desde" incluye la hora (`ProfilePage.tsx:71`).
-  - **Búsqueda por nombre:** la búsqueda por `username` distingue mayúsculas (`eq`) aunque la unicidad no las distingue. Hay que usar `ilike` o normalizar.
-- **Impacto:** información falsa y enlaces que no encuentran el perfil por diferencias de mayúsculas.
-- **Gravedad:** Baja
-- **Estado:** Realizado
-
-### UX-12 · Problemas de accesibilidad en calendario, heatmap, progreso y pestañas
-
-- **Qué cambiar:**
-  - **Calendario:** `RitualCalendar.tsx:95` pone `aria-label` en `<div>` sin rol, y los lectores de pantalla lo ignoran. Hay que usar `role="gridcell"` dentro de `role="grid"`, o una tabla.
-  - **Heatmap:** `Heatmap.tsx:33` no alinea las filas con los días de la semana (empieza en cualquier día) y no tiene alternativa textual navegable.
-  - **Barras de progreso:** las de rango (`AppLayout.tsx:193`), objetivos y logros no tienen `role="progressbar"` ni `aria-valuenow/min/max`.
-  - **Pestañas:** las de manual/IA (`HabitsPage.tsx:223-244`) no usan `role="tablist"`, `role="tab"` ni `aria-selected`.
-  - **Gráficos:** los de Recharts (`AdvancedAnalytics.tsx`) no tienen tabla ni resumen alternativo.
-  - **Modal:** el botón de cerrar mide 36 px (`Modal.tsx:46`), por debajo de los 44 px del resto de la app.
-  - **Foco:** los inputs con `outline-none` solo cambian el color del borde al recibir el foco.
-  - **Notificaciones:** el popover se declara `aria-modal="true"` (`NotificationBell.tsx:50`) aunque no es modal.
-- **Impacto:** barreras para usuarios de lector de pantalla y teclado; incumplimientos puntuales de WCAG 1.3.1, 2.4.7 y 2.5.5.
-- **Gravedad:** Baja
-- **Estado:** Realizado
-
-### UX-13 · Flujos de autenticación con casos mal resueltos
-
-- **Qué cambiar:**
-  - `AuthCallbackPage.tsx:13-16` ignora `error`/`error_description` de la URL (enlace caducado o usado) y redirige a `/login` sin explicar nada.
-  - Tras restablecer la contraseña, `ResetPasswordPage.tsx:22` navega a `/login`, pero la sesión sigue activa, así que `LoginPage` redirige al dashboard.
-  - Al cambiar a "¿Olvidaste tu contraseña?" (`LoginPage.tsx:163`) no se limpian el error ni el mensaje anteriores.
-- **Impacto:** el usuario no entiende por qué el enlace no funciona y la navegación tras el restablecimiento no es la esperada.
-- **Gravedad:** Baja
-- **Estado:** Realizado
-
-### UX-14 · i18n sin interpolación ni plurales
-
-- **Qué cambiar:** `t()` (`src/i18n/index.tsx:825-827`) no admite parámetros ni plurales. Los textos se montan concatenando (`${count} ${t("habits.pendingCount")}`, `HabitsPage.tsx:181`; `SettingsPage.tsx:121`; `RitualCard.tsx:40`), lo que fija el orden de las palabras y da plurales incorrectos ("1 días"). Hay que añadir `t(key, params)` con `{count}` e `Intl.PluralRules`.
-- **Impacto:** frases gramaticalmente incorrectas en ambos idiomas y difíciles de traducir.
-- **Gravedad:** Baja
-- **Estado:** Realizado
-
-### UX-15 · Ajustes con modelo de guardado inconsistente
-
-- **Qué cambiar:**
-  - En `SettingsPage.tsx`, el idioma se guarda al pulsarlo, pero las notificaciones y la hora del recordatorio necesitan el botón "Guardar" global, que además guarda perfil y ajustes en dos peticiones no atómicas (líneas 64-73).
-  - El nombre del archivo exportado usa la fecha UTC (`toISOString`, líneas 97 y 105), en contra de la regla de `dates.ts`.
-
-  Hay que unificar (guardado automático por campo, o un formulario por sección) y usar `toDateKey()`.
-
-- **Impacto:** cambios que se pierden al salir sin guardar y guardados parciales si falla la segunda petición.
-- **Gravedad:** Baja
-- **Estado:** Realizado
-
-### UX-16 · Recordatorios solo in-app y solo al abrir la app
-
-- **Decisión (confirmada):** se mantiene in-app; se calcula en la zona horaria del usuario y Ajustes explica cómo funciona.
-- **Qué cambiar:** `ensure_ritual_reminder` solo se ejecuta al montar `AppLayout` (`AppLayout.tsx:81-83`). Si el usuario no abre la app, nunca recibe el recordatorio. Hay que programarlo en el servidor (`pg_cron` + Web Push o email) o, como mínimo, explicar en Ajustes que el recordatorio es interno.
-- **Impacto:** el ajuste "Recordatorio" promete algo que no ocurre cuando más se necesita (el usuario no ha entrado).
-- **Gravedad:** Baja
-- **Estado:** Realizado
+- **Excluidos por petición expresa (sin tests por ahora):** toda la sección 10 (tests de componentes, E2E, Edge Functions, cobertura/axe).
+- **Dependen de servicios o configuración externa que hay que elegir:** OAuth/magic link/MFA (proveedores y panel de Auth), Web Push o email y `pg_cron` (recordatorios, retención de notificaciones), Supabase Storage para avatares, PWA/service worker y cola sin conexión, Supabase Realtime, tipos generados (`supabase gen types` necesita CLI y proyecto enlazado).
+- **IA (sección 12):** hay que decidir proveedor y modelo, topes de gasto y la UX de consentimiento en Ajustes antes de conectar `generateSuggestions`.
+- **Cambios de modelo de datos con varias lecturas posibles:** frecuencias flexibles ("N veces por semana" frente a días concretos), rituales cuantitativos, notas al completar, orden manual/etiquetas/momento del día, modo vacaciones, tipos de objetivo nuevos, sugerencia de `target_value`, notificaciones de objetivo vencido (necesita tarea programada), retos temporales, compañero de rendición de cuentas, clasificación entre seguidos, bloqueo/silencio de usuarios.
+- **Contenido del juego a decidir:** más logros y cosméticos, si los buffs se acumulan y si la Poción de Olvido cubre rituales semanales.
+- **Rendimiento a valorar con datos reales:** feed escalable (vista de recuentos), evaluar logros solo por las métricas afectadas, métricas de administración con series temporales, catálogo de tienda/logros editable desde el panel, exportación completa, más idiomas.
