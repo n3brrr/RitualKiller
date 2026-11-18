@@ -1,15 +1,15 @@
-import type { TranslationKey } from "@/i18n";
-import type { Difficulty, Frequency } from "@/types";
+import type { TranslationKey } from '@/i18n'
+import type { Difficulty, Frequency } from '@/types'
 
 export type RitualCategory =
-  | "health"
-  | "productivity"
-  | "mental"
-  | "physical"
-  | "social"
-  | "learning"
-  | "creativity"
-  | "spiritual";
+  | 'health'
+  | 'productivity'
+  | 'mental'
+  | 'physical'
+  | 'social'
+  | 'learning'
+  | 'creativity'
+  | 'spiritual'
 
 /**
  * Suggested ritual. Title and description are translated
@@ -17,12 +17,12 @@ export type RitualCategory =
  * difficulty and frequency exactly like the database does.
  */
 export interface RitualTemplate {
-  id: string;
-  difficulty: Difficulty;
-  category: RitualCategory;
-  frequency: Frequency;
-  tags: string[];
-  popular?: boolean;
+  id: string
+  difficulty: Difficulty
+  category: RitualCategory
+  frequency: Frequency
+  tags: string[]
+  popular?: boolean
 }
 
 // prettier-ignore
@@ -42,25 +42,25 @@ export const RITUAL_LIBRARY: RitualTemplate[] = [
   { id: "lib-learning-2", difficulty: "adept", category: "learning", frequency: "daily", tags: ["learning", "programming", "skills"] },
   { id: "lib-creativity-1", difficulty: "novice", category: "creativity", frequency: "daily", tags: ["creativity", "art", "expression"] },
   { id: "lib-spiritual-1", difficulty: "novice", category: "spiritual", frequency: "daily", tags: ["spiritual", "reflection", "growth"] },
-];
+]
 
-type Translate = (key: TranslationKey) => string;
+type Translate = (key: TranslationKey) => string
 
 export function templateText(
-  template: Pick<RitualTemplate, "id">,
+  template: Pick<RitualTemplate, 'id'>,
   t: Translate,
 ): { title: string; description: string } {
   return {
     title: t(`library.${template.id}.title` as TranslationKey),
     description: t(`library.${template.id}.description` as TranslationKey),
-  };
+  }
 }
 
 export interface LibraryFilters {
-  query: string;
-  popularOnly: boolean;
-  category: RitualCategory | "all";
-  difficulty: Difficulty | "all";
+  query: string
+  popularOnly: boolean
+  category: RitualCategory | 'all'
+  difficulty: Difficulty | 'all'
 }
 
 /** All filters combine (searching no longer ignores "popular only"). */
@@ -69,18 +69,21 @@ export function filterTemplates(
   filters: LibraryFilters,
   t: Translate,
 ): RitualTemplate[] {
-  const query = filters.query.trim().toLowerCase();
+  const query = filters.query.trim().toLowerCase()
   return templates.filter((template) => {
-    if (filters.popularOnly && !template.popular) return false;
-    if (filters.category !== "all" && template.category !== filters.category)
-      return false;
-    if (filters.difficulty !== "all" && template.difficulty !== filters.difficulty) {
-      return false;
+    if (filters.popularOnly && !template.popular) return false
+    if (filters.category !== 'all' && template.category !== filters.category)
+      return false
+    if (
+      filters.difficulty !== 'all' &&
+      template.difficulty !== filters.difficulty
+    ) {
+      return false
     }
-    if (!query) return true;
-    const { title, description } = templateText(template, t);
+    if (!query) return true
+    const { title, description } = templateText(template, t)
     return [title, description, ...template.tags].some((text) =>
       text.toLowerCase().includes(query),
-    );
-  });
+    )
+  })
 }

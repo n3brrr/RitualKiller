@@ -6,14 +6,14 @@
  * y muestra un indicador de carga mientras el módulo se obtiene.
  */
 
-import React, { Suspense } from "react";
-import { lazyWithRetry } from "@/lib/lazyWithRetry";
-import Loading from "@/components/animations/Loading";
+import React, { Suspense } from 'react'
+import { lazyWithRetry } from '@/lib/lazyWithRetry'
+import Loading from '@/components/animations/Loading'
 
 // Carga diferida del componente de la lista de logros.
 const AchievementsList = lazyWithRetry(
-  () => import("@/components/achievements/AchievementsList"),
-);
+  () => import('@/components/achievements/AchievementsList'),
+)
 
 const AchievementsPage = () => {
   return (
@@ -31,7 +31,7 @@ const AchievementsPage = () => {
         <AchievementsList />
       </Suspense>
     </div>
-  );
-};
+  )
+}
 
-export default AchievementsPage;
+export default AchievementsPage

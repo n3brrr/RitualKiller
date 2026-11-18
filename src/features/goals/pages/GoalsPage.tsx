@@ -1,89 +1,91 @@
-import { useState } from "react";
-import { Calendar, Pencil, Plus, Target, Trash2 } from "lucide-react";
-import { useGoals } from "@/hooks/useGoals";
-import { useRituals } from "@/hooks/useRituals";
-import { useI18n } from "@/i18n";
-import { ProgressBar } from "@/components/ui/ProgressBar";
-import { errorMessage } from "@/lib/errors";
-import { addDays, daysUntil, toDateKey } from "@/utils/dates";
-import Loading from "@/components/animations/Loading";
-import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
-import { ErrorState } from "@/components/ui/ErrorState";
+import { useState } from 'react'
+import { Calendar, Pencil, Plus, Target, Trash2 } from 'lucide-react'
+import { useGoals } from '@/hooks/useGoals'
+import { useRituals } from '@/hooks/useRituals'
+import { useI18n } from '@/i18n'
+import { ProgressBar } from '@/components/ui/ProgressBar'
+import { errorMessage } from '@/lib/errors'
+import { addDays, daysUntil, toDateKey } from '@/utils/dates'
+import Loading from '@/components/animations/Loading'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
+import { ErrorState } from '@/components/ui/ErrorState'
 
 function emptyForm() {
   return {
-    title: "",
-    description: "",
+    title: '',
+    description: '',
     targetDate: toDateKey(addDays(new Date(), 30)),
     targetValue: 30,
     ritualIds: [] as string[],
-  };
+  }
 }
 
 export default function GoalsPage() {
-  const { goals, isLoading, error, refetch, saveGoal, isSaving, removeGoal } = useGoals();
-  const { rituals } = useRituals();
-  const { t, tn, locale } = useI18n();
+  const { goals, isLoading, error, refetch, saveGoal, isSaving, removeGoal } =
+    useGoals()
+  const { rituals } = useRituals()
+  const { t, tn, locale } = useI18n()
 
-  const [showCreator, setShowCreator] = useState(false);
-  const [formError, setFormError] = useState<string | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<{ id: string; title: string } | null>(
-    null,
-  );
-  const [deleting, setDeleting] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [form, setForm] = useState(emptyForm);
+  const [showCreator, setShowCreator] = useState(false)
+  const [formError, setFormError] = useState<string | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<{
+    id: string
+    title: string
+  } | null>(null)
+  const [deleting, setDeleting] = useState(false)
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [form, setForm] = useState(emptyForm)
 
-  if (isLoading) return <Loading />;
+  if (isLoading) return <Loading />
   if (error) {
     return (
       <div className="mx-auto max-w-3xl">
         <ErrorState
-          title={t("goals.errorTitle")}
+          title={t('goals.errorTitle')}
           message={errorMessage(error, t)}
           onRetry={() => void refetch()}
         />
       </div>
-    );
+    )
   }
 
   const openCreator = () => {
-    setEditingId(null);
-    setForm(emptyForm());
-    setFormError(null);
-    setShowCreator(true);
-  };
+    setEditingId(null)
+    setForm(emptyForm())
+    setFormError(null)
+    setShowCreator(true)
+  }
 
   const openEditor = (goal: (typeof goals)[number]) => {
-    setEditingId(goal.id);
+    setEditingId(goal.id)
     setForm({
       title: goal.title,
       description: goal.description,
       targetDate: goal.target_date,
       targetValue: goal.target_value,
       ritualIds: goal.ritual_ids,
-    });
-    setFormError(null);
-    setShowCreator(true);
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
+    })
+    setFormError(null)
+    setShowCreator(true)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
 
   const closeForm = () => {
-    setShowCreator(false);
-    setEditingId(null);
-    setForm(emptyForm());
-  };
+    setShowCreator(false)
+    setEditingId(null)
+    setForm(emptyForm())
+  }
 
   const handleCreate = async (event: React.FormEvent) => {
-    event.preventDefault();
-    setFormError(null);
+    event.preventDefault()
+    setFormError(null)
     if (form.title.trim().length < 2) {
-      setFormError(t("goals.titleRequired"));
-      return;
+      setFormError(t('goals.titleRequired'))
+      return
     }
     if (!form.targetDate) {
-      setFormError(t("goals.dateRequired"));
-      return;
+      setFormError(t('goals.dateRequired'))
+      return
     }
 
     try {
@@ -96,12 +98,12 @@ export default function GoalsPage() {
           targetValue: Math.max(1, form.targetValue),
           ritualIds: form.ritualIds,
         },
-      });
-      closeForm();
+      })
+      closeForm()
     } catch (createError) {
-      setFormError(errorMessage(createError, t));
+      setFormError(errorMessage(createError, t))
     }
-  };
+  }
 
   const toggleRitual = (id: string) => {
     setForm((current) => ({
@@ -109,35 +111,35 @@ export default function GoalsPage() {
       ritualIds: current.ritualIds.includes(id)
         ? current.ritualIds.filter((item) => item !== id)
         : [...current.ritualIds, id],
-    }));
-  };
+    }))
+  }
 
   const handleDelete = (id: string, title: string) => {
-    setDeleteTarget({ id, title });
-  };
+    setDeleteTarget({ id, title })
+  }
 
   const confirmDelete = async () => {
-    if (!deleteTarget) return;
-    setFormError(null);
-    setDeleting(true);
+    if (!deleteTarget) return
+    setFormError(null)
+    setDeleting(true)
     try {
-      await removeGoal(deleteTarget.id);
+      await removeGoal(deleteTarget.id)
     } catch (deleteError) {
-      setFormError(errorMessage(deleteError, t));
+      setFormError(errorMessage(deleteError, t))
     } finally {
-      setDeleting(false);
-      setDeleteTarget(null);
+      setDeleting(false)
+      setDeleteTarget(null)
     }
-  };
+  }
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="font-display text-2xl font-bold sm:text-3xl">
-            {t("goals.title")}
+            {t('goals.title')}
           </h1>
-          <p className="text-sm text-zinc-400">{t("goals.subtitle")}</p>
+          <p className="text-sm text-zinc-400">{t('goals.subtitle')}</p>
         </div>
         <button
           type="button"
@@ -146,7 +148,7 @@ export default function GoalsPage() {
           className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-ritual-accent px-4 font-bold text-black hover:bg-emerald-400"
         >
           <Plus size={16} aria-hidden="true" />
-          {showCreator ? t("common.close") : t("goals.new")}
+          {showCreator ? t('common.close') : t('goals.new')}
         </button>
       </header>
 
@@ -165,16 +167,18 @@ export default function GoalsPage() {
           className="space-y-4 rounded-xl border border-zinc-800 bg-zinc-950 p-4 sm:p-6"
         >
           <h2 className="font-display text-lg font-bold text-white">
-            {editingId ? t("goals.editTitle") : t("goals.new")}
+            {editingId ? t('goals.editTitle') : t('goals.new')}
           </h2>
           <label className="block">
             <span className="mb-1 block text-xs font-bold uppercase tracking-wider text-zinc-400">
-              {t("goals.titleLabel")}
+              {t('goals.titleLabel')}
             </span>
             <input
               type="text"
               value={form.title}
-              onChange={(event) => setForm({ ...form, title: event.target.value })}
+              onChange={(event) =>
+                setForm({ ...form, title: event.target.value })
+              }
               maxLength={120}
               required
               className="min-h-11 w-full rounded-lg border border-zinc-700 bg-black px-4 text-white outline-none focus:border-ritual-accent"
@@ -183,11 +187,13 @@ export default function GoalsPage() {
 
           <label className="block">
             <span className="mb-1 block text-xs font-bold uppercase tracking-wider text-zinc-400">
-              {t("goals.description")}
+              {t('goals.description')}
             </span>
             <textarea
               value={form.description}
-              onChange={(event) => setForm({ ...form, description: event.target.value })}
+              onChange={(event) =>
+                setForm({ ...form, description: event.target.value })
+              }
               maxLength={500}
               rows={2}
               className="w-full rounded-lg border border-zinc-700 bg-black px-4 py-2 text-white outline-none focus:border-ritual-accent"
@@ -197,13 +203,15 @@ export default function GoalsPage() {
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <label className="block">
               <span className="mb-1 block text-xs font-bold uppercase tracking-wider text-zinc-400">
-                {t("goals.targetDate")}
+                {t('goals.targetDate')}
               </span>
               <input
                 type="date"
                 value={form.targetDate}
                 min={editingId ? undefined : toDateKey()}
-                onChange={(event) => setForm({ ...form, targetDate: event.target.value })}
+                onChange={(event) =>
+                  setForm({ ...form, targetDate: event.target.value })
+                }
                 required
                 className="min-h-11 w-full rounded-lg border border-zinc-700 bg-black px-4 text-white outline-none focus:border-ritual-accent"
               />
@@ -211,7 +219,7 @@ export default function GoalsPage() {
 
             <label className="block">
               <span className="mb-1 block text-xs font-bold uppercase tracking-wider text-zinc-400">
-                {t("goals.targetValue")}
+                {t('goals.targetValue')}
               </span>
               <input
                 type="number"
@@ -231,12 +239,16 @@ export default function GoalsPage() {
 
           <fieldset>
             <legend className="mb-2 text-xs font-bold uppercase tracking-wider text-zinc-400">
-              {t("goals.linked")}
+              {t('goals.linked')}
             </legend>
-            <p className="mb-2 text-xs text-zinc-400">{t("goals.ritualsHint")}</p>
+            <p className="mb-2 text-xs text-zinc-400">
+              {t('goals.ritualsHint')}
+            </p>
             <div className="max-h-48 space-y-1 overflow-y-auto rounded-lg border border-zinc-800 p-2">
               {rituals.length === 0 && (
-                <p className="p-2 text-sm text-zinc-400">{t("goals.noRituals")}</p>
+                <p className="p-2 text-sm text-zinc-400">
+                  {t('goals.noRituals')}
+                </p>
               )}
               {rituals.map((ritual) => (
                 <label
@@ -261,10 +273,10 @@ export default function GoalsPage() {
             className="inline-flex min-h-11 w-full items-center justify-center rounded-lg bg-ritual-accent px-5 font-bold text-black hover:bg-emerald-400 disabled:opacity-50 sm:w-auto"
           >
             {isSaving
-              ? t("common.saving")
+              ? t('common.saving')
               : editingId
-                ? t("common.save")
-                : t("common.create")}
+                ? t('common.save')
+                : t('common.create')}
           </button>
         </form>
       )}
@@ -276,33 +288,33 @@ export default function GoalsPage() {
             size={28}
             aria-hidden="true"
           />
-          <p>{t("goals.empty")}</p>
+          <p>{t('goals.empty')}</p>
           {!showCreator && (
             <button
               type="button"
               onClick={openCreator}
               className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-lg bg-ritual-accent px-4 text-sm font-bold text-black transition-colors hover:bg-emerald-400"
             >
-              <Plus size={16} aria-hidden="true" /> {t("goals.new")}
+              <Plus size={16} aria-hidden="true" /> {t('goals.new')}
             </button>
           )}
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           {goals.map((goal) => {
-            const progress = Math.min(goal.progress, goal.target_value);
+            const progress = Math.min(goal.progress, goal.target_value)
             const percent = Math.min(
               100,
               Math.round((progress / goal.target_value) * 100),
-            );
-            const remaining = daysUntil(goal.target_date);
+            )
+            const remaining = daysUntil(goal.target_date)
             const targetDate = new Date(
               `${goal.target_date}T00:00:00`,
             ).toLocaleDateString(locale, {
-              day: "numeric",
-              month: "short",
-              year: "numeric",
-            });
+              day: 'numeric',
+              month: 'short',
+              year: 'numeric',
+            })
 
             return (
               <article
@@ -313,14 +325,16 @@ export default function GoalsPage() {
                   <div>
                     <h2 className="font-bold text-white">{goal.title}</h2>
                     {goal.description && (
-                      <p className="mt-1 text-sm text-zinc-400">{goal.description}</p>
+                      <p className="mt-1 text-sm text-zinc-400">
+                        {goal.description}
+                      </p>
                     )}
                   </div>
                   <div className="flex shrink-0">
                     <button
                       type="button"
                       onClick={() => openEditor(goal)}
-                      aria-label={t("goals.editLabel", { name: goal.title })}
+                      aria-label={t('goals.editLabel', { name: goal.title })}
                       className="inline-flex h-11 w-11 items-center justify-center rounded-full text-zinc-400 hover:text-white"
                     >
                       <Pencil size={16} aria-hidden="true" />
@@ -328,7 +342,7 @@ export default function GoalsPage() {
                     <button
                       type="button"
                       onClick={() => handleDelete(goal.id, goal.title)}
-                      aria-label={`${t("common.delete")} ${goal.title}`}
+                      aria-label={`${t('common.delete')} ${goal.title}`}
                       className="inline-flex h-11 w-11 items-center justify-center rounded-full text-zinc-400 hover:text-red-500"
                     >
                       <Trash2 size={16} aria-hidden="true" />
@@ -343,7 +357,7 @@ export default function GoalsPage() {
                   <span>{percent}%</span>
                 </div>
                 <ProgressBar
-                  label={t("goals.progressLabel", { name: goal.title })}
+                  label={t('goals.progressLabel', { name: goal.title })}
                   value={progress}
                   max={goal.target_value}
                   className="h-2"
@@ -353,34 +367,36 @@ export default function GoalsPage() {
                   <span className="inline-flex items-center gap-1">
                     <Calendar size={12} aria-hidden="true" /> {targetDate}
                   </span>
-                  <span className={remaining < 0 ? "text-red-400" : ""}>
+                  <span className={remaining < 0 ? 'text-red-400' : ''}>
                     {remaining >= 0
-                      ? tn("goals.daysLeft", remaining)
-                      : tn("goals.daysOverdue", Math.abs(remaining))}
+                      ? tn('goals.daysLeft', remaining)
+                      : tn('goals.daysOverdue', Math.abs(remaining))}
                   </span>
                   <span className="inline-flex items-center gap-1">
-                    <Target size={12} aria-hidden="true" />{" "}
+                    <Target size={12} aria-hidden="true" />{' '}
                     {goal.ritual_ids.length === 0
-                      ? t("goals.ritualsHint")
-                      : tn("goals.linkedRituals", goal.ritual_ids.length)}
+                      ? t('goals.ritualsHint')
+                      : tn('goals.linkedRituals', goal.ritual_ids.length)}
                   </span>
                 </div>
               </article>
-            );
+            )
           })}
         </div>
       )}
 
       <ConfirmDialog
         open={Boolean(deleteTarget)}
-        title={t("goals.deleteTitle")}
-        description={t("goals.deleteConfirm", { name: deleteTarget?.title ?? "" })}
-        confirmLabel={t("common.delete")}
+        title={t('goals.deleteTitle')}
+        description={t('goals.deleteConfirm', {
+          name: deleteTarget?.title ?? '',
+        })}
+        confirmLabel={t('common.delete')}
         destructive
         busy={deleting}
         onConfirm={() => void confirmDelete()}
         onClose={() => setDeleteTarget(null)}
       />
     </div>
-  );
+  )
 }

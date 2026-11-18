@@ -1,12 +1,12 @@
-import { Bell, CheckCheck, Trash2 } from "lucide-react";
-import { useNotifications } from "@/hooks/useNotifications";
-import { useI18n } from "@/i18n";
-import { useToast } from "@/hooks/useToast";
-import { errorMessage } from "@/lib/errors";
-import { notificationText } from "@/utils/notificationText";
-import { formatDateTime } from "@/utils/dates";
-import Loading from "@/components/animations/Loading";
-import { ErrorState } from "@/components/ui/ErrorState";
+import { Bell, CheckCheck, Trash2 } from 'lucide-react'
+import { useNotifications } from '@/hooks/useNotifications'
+import { useI18n } from '@/i18n'
+import { useToast } from '@/hooks/useToast'
+import { errorMessage } from '@/lib/errors'
+import { notificationText } from '@/utils/notificationText'
+import { formatDateTime } from '@/utils/dates'
+import Loading from '@/components/animations/Loading'
+import { ErrorState } from '@/components/ui/ErrorState'
 
 export default function NotificationsPage() {
   const {
@@ -21,29 +21,29 @@ export default function NotificationsPage() {
     markAllRead,
     markRead,
     removeNotification,
-  } = useNotifications();
-  const { t, tn, locale } = useI18n();
-  const toast = useToast();
+  } = useNotifications()
+  const { t, tn, locale } = useI18n()
+  const toast = useToast()
   // Quick actions report failures instead of failing silently.
   const run = async (action: () => Promise<unknown>) => {
     try {
-      await action();
+      await action()
     } catch (actionError) {
-      toast.error(errorMessage(actionError, t));
+      toast.error(errorMessage(actionError, t))
     }
-  };
+  }
 
-  if (isLoading) return <Loading />;
+  if (isLoading) return <Loading />
   if (error) {
     return (
       <div className="mx-auto max-w-2xl">
         <ErrorState
-          title={t("notifications.errorTitle")}
+          title={t('notifications.errorTitle')}
           message={errorMessage(error, t)}
           onRetry={() => void refetch()}
         />
       </div>
-    );
+    )
   }
 
   return (
@@ -51,10 +51,10 @@ export default function NotificationsPage() {
       <header className="flex items-center justify-between gap-3">
         <div>
           <h1 className="font-display text-2xl font-bold sm:text-3xl">
-            {t("notifications.title")}
+            {t('notifications.title')}
           </h1>
           <p className="text-sm text-zinc-400">
-            {tn("notifications.unreadCount", unreadCount)}
+            {tn('notifications.unreadCount', unreadCount)}
           </p>
         </div>
         {unreadCount > 0 && (
@@ -64,7 +64,7 @@ export default function NotificationsPage() {
             className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-zinc-800 px-3 text-sm text-zinc-300 hover:border-ritual-accent hover:text-ritual-accent"
           >
             <CheckCheck size={16} aria-hidden="true" />
-            {t("notifications.markAll")}
+            {t('notifications.markAll')}
           </button>
         )}
       </header>
@@ -76,7 +76,7 @@ export default function NotificationsPage() {
             size={28}
             aria-hidden="true"
           />
-          <p>{t("notifications.empty")}</p>
+          <p>{t('notifications.empty')}</p>
         </div>
       ) : (
         <ul className="space-y-2">
@@ -85,8 +85,8 @@ export default function NotificationsPage() {
               key={notification.id}
               className={`rounded-xl border p-4 ${
                 notification.read
-                  ? "border-zinc-900 bg-zinc-950 opacity-70"
-                  : "border-ritual-accent/30 bg-ritual-accent/5"
+                  ? 'border-zinc-900 bg-zinc-950 opacity-70'
+                  : 'border-ritual-accent/30 bg-ritual-accent/5'
               }`}
             >
               <div className="flex items-start justify-between gap-2">
@@ -114,7 +114,7 @@ export default function NotificationsPage() {
                     <button
                       type="button"
                       onClick={() => void run(() => markRead(notification.id))}
-                      aria-label={t("notifications.markRead")}
+                      aria-label={t('notifications.markRead')}
                       className="inline-flex h-11 w-11 items-center justify-center rounded-full text-zinc-400 hover:text-ritual-accent"
                     >
                       <Bell size={16} aria-hidden="true" />
@@ -122,8 +122,10 @@ export default function NotificationsPage() {
                   )}
                   <button
                     type="button"
-                    onClick={() => void run(() => removeNotification(notification.id))}
-                    aria-label={t("notifications.remove")}
+                    onClick={() =>
+                      void run(() => removeNotification(notification.id))
+                    }
+                    aria-label={t('notifications.remove')}
                     className="inline-flex h-11 w-11 items-center justify-center rounded-full text-zinc-400 hover:text-red-500"
                   >
                     <Trash2 size={16} aria-hidden="true" />
@@ -142,10 +144,10 @@ export default function NotificationsPage() {
             disabled={isFetching}
             className="inline-flex min-h-11 items-center rounded-lg border border-zinc-700 px-4 text-sm text-zinc-300 transition-colors hover:border-ritual-accent hover:text-ritual-accent disabled:opacity-50"
           >
-            {t("notifications.loadMore")}
+            {t('notifications.loadMore')}
           </button>
         </div>
       )}
     </div>
-  );
+  )
 }

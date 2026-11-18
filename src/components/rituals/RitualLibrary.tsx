@@ -1,48 +1,56 @@
-import { useMemo, useState } from "react";
-import { BookOpen, Plus, Search, Star } from "lucide-react";
+import { useMemo, useState } from 'react'
+import { BookOpen, Plus, Search, Star } from 'lucide-react'
 import {
   filterTemplates,
   RITUAL_LIBRARY,
   templateText,
   type RitualCategory,
   type RitualTemplate,
-} from "@/data/ritualLibrary";
-import { ritualReward } from "@/utils/rewards";
-import type { Difficulty } from "@/types";
-import { difficultyKeys, frequencyKeys, useI18n, type TranslationKey } from "@/i18n";
+} from '@/data/ritualLibrary'
+import { ritualReward } from '@/utils/rewards'
+import type { Difficulty } from '@/types'
+import {
+  difficultyKeys,
+  frequencyKeys,
+  useI18n,
+  type TranslationKey,
+} from '@/i18n'
 
 interface RitualLibraryProps {
-  onImport: (template: RitualTemplate) => Promise<void> | void;
+  onImport: (template: RitualTemplate) => Promise<void> | void
   /** Lower-cased titles of the user's active rituals, to avoid duplicates. */
-  existingTitles: Set<string>;
+  existingTitles: Set<string>
 }
 
 const CATEGORIES: Array<{ value: RitualCategory; labelKey: TranslationKey }> = [
-  { value: "health", labelKey: "library.category.health" },
-  { value: "productivity", labelKey: "library.category.productivity" },
-  { value: "mental", labelKey: "library.category.mental" },
-  { value: "physical", labelKey: "library.category.physical" },
-  { value: "learning", labelKey: "library.category.learning" },
-  { value: "creativity", labelKey: "library.category.creativity" },
-  { value: "social", labelKey: "library.category.social" },
-  { value: "spiritual", labelKey: "library.category.spiritual" },
-];
+  { value: 'health', labelKey: 'library.category.health' },
+  { value: 'productivity', labelKey: 'library.category.productivity' },
+  { value: 'mental', labelKey: 'library.category.mental' },
+  { value: 'physical', labelKey: 'library.category.physical' },
+  { value: 'learning', labelKey: 'library.category.learning' },
+  { value: 'creativity', labelKey: 'library.category.creativity' },
+  { value: 'social', labelKey: 'library.category.social' },
+  { value: 'spiritual', labelKey: 'library.category.spiritual' },
+]
 
-const DIFFICULTIES: Difficulty[] = ["novice", "adept", "master"];
+const DIFFICULTIES: Difficulty[] = ['novice', 'adept', 'master']
 
 const DIFFICULTY_STYLES = {
-  novice: "border-green-500/30 bg-green-500/10 text-green-500",
-  adept: "border-yellow-500/30 bg-yellow-500/10 text-yellow-500",
-  master: "border-red-500/30 bg-red-500/10 text-red-500",
-} as const;
+  novice: 'border-green-500/30 bg-green-500/10 text-green-500',
+  adept: 'border-yellow-500/30 bg-yellow-500/10 text-yellow-500',
+  master: 'border-red-500/30 bg-red-500/10 text-red-500',
+} as const
 
-export function RitualLibrary({ onImport, existingTitles }: RitualLibraryProps) {
-  const { t } = useI18n();
-  const [searchQuery, setSearchQuery] = useState("");
-  const [category, setCategory] = useState<RitualCategory | "all">("all");
-  const [difficulty, setDifficulty] = useState<Difficulty | "all">("all");
-  const [popularOnly, setPopularOnly] = useState(false);
-  const [importingId, setImportingId] = useState<string | null>(null);
+export function RitualLibrary({
+  onImport,
+  existingTitles,
+}: RitualLibraryProps) {
+  const { t } = useI18n()
+  const [searchQuery, setSearchQuery] = useState('')
+  const [category, setCategory] = useState<RitualCategory | 'all'>('all')
+  const [difficulty, setDifficulty] = useState<Difficulty | 'all'>('all')
+  const [popularOnly, setPopularOnly] = useState(false)
+  const [importingId, setImportingId] = useState<string | null>(null)
 
   const filtered = useMemo(
     () =>
@@ -52,22 +60,22 @@ export function RitualLibrary({ onImport, existingTitles }: RitualLibraryProps) 
         t,
       ),
     [searchQuery, category, difficulty, popularOnly, t],
-  );
+  )
 
   const handleImport = async (template: RitualTemplate) => {
-    setImportingId(template.id);
+    setImportingId(template.id)
     try {
-      await onImport(template);
+      await onImport(template)
     } finally {
-      setImportingId(null);
+      setImportingId(null)
     }
-  };
+  }
 
   return (
-    <section className="space-y-4" aria-label={t("library.label")}>
+    <section className="space-y-4" aria-label={t('library.label')}>
       <div className="flex items-center gap-2">
         <BookOpen className="text-ritual-accent" size={22} aria-hidden="true" />
-        <h2 className="font-display text-xl font-bold">{t("library.title")}</h2>
+        <h2 className="font-display text-xl font-bold">{t('library.title')}</h2>
       </div>
 
       <div className="space-y-3">
@@ -81,8 +89,8 @@ export function RitualLibrary({ onImport, existingTitles }: RitualLibraryProps) 
             type="search"
             value={searchQuery}
             onChange={(event) => setSearchQuery(event.target.value)}
-            placeholder={t("library.searchPlaceholder")}
-            aria-label={t("library.searchLabel")}
+            placeholder={t('library.searchPlaceholder')}
+            aria-label={t('library.searchLabel')}
             className="min-h-11 w-full rounded-lg border border-zinc-800 bg-zinc-950 py-2 pl-10 pr-4 text-white placeholder-zinc-400 outline-none focus:border-ritual-accent"
           />
         </div>
@@ -94,22 +102,22 @@ export function RitualLibrary({ onImport, existingTitles }: RitualLibraryProps) 
             aria-pressed={popularOnly}
             className={`inline-flex min-h-11 items-center gap-2 rounded-lg border px-3 text-xs uppercase tracking-wider ${
               popularOnly
-                ? "border-ritual-accent bg-ritual-accent/10 text-ritual-accent"
-                : "border-zinc-800 bg-zinc-900 text-zinc-400"
+                ? 'border-ritual-accent bg-ritual-accent/10 text-ritual-accent'
+                : 'border-zinc-800 bg-zinc-900 text-zinc-400'
             }`}
           >
-            <Star size={14} aria-hidden="true" /> {t("library.popular")}
+            <Star size={14} aria-hidden="true" /> {t('library.popular')}
           </button>
 
           <select
             value={category}
             onChange={(event) =>
-              setCategory(event.target.value as RitualCategory | "all")
+              setCategory(event.target.value as RitualCategory | 'all')
             }
-            aria-label={t("library.categoryLabel")}
+            aria-label={t('library.categoryLabel')}
             className="min-h-11 flex-1 rounded-lg border border-zinc-800 bg-zinc-900 px-3 text-sm text-white outline-none focus:border-ritual-accent"
           >
-            <option value="all">{t("library.categoryAll")}</option>
+            <option value="all">{t('library.categoryAll')}</option>
             {CATEGORIES.map((item) => (
               <option key={item.value} value={item.value}>
                 {t(item.labelKey)}
@@ -119,11 +127,13 @@ export function RitualLibrary({ onImport, existingTitles }: RitualLibraryProps) 
 
           <select
             value={difficulty}
-            onChange={(event) => setDifficulty(event.target.value as Difficulty | "all")}
-            aria-label={t("library.difficultyLabel")}
+            onChange={(event) =>
+              setDifficulty(event.target.value as Difficulty | 'all')
+            }
+            aria-label={t('library.difficultyLabel')}
             className="min-h-11 flex-1 rounded-lg border border-zinc-800 bg-zinc-900 px-3 text-sm text-white outline-none focus:border-ritual-accent"
           >
-            <option value="all">{t("library.difficultyAll")}</option>
+            <option value="all">{t('library.difficultyAll')}</option>
             {DIFFICULTIES.map((value) => (
               <option key={value} value={value}>
                 {t(difficultyKeys[value])}
@@ -135,8 +145,8 @@ export function RitualLibrary({ onImport, existingTitles }: RitualLibraryProps) 
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         {filtered.map((template) => {
-          const { title, description } = templateText(template, t);
-          const added = existingTitles.has(title.toLowerCase());
+          const { title, description } = templateText(template, t)
+          const added = existingTitles.has(title.toLowerCase())
           return (
             <article
               key={template.id}
@@ -148,7 +158,7 @@ export function RitualLibrary({ onImport, existingTitles }: RitualLibraryProps) 
                   <Star
                     className="shrink-0 fill-yellow-500/20 text-yellow-500"
                     size={16}
-                    aria-label={t("library.popularMark")}
+                    aria-label={t('library.popularMark')}
                   />
                 )}
               </div>
@@ -176,21 +186,23 @@ export function RitualLibrary({ onImport, existingTitles }: RitualLibraryProps) 
               >
                 <Plus size={16} aria-hidden="true" />
                 {added
-                  ? t("library.alreadyAdded")
+                  ? t('library.alreadyAdded')
                   : importingId === template.id
-                    ? t("library.adding")
-                    : t("library.add")}
+                    ? t('library.adding')
+                    : t('library.add')}
               </button>
             </article>
-          );
+          )
         })}
       </div>
 
       {filtered.length === 0 && (
-        <p className="py-8 text-center text-sm text-zinc-400">{t("library.empty")}</p>
+        <p className="py-8 text-center text-sm text-zinc-400">
+          {t('library.empty')}
+        </p>
       )}
     </section>
-  );
+  )
 }
 
-export default RitualLibrary;
+export default RitualLibrary

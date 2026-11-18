@@ -1,9 +1,9 @@
 /** Default max rows PostgREST returns per request in Supabase. */
-export const PAGE_SIZE = 1000;
+export const PAGE_SIZE = 1000
 
 interface PageResult<T> {
-  data: T[] | null;
-  error: unknown;
+  data: T[] | null
+  error: unknown
 }
 
 /**
@@ -15,13 +15,13 @@ export async function fetchAllPages<T>(
   page: (from: number, to: number) => PromiseLike<PageResult<T>>,
   maxRows = 50_000,
 ): Promise<T[]> {
-  const rows: T[] = [];
+  const rows: T[] = []
   for (let from = 0; from < maxRows; from += PAGE_SIZE) {
-    const { data, error } = await page(from, from + PAGE_SIZE - 1);
-    if (error) throw error;
-    const chunk = data ?? [];
-    rows.push(...chunk);
-    if (chunk.length < PAGE_SIZE) break;
+    const { data, error } = await page(from, from + PAGE_SIZE - 1)
+    if (error) throw error
+    const chunk = data ?? []
+    rows.push(...chunk)
+    if (chunk.length < PAGE_SIZE) break
   }
-  return rows;
+  return rows
 }

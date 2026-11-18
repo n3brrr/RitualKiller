@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState } from 'react'
 import {
   Bar,
   BarChart,
@@ -13,36 +13,40 @@ import {
   Tooltip,
   XAxis,
   YAxis,
-} from "recharts";
-import { Calendar, Download, TrendingUp, Target } from "lucide-react";
-import { useRituals } from "@/hooks/useRituals";
-import { difficultyKeys, useI18n } from "@/i18n";
-import { errorMessage } from "@/lib/errors";
+} from 'recharts'
+import { Calendar, Download, TrendingUp, Target } from 'lucide-react'
+import { useRituals } from '@/hooks/useRituals'
+import { difficultyKeys, useI18n } from '@/i18n'
+import { errorMessage } from '@/lib/errors'
 import {
   buildDailySeries,
   buildDifficultySeries,
   buildWeekdaySeries,
   calculateCompletionRate,
   filterLogsByDays,
-} from "@/utils/analytics";
-import { downloadFile, exportToCSV } from "@/utils/exportImport";
-import { csvLabels } from "@/utils/csvLabels";
-import Loading from "@/components/animations/Loading";
-import { ErrorState } from "@/components/ui/ErrorState";
+} from '@/utils/analytics'
+import { downloadFile, exportToCSV } from '@/utils/exportImport'
+import { csvLabels } from '@/utils/csvLabels'
+import Loading from '@/components/animations/Loading'
+import { ErrorState } from '@/components/ui/ErrorState'
 
-const RANGES = [7, 30, 90] as const;
-const COLORS = ["#22c55e", "#eab308", "#ef4444"];
+const RANGES = [7, 30, 90] as const
+const COLORS = ['#22c55e', '#eab308', '#ef4444']
 
 export function AdvancedAnalytics() {
-  const { rituals, archivedRituals, logs, isLoading, error, refetch } = useRituals();
-  const { t, tn, locale } = useI18n();
-  const [range, setRange] = useState<(typeof RANGES)[number]>(7);
+  const { rituals, archivedRituals, logs, isLoading, error, refetch } =
+    useRituals()
+  const { t, tn, locale } = useI18n()
+  const [range, setRange] = useState<(typeof RANGES)[number]>(7)
 
-  const filteredLogs = useMemo(() => filterLogsByDays(logs, range), [logs, range]);
+  const filteredLogs = useMemo(
+    () => filterLogsByDays(logs, range),
+    [logs, range],
+  )
   const dailySeries = useMemo(
     () => buildDailySeries(logs, range, new Date(), locale),
     [logs, range, locale],
-  );
+  )
   const difficultySeries = useMemo(
     () =>
       buildDifficultySeries(
@@ -51,36 +55,48 @@ export function AdvancedAnalytics() {
         (difficulty) => t(difficultyKeys[difficulty]),
       ),
     [rituals, archivedRituals, filteredLogs, t],
-  );
+  )
   const weekdaySeries = useMemo(
     () => buildWeekdaySeries(filteredLogs, locale),
     [filteredLogs, locale],
-  );
+  )
   const completionRate = useMemo(
     () => calculateCompletionRate(rituals, filteredLogs, range),
     [rituals, filteredLogs, range],
-  );
+  )
 
   const handleExport = () => {
-    const csv = exportToCSV([...rituals, ...archivedRituals], filteredLogs, csvLabels(t));
-    downloadFile(csv, `ritualkiller-analytics-${range}d.csv`, "text/csv;charset=utf-8");
-  };
+    const csv = exportToCSV(
+      [...rituals, ...archivedRituals],
+      filteredLogs,
+      csvLabels(t),
+    )
+    downloadFile(
+      csv,
+      `ritualkiller-analytics-${range}d.csv`,
+      'text/csv;charset=utf-8',
+    )
+  }
 
-  if (isLoading) return <Loading />;
+  if (isLoading) return <Loading />
   if (error) {
     return (
       <ErrorState
-        title={t("analytics.errorTitle")}
+        title={t('analytics.errorTitle')}
         message={errorMessage(error, t)}
         onRetry={() => void refetch()}
       />
-    );
+    )
   }
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex gap-2" role="group" aria-label={t("analytics.range")}>
+        <div
+          className="flex gap-2"
+          role="group"
+          aria-label={t('analytics.range')}
+        >
           {RANGES.map((value) => (
             <button
               key={value}
@@ -89,11 +105,11 @@ export function AdvancedAnalytics() {
               aria-pressed={range === value}
               className={`min-h-11 rounded-lg border px-4 text-sm font-bold ${
                 range === value
-                  ? "border-ritual-accent bg-ritual-accent/10 text-ritual-accent"
-                  : "border-zinc-800 bg-zinc-950 text-zinc-400 hover:text-white"
+                  ? 'border-ritual-accent bg-ritual-accent/10 text-ritual-accent'
+                  : 'border-zinc-800 bg-zinc-950 text-zinc-400 hover:text-white'
               }`}
             >
-              {tn("common.days", value)}
+              {tn('common.days', value)}
             </button>
           ))}
         </div>
@@ -102,14 +118,14 @@ export function AdvancedAnalytics() {
           onClick={handleExport}
           className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-zinc-800 bg-zinc-950 px-4 text-sm font-bold text-zinc-300 hover:border-ritual-accent hover:text-ritual-accent"
         >
-          <Download size={16} aria-hidden="true" /> {t("common.export")} CSV
+          <Download size={16} aria-hidden="true" /> {t('common.export')} CSV
         </button>
       </div>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
         <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-4">
           <div className="mb-1 flex items-center gap-2 text-xs uppercase tracking-wider text-zinc-400">
-            <Target size={14} aria-hidden="true" /> {t("analytics.rate")}
+            <Target size={14} aria-hidden="true" /> {t('analytics.rate')}
           </div>
           <div className="font-mono text-2xl text-ritual-accent">
             {Math.round(completionRate)}%
@@ -117,24 +133,29 @@ export function AdvancedAnalytics() {
         </div>
         <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-4">
           <div className="mb-1 flex items-center gap-2 text-xs uppercase tracking-wider text-zinc-400">
-            <TrendingUp size={14} aria-hidden="true" /> {t("analytics.completed")}
+            <TrendingUp size={14} aria-hidden="true" />{' '}
+            {t('analytics.completed')}
           </div>
-          <div className="font-mono text-2xl text-white">{filteredLogs.length}</div>
+          <div className="font-mono text-2xl text-white">
+            {filteredLogs.length}
+          </div>
         </div>
         <div className="col-span-2 rounded-xl border border-zinc-800 bg-zinc-950 p-4 sm:col-span-1">
           <div className="mb-1 flex items-center gap-2 text-xs uppercase tracking-wider text-zinc-400">
-            <Calendar size={14} aria-hidden="true" /> {t("analytics.range")}
+            <Calendar size={14} aria-hidden="true" /> {t('analytics.range')}
           </div>
-          <div className="font-mono text-2xl text-white">{tn("common.days", range)}</div>
+          <div className="font-mono text-2xl text-white">
+            {tn('common.days', range)}
+          </div>
         </div>
       </div>
 
       <section className="rounded-xl border border-zinc-800 bg-zinc-950 p-4">
         <h2 className="mb-4 text-sm font-bold uppercase tracking-wider text-zinc-300">
-          {t("analytics.daily")}
+          {t('analytics.daily')}
         </h2>
         <ChartTable
-          title={t("analytics.daily")}
+          title={t('analytics.daily')}
           rows={dailySeries.map((point) => ({
             label: point.label,
             value: point.Completions,
@@ -147,12 +168,15 @@ export function AdvancedAnalytics() {
               <XAxis dataKey="label" stroke="#71717a" fontSize={11} />
               <YAxis allowDecimals={false} stroke="#71717a" fontSize={11} />
               <Tooltip
-                contentStyle={{ background: "#09090b", border: "1px solid #27272a" }}
+                contentStyle={{
+                  background: '#09090b',
+                  border: '1px solid #27272a',
+                }}
               />
               <Line
                 type="monotone"
                 dataKey="Completions"
-                name={t("analytics.completed")}
+                name={t('analytics.completed')}
                 stroke="#22c55e"
                 strokeWidth={2}
                 dot={false}
@@ -165,10 +189,10 @@ export function AdvancedAnalytics() {
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <section className="rounded-xl border border-zinc-800 bg-zinc-950 p-4">
           <h2 className="mb-4 text-sm font-bold uppercase tracking-wider text-zinc-300">
-            {t("analytics.weekday")}
+            {t('analytics.weekday')}
           </h2>
           <ChartTable
-            title={t("analytics.weekday")}
+            title={t('analytics.weekday')}
             rows={weekdaySeries.map((point) => ({
               label: point.name,
               value: point.Completions,
@@ -181,11 +205,14 @@ export function AdvancedAnalytics() {
                 <XAxis dataKey="name" stroke="#71717a" fontSize={11} />
                 <YAxis allowDecimals={false} stroke="#71717a" fontSize={11} />
                 <Tooltip
-                  contentStyle={{ background: "#09090b", border: "1px solid #27272a" }}
+                  contentStyle={{
+                    background: '#09090b',
+                    border: '1px solid #27272a',
+                  }}
                 />
                 <Bar
                   dataKey="Completions"
-                  name={t("analytics.completed")}
+                  name={t('analytics.completed')}
                   fill="#22c55e"
                   radius={[4, 4, 0, 0]}
                 />
@@ -196,16 +223,16 @@ export function AdvancedAnalytics() {
 
         <section className="rounded-xl border border-zinc-800 bg-zinc-950 p-4">
           <h2 className="mb-4 text-sm font-bold uppercase tracking-wider text-zinc-300">
-            {t("analytics.byDifficulty")}
+            {t('analytics.byDifficulty')}
           </h2>
           {difficultySeries.length === 0 ? (
             <p className="py-12 text-center text-sm text-zinc-400">
-              {t("analytics.noData")}
+              {t('analytics.noData')}
             </p>
           ) : (
             <>
               <ChartTable
-                title={t("analytics.byDifficulty")}
+                title={t('analytics.byDifficulty')}
                 rows={difficultySeries.map((point) => ({
                   label: point.name,
                   value: point.Completions,
@@ -223,13 +250,16 @@ export function AdvancedAnalytics() {
                       paddingAngle={3}
                     >
                       {difficultySeries.map((entry, index) => (
-                        <Cell key={entry.name} fill={COLORS[index % COLORS.length]} />
+                        <Cell
+                          key={entry.name}
+                          fill={COLORS[index % COLORS.length]}
+                        />
                       ))}
                     </Pie>
                     <Tooltip
                       contentStyle={{
-                        background: "#09090b",
-                        border: "1px solid #27272a",
+                        background: '#09090b',
+                        border: '1px solid #27272a',
                       }}
                     />
                     <Legend />
@@ -241,27 +271,27 @@ export function AdvancedAnalytics() {
         </section>
       </div>
     </div>
-  );
+  )
 }
 
-export default AdvancedAnalytics;
+export default AdvancedAnalytics
 
 /** Screen-reader alternative to a chart: the same numbers as a table. */
 function ChartTable({
   title,
   rows,
 }: {
-  title: string;
-  rows: Array<{ label: string; value: number }>;
+  title: string
+  rows: Array<{ label: string; value: number }>
 }) {
-  const { t } = useI18n();
+  const { t } = useI18n()
   return (
     <table className="sr-only">
-      <caption>{t("analytics.tableCaption", { title })}</caption>
+      <caption>{t('analytics.tableCaption', { title })}</caption>
       <thead>
         <tr>
-          <th scope="col">{t("analytics.tableLabel")}</th>
-          <th scope="col">{t("analytics.completed")}</th>
+          <th scope="col">{t('analytics.tableLabel')}</th>
+          <th scope="col">{t('analytics.completed')}</th>
         </tr>
       </thead>
       <tbody>
@@ -273,5 +303,5 @@ function ChartTable({
         ))}
       </tbody>
     </table>
-  );
+  )
 }

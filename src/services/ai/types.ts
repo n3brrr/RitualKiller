@@ -1,17 +1,17 @@
-import type { Difficulty, Locale } from "@/types";
+import type { Difficulty, Locale } from '@/types'
 
 /** A ritual proposed by an AI provider, already validated and trimmed. */
 export interface RitualSuggestion {
-  title: string;
-  description: string;
-  difficulty: Difficulty;
+  title: string
+  description: string
+  difficulty: Difficulty
 }
 
 export interface SuggestRitualsInput {
   /** What the user wants to achieve, free text (max 200 characters). */
-  goal: string;
+  goal: string
   /** The answer must be written in the user's language. */
-  locale: Locale;
+  locale: Locale
 }
 
 /**
@@ -22,15 +22,15 @@ export interface SuggestRitualsInput {
  * the per-user quota and keeps any provider key as a server secret.
  */
 export interface AiProvider {
-  readonly id: string;
+  readonly id: string
   /** False when the feature flag is off or no backend is configured. */
-  readonly available: boolean;
-  suggestRituals(input: SuggestRitualsInput): Promise<RitualSuggestion[]>;
+  readonly available: boolean
+  suggestRituals(input: SuggestRitualsInput): Promise<RitualSuggestion[]>
 }
 
 export class AiUnavailableError extends Error {
-  constructor(message = "AI features are not available") {
-    super(message);
-    this.name = "AiUnavailableError";
+  constructor(message = 'AI features are not available') {
+    super(message)
+    this.name = 'AiUnavailableError'
   }
 }

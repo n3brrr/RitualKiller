@@ -3,73 +3,83 @@ import {
   useMutation,
   useQuery,
   useQueryClient,
-} from "@tanstack/react-query";
-import { useAuth } from "@/features/auth/useAuth";
-import { adminService } from "@/services/adminService";
+} from '@tanstack/react-query'
+import { useAuth } from '@/features/auth/useAuth'
+import { adminService } from '@/services/adminService'
 
-export function useAdmin(userSearch = "", userPage = 0) {
-  const { user } = useAuth();
-  const enabled = Boolean(user?.isAdmin);
-  const queryClient = useQueryClient();
+export function useAdmin(userSearch = '', userPage = 0) {
+  const { user } = useAuth()
+  const enabled = Boolean(user?.isAdmin)
+  const queryClient = useQueryClient()
 
   const metricsQuery = useQuery({
-    queryKey: ["admin", "metrics"],
+    queryKey: ['admin', 'metrics'],
     queryFn: () => adminService.getMetrics(),
     enabled,
-  });
+  })
 
   const usersQuery = useQuery({
-    queryKey: ["admin", "users", userSearch, userPage],
+    queryKey: ['admin', 'users', userSearch, userPage],
     queryFn: () => adminService.getUsers(userSearch, userPage),
     enabled,
     placeholderData: keepPreviousData,
-  });
+  })
 
   const reportsQuery = useQuery({
-    queryKey: ["admin", "reports"],
+    queryKey: ['admin', 'reports'],
     queryFn: () => adminService.getReports(),
     enabled,
-  });
+  })
 
   const errorsQuery = useQuery({
-    queryKey: ["admin", "errors"],
+    queryKey: ['admin', 'errors'],
     queryFn: () => adminService.getErrorLogs(),
     enabled,
-  });
+  })
 
   const moderationQuery = useQuery({
-    queryKey: ["admin", "moderation"],
+    queryKey: ['admin', 'moderation'],
     queryFn: () => adminService.getModerationLog(),
     enabled,
-  });
+  })
 
   const invalidate = () => {
-    void queryClient.invalidateQueries({ queryKey: ["admin"] });
-    void queryClient.invalidateQueries({ queryKey: ["social"] });
-  };
+    void queryClient.invalidateQueries({ queryKey: ['admin'] })
+    void queryClient.invalidateQueries({ queryKey: ['social'] })
+  }
 
   const resolveMutation = useMutation({
-    mutationFn: ({ id, status }: { id: string; status: "resolved" | "dismissed" }) =>
-      adminService.resolveReport(id, status),
+    mutationFn: ({
+      id,
+      status,
+    }: {
+      id: string
+      status: 'resolved' | 'dismissed'
+    }) => adminService.resolveReport(id, status),
     onSuccess: invalidate,
-  });
+  })
 
   const adminMutation = useMutation({
     mutationFn: ({ userId, isAdmin }: { userId: string; isAdmin: boolean }) =>
       adminService.setAdmin(userId, isAdmin),
     onSuccess: invalidate,
-  });
+  })
 
   const deletePostMutation = useMutation({
-    mutationFn: ({ postId, reportId }: { postId: string; reportId: string | null }) =>
-      adminService.deletePost(postId, reportId),
+    mutationFn: ({
+      postId,
+      reportId,
+    }: {
+      postId: string
+      reportId: string | null
+    }) => adminService.deletePost(postId, reportId),
     onSuccess: invalidate,
-  });
+  })
 
   const deleteCommentMutation = useMutation({
     mutationFn: (commentId: string) => adminService.deleteComment(commentId),
     onSuccess: invalidate,
-  });
+  })
 
   const suspendMutation = useMutation({
     mutationFn: ({
@@ -77,12 +87,12 @@ export function useAdmin(userSearch = "", userPage = 0) {
       days,
       reportId,
     }: {
-      userId: string;
-      days: number;
-      reportId: string | null;
+      userId: string
+      days: number
+      reportId: string | null
     }) => adminService.suspendUser(userId, days, reportId),
     onSuccess: invalidate,
-  });
+  })
 
   return {
     metrics: metricsQuery.data ?? null,
@@ -92,7 +102,8 @@ export function useAdmin(userSearch = "", userPage = 0) {
     reports: reportsQuery.data ?? [],
     errorLogs: errorsQuery.data ?? [],
     moderationLog: moderationQuery.data ?? [],
-    isLoading: metricsQuery.isLoading || reportsQuery.isLoading || errorsQuery.isLoading,
+    isLoading:
+      metricsQuery.isLoading || reportsQuery.isLoading || errorsQuery.isLoading,
     error:
       (metricsQuery.error as Error | null) ??
       (usersQuery.error as Error | null) ??
@@ -101,16 +112,16 @@ export function useAdmin(userSearch = "", userPage = 0) {
       (moderationQuery.error as Error | null) ??
       null,
     refetch: () => {
-      void metricsQuery.refetch();
-      void usersQuery.refetch();
-      void reportsQuery.refetch();
-      void errorsQuery.refetch();
-      void moderationQuery.refetch();
+      void metricsQuery.refetch()
+      void usersQuery.refetch()
+      void reportsQuery.refetch()
+      void errorsQuery.refetch()
+      void moderationQuery.refetch()
     },
     resolveReport: resolveMutation.mutateAsync,
     setAdmin: adminMutation.mutateAsync,
     deletePost: deletePostMutation.mutateAsync,
     deleteComment: deleteCommentMutation.mutateAsync,
     suspendUser: suspendMutation.mutateAsync,
-  };
+  }
 }

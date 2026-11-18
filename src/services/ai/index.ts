@@ -1,28 +1,28 @@
-import { supabase } from "@/lib/supabase";
-import { normalizeGoal, sanitizeSuggestions } from "./sanitize";
+import { supabase } from '@/lib/supabase'
+import { normalizeGoal, sanitizeSuggestions } from './sanitize'
 import {
   AiUnavailableError,
   type AiProvider,
   type RitualSuggestion,
   type SuggestRitualsInput,
-} from "./types";
+} from './types'
 
-export type { AiProvider, RitualSuggestion, SuggestRitualsInput } from "./types";
-export { AiUnavailableError } from "./types";
+export type { AiProvider, RitualSuggestion, SuggestRitualsInput } from './types'
+export { AiUnavailableError } from './types'
 
 /** Feature flag: AI entry points stay hidden unless VITE_AI_ENABLED is "true". */
 export function isAiEnabled(): boolean {
-  return import.meta.env.VITE_AI_ENABLED === "true";
+  return import.meta.env.VITE_AI_ENABLED === 'true'
 }
 
 /** Default provider: the feature is off, every call is rejected. */
 export const disabledProvider: AiProvider = {
-  id: "disabled",
+  id: 'disabled',
   available: false,
   async suggestRituals(): Promise<RitualSuggestion[]> {
-    throw new AiUnavailableError();
+    throw new AiUnavailableError()
   },
-};
+}
 
 /**
  * Calls the authenticated `ai-suggest-rituals` Edge Function. The function owns
@@ -30,19 +30,24 @@ export const disabledProvider: AiProvider = {
  * model directly.
  */
 export const edgeFunctionProvider: AiProvider = {
-  id: "supabase-edge",
+  id: 'supabase-edge',
   available: true,
-  async suggestRituals(input: SuggestRitualsInput): Promise<RitualSuggestion[]> {
-    const goal = normalizeGoal(input.goal);
-    if (!goal) return [];
-    const { data, error } = await supabase.functions.invoke("ai-suggest-rituals", {
-      body: { goal, locale: input.locale },
-    });
-    if (error) throw error;
-    return sanitizeSuggestions(data);
+  async suggestRituals(
+    input: SuggestRitualsInput,
+  ): Promise<RitualSuggestion[]> {
+    const goal = normalizeGoal(input.goal)
+    if (!goal) return []
+    const { data, error } = await supabase.functions.invoke(
+      'ai-suggest-rituals',
+      {
+        body: { goal, locale: input.locale },
+      },
+    )
+    if (error) throw error
+    return sanitizeSuggestions(data)
   },
-};
+}
 
 export function getAiProvider(): AiProvider {
-  return isAiEnabled() ? edgeFunctionProvider : disabledProvider;
+  return isAiEnabled() ? edgeFunctionProvider : disabledProvider
 }

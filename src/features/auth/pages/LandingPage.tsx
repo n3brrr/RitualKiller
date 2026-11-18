@@ -1,5 +1,5 @@
-import { useLayoutEffect, useRef, type ReactNode } from "react";
-import { Link } from "react-router-dom";
+import { useLayoutEffect, useRef, type ReactNode } from 'react'
+import { Link } from 'react-router-dom'
 import {
   ArrowRight,
   Check,
@@ -8,12 +8,12 @@ import {
   Lock,
   Skull,
   Trophy,
-} from "lucide-react";
-import { useI18n, type TranslationKey } from "@/i18n";
-import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
+} from 'lucide-react'
+import { useI18n, type TranslationKey } from '@/i18n'
+import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher'
 
-function CTA({ className = "" }: { className?: string }) {
-  const { t } = useI18n();
+function CTA({ className = '' }: { className?: string }) {
+  const { t } = useI18n()
   return (
     <Link
       to="/login"
@@ -23,10 +23,10 @@ function CTA({ className = "" }: { className?: string }) {
         aria-hidden="true"
         className="absolute inset-0 translate-y-full bg-ritual-accent transition-transform duration-300 group-hover:translate-y-0 group-focus-visible:translate-y-0"
       />
-      <span className="relative z-10">{t("landing.cta")}</span>
+      <span className="relative z-10">{t('landing.cta')}</span>
       <ArrowRight size={16} className="relative z-10" aria-hidden="true" />
     </Link>
-  );
+  )
 }
 
 function Frame({ label, children }: { label: string; children: ReactNode }) {
@@ -40,7 +40,7 @@ function Frame({ label, children }: { label: string; children: ReactNode }) {
       </div>
       {children}
     </div>
-  );
+  )
 }
 
 function Section({
@@ -51,12 +51,12 @@ function Section({
   flip = false,
   children,
 }: {
-  id: string;
-  eyebrow: string;
-  title: string;
-  copy: string;
-  flip?: boolean;
-  children: ReactNode;
+  id: string
+  eyebrow: string
+  title: string
+  copy: string
+  flip?: boolean
+  children: ReactNode
 }) {
   return (
     <section
@@ -65,7 +65,7 @@ function Section({
       aria-labelledby={`section-${id}`}
     >
       <div className="mx-auto grid max-w-6xl gap-10 px-5 py-16 md:grid-cols-[0.9fr_1.1fr] md:items-center md:py-24">
-        <div className={flip ? "md:order-2" : undefined}>
+        <div className={flip ? 'md:order-2' : undefined}>
           <span className="font-mono text-xs uppercase tracking-[0.3em] text-ritual-accent">
             {eyebrow}
           </span>
@@ -77,75 +77,82 @@ function Section({
           </h2>
           <p className="mt-4 max-w-md text-zinc-400">{copy}</p>
         </div>
-        <div aria-hidden="true" className={flip ? "md:order-1" : undefined}>
+        <div aria-hidden="true" className={flip ? 'md:order-1' : undefined}>
           {children}
         </div>
       </div>
     </section>
-  );
+  )
 }
 
-const RITUALS: Array<{ titleKey: TranslationKey; reward: string; done: boolean }> = [
-  { titleKey: "landing.ritual.meditate", reward: "+15", done: true },
-  { titleKey: "landing.ritual.read", reward: "+10", done: true },
-  { titleKey: "landing.ritual.train", reward: "+20", done: false },
-];
+const RITUALS: Array<{
+  titleKey: TranslationKey
+  reward: string
+  done: boolean
+}> = [
+  { titleKey: 'landing.ritual.meditate', reward: '+15', done: true },
+  { titleKey: 'landing.ritual.read', reward: '+10', done: true },
+  { titleKey: 'landing.ritual.train', reward: '+20', done: false },
+]
 
 const HEATMAP = [
-  0, 1, 2, 1, 3, 2, 1, 0, 1, 2, 3, 2, 1, 2, 0, 2, 3, 3, 1, 0, 1, 2, 2, 3, 1, 2, 0, 1,
-];
+  0, 1, 2, 1, 3, 2, 1, 0, 1, 2, 3, 2, 1, 2, 0, 2, 3, 3, 1, 0, 1, 2, 2, 3, 1, 2,
+  0, 1,
+]
 
 const HEATMAP_STYLES = [
-  "bg-zinc-900",
-  "bg-ritual-accent/20",
-  "bg-ritual-accent/40",
-  "bg-ritual-accent/70",
-];
+  'bg-zinc-900',
+  'bg-ritual-accent/20',
+  'bg-ritual-accent/40',
+  'bg-ritual-accent/70',
+]
 
 export default function LandingPage() {
-  const rootRef = useRef<HTMLDivElement>(null);
-  const { t, locale } = useI18n();
-  const number = (value: number) => value.toLocaleString(locale);
+  const rootRef = useRef<HTMLDivElement>(null)
+  const { t, locale } = useI18n()
+  const number = (value: number) => value.toLocaleString(locale)
 
   useLayoutEffect(() => {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
 
-    let cancelled = false;
-    let context: { revert: () => void } | undefined;
+    let cancelled = false
+    let context: { revert: () => void } | undefined
 
     void (async () => {
       const [{ gsap }, { ScrollTrigger }] = await Promise.all([
-        import("gsap"),
-        import("gsap/ScrollTrigger"),
-      ]);
-      if (cancelled) return;
+        import('gsap'),
+        import('gsap/ScrollTrigger'),
+      ])
+      if (cancelled) return
 
-      gsap.registerPlugin(ScrollTrigger);
+      gsap.registerPlugin(ScrollTrigger)
       context = gsap.context(() => {
-        gsap.from("[data-hero]", {
+        gsap.from('[data-hero]', {
           y: 12,
           duration: 0.6,
           stagger: 0.08,
-          ease: "power2.out",
-        });
+          ease: 'power2.out',
+        })
 
-        for (const element of gsap.utils.toArray("[data-reveal]") as HTMLElement[]) {
+        for (const element of gsap.utils.toArray(
+          '[data-reveal]',
+        ) as HTMLElement[]) {
           gsap.from(element, {
             y: 16,
             opacity: 0,
             duration: 0.6,
-            ease: "power2.out",
-            scrollTrigger: { trigger: element, start: "top 85%", once: true },
-          });
+            ease: 'power2.out',
+            scrollTrigger: { trigger: element, start: 'top 85%', once: true },
+          })
         }
-      }, rootRef);
-    })();
+      }, rootRef)
+    })()
 
     return () => {
-      cancelled = true;
-      context?.revert();
-    };
-  }, []);
+      cancelled = true
+      context?.revert()
+    }
+  }, [])
 
   return (
     <div
@@ -163,7 +170,11 @@ export default function LandingPage() {
             to="/"
             className="flex items-center gap-2 font-display text-sm font-bold uppercase tracking-widest text-white"
           >
-            <Skull size={22} className="text-ritual-accent" aria-hidden="true" />
+            <Skull
+              size={22}
+              className="text-ritual-accent"
+              aria-hidden="true"
+            />
             RitualKiller
           </Link>
           <div className="flex items-center gap-2">
@@ -172,7 +183,7 @@ export default function LandingPage() {
               to="/login"
               className="inline-flex min-h-11 items-center rounded-lg border border-zinc-800 px-4 font-display text-xs font-bold uppercase tracking-widest text-zinc-300 transition-colors hover:border-ritual-accent hover:text-ritual-accent"
             >
-              {t("landing.enter")}
+              {t('landing.enter')}
             </Link>
           </div>
         </div>
@@ -191,28 +202,34 @@ export default function LandingPage() {
               data-hero
               className="mt-4 font-display text-4xl font-black leading-[1.05] text-white sm:text-5xl md:text-6xl"
             >
-              {t("landing.headline")}
+              {t('landing.headline')}
               <span className="mt-2 block text-ritual-accent">
-                {t("landing.headlineAccent")}
+                {t('landing.headlineAccent')}
               </span>
             </h1>
-            <p data-hero className="mt-5 max-w-lg text-lg leading-relaxed text-zinc-400">
-              {t("landing.intro")}
+            <p
+              data-hero
+              className="mt-5 max-w-lg text-lg leading-relaxed text-zinc-400"
+            >
+              {t('landing.intro')}
             </p>
             <div data-hero className="mt-8">
               <CTA />
             </div>
-            <p data-hero className="mt-4 text-xs uppercase tracking-widest text-zinc-400">
-              {t("landing.tagline")}
+            <p
+              data-hero
+              className="mt-4 text-xs uppercase tracking-widest text-zinc-400"
+            >
+              {t('landing.tagline')}
             </p>
           </div>
 
           <div data-hero aria-hidden="true">
-            <Frame label={t("landing.frame.altar")}>
+            <Frame label={t('landing.frame.altar')}>
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <p className="text-xs uppercase tracking-widest text-zinc-400">
-                    {t("landing.essence")}
+                    {t('landing.essence')}
                   </p>
                   <p className="font-mono text-3xl font-bold text-ritual-accent">
                     {number(1850)}
@@ -220,10 +237,10 @@ export default function LandingPage() {
                 </div>
                 <div className="text-right">
                   <p className="text-xs uppercase tracking-widest text-zinc-400">
-                    {t("landing.rank")}
+                    {t('landing.rank')}
                   </p>
                   <p className="font-display text-lg font-bold text-white">
-                    {t("rank.warlock")}
+                    {t('rank.warlock')}
                   </p>
                 </div>
               </div>
@@ -237,9 +254,13 @@ export default function LandingPage() {
               </div>
 
               <div className="mt-5 flex items-center gap-2 rounded-lg border border-yellow-500/20 bg-yellow-500/5 px-3 py-2">
-                <Flame size={16} className="text-yellow-500" aria-hidden="true" />
+                <Flame
+                  size={16}
+                  className="text-yellow-500"
+                  aria-hidden="true"
+                />
                 <span className="font-mono text-sm text-yellow-500">
-                  {t("landing.streakDays")}
+                  {t('landing.streakDays')}
                 </span>
               </div>
 
@@ -249,11 +270,15 @@ export default function LandingPage() {
                 </span>
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium text-white">
-                    {t("landing.ritual.meditate")}
+                    {t('landing.ritual.meditate')}
                   </p>
-                  <p className="text-xs text-zinc-400">{t("landing.doneToday")}</p>
+                  <p className="text-xs text-zinc-400">
+                    {t('landing.doneToday')}
+                  </p>
                 </div>
-                <span className="font-mono text-sm text-ritual-accent">+15</span>
+                <span className="font-mono text-sm text-ritual-accent">
+                  +15
+                </span>
               </div>
             </Frame>
           </div>
@@ -261,11 +286,11 @@ export default function LandingPage() {
 
         <Section
           id="rituals"
-          eyebrow={t("landing.rituals.eyebrow")}
-          title={t("landing.rituals.title")}
-          copy={t("landing.rituals.copy")}
+          eyebrow={t('landing.rituals.eyebrow')}
+          title={t('landing.rituals.title')}
+          copy={t('landing.rituals.copy')}
         >
-          <Frame label={t("landing.rituals.frame")}>
+          <Frame label={t('landing.rituals.frame')}>
             <ul className="space-y-2">
               {RITUALS.map((ritual) => (
                 <li
@@ -275,29 +300,31 @@ export default function LandingPage() {
                   <span
                     className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 ${
                       ritual.done
-                        ? "border-ritual-accent bg-ritual-accent text-black"
-                        : "border-zinc-700 text-zinc-400"
+                        ? 'border-ritual-accent bg-ritual-accent text-black'
+                        : 'border-zinc-700 text-zinc-400'
                     }`}
                   >
                     <Check size={16} aria-hidden="true" />
                   </span>
                   <span
                     className={`min-w-0 flex-1 truncate text-sm ${
-                      ritual.done ? "text-zinc-400 line-through" : "text-white"
+                      ritual.done ? 'text-zinc-400 line-through' : 'text-white'
                     }`}
                   >
                     {t(ritual.titleKey)}
                   </span>
-                  <span className="font-mono text-xs text-zinc-400">{ritual.reward}</span>
+                  <span className="font-mono text-xs text-zinc-400">
+                    {ritual.reward}
+                  </span>
                 </li>
               ))}
             </ul>
             <div className="mt-4 flex items-center justify-between border-t border-zinc-900 pt-3 text-sm">
               <span className="inline-flex items-center gap-2 text-yellow-500">
-                <Flame size={15} aria-hidden="true" /> {t("landing.streakDays")}
+                <Flame size={15} aria-hidden="true" /> {t('landing.streakDays')}
               </span>
               <span className="font-mono text-xs text-ritual-accent">
-                {t("landing.rituals.essenceToday")}
+                {t('landing.rituals.essenceToday')}
               </span>
             </div>
           </Frame>
@@ -305,34 +332,38 @@ export default function LandingPage() {
 
         <Section
           id="goals"
-          eyebrow={t("landing.goals.eyebrow")}
-          title={t("landing.goals.title")}
-          copy={t("landing.goals.copy")}
+          eyebrow={t('landing.goals.eyebrow')}
+          title={t('landing.goals.title')}
+          copy={t('landing.goals.copy')}
           flip
         >
-          <Frame label={t("landing.goals.frame")}>
+          <Frame label={t('landing.goals.frame')}>
             <div className="flex items-start justify-between gap-4">
               <div>
                 <p className="text-sm font-medium text-white">
-                  {t("landing.goals.example")}
+                  {t('landing.goals.example')}
                 </p>
-                <p className="mt-1 text-xs text-zinc-400">{t("landing.goals.due")}</p>
+                <p className="mt-1 text-xs text-zinc-400">
+                  {t('landing.goals.due')}
+                </p>
               </div>
-              <span className="font-mono text-2xl font-bold text-ritual-accent">58%</span>
+              <span className="font-mono text-2xl font-bold text-ritual-accent">
+                58%
+              </span>
             </div>
             <div className="mt-4 h-2 overflow-hidden rounded-full bg-zinc-900">
               <div className="h-full w-[58%] rounded-full bg-ritual-accent" />
             </div>
             <div className="mt-2 flex justify-between text-xs text-zinc-400">
-              <span>{t("landing.goals.progress")}</span>
-              <span>{t("landing.goals.remaining")}</span>
+              <span>{t('landing.goals.progress')}</span>
+              <span>{t('landing.goals.remaining')}</span>
             </div>
             <div className="mt-4 flex flex-wrap gap-2">
               <span className="rounded-lg border border-zinc-800 px-2 py-1 text-xs text-zinc-400">
-                {t("landing.ritual.read")}
+                {t('landing.ritual.read')}
               </span>
               <span className="rounded-lg border border-zinc-800 px-2 py-1 text-xs text-zinc-400">
-                {t("landing.goals.activeStreak")}
+                {t('landing.goals.activeStreak')}
               </span>
             </div>
           </Frame>
@@ -340,42 +371,42 @@ export default function LandingPage() {
 
         <Section
           id="coven"
-          eyebrow={t("landing.coven.eyebrow")}
-          title={t("landing.coven.title")}
-          copy={t("landing.coven.copy")}
+          eyebrow={t('landing.coven.eyebrow')}
+          title={t('landing.coven.title')}
+          copy={t('landing.coven.copy')}
         >
-          <Frame label={t("nav.social")}>
+          <Frame label={t('nav.social')}>
             <div className="flex items-center gap-3">
               <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-zinc-700 bg-zinc-800 font-display font-bold text-ritual-accent">
                 V
               </span>
               <div className="min-w-0 flex-1">
                 <p className="text-sm text-zinc-200">
-                  <span className="font-bold text-white">Vex</span>{" "}
-                  {t("landing.coven.activity")}
+                  <span className="font-bold text-white">Vex</span>{' '}
+                  {t('landing.coven.activity')}
                 </p>
                 <p className="text-xs uppercase tracking-wider text-zinc-400">
-                  {t("landing.coven.when")}
+                  {t('landing.coven.when')}
                 </p>
               </div>
               <span className="font-mono text-xs text-ritual-accent">+15</span>
             </div>
             <div className="mt-4 flex items-center gap-2 border-t border-zinc-900 pt-3 text-xs text-zinc-400">
               <Flame size={14} className="text-yellow-500" aria-hidden="true" />
-              {t("landing.coven.members")}
+              {t('landing.coven.members')}
             </div>
           </Frame>
         </Section>
 
         <Section
           id="market"
-          eyebrow={t("landing.market.eyebrow")}
-          title={t("landing.market.title")}
-          copy={t("landing.market.copy")}
+          eyebrow={t('landing.market.eyebrow')}
+          title={t('landing.market.title')}
+          copy={t('landing.market.copy')}
           flip
         >
           <div className="grid gap-4 sm:grid-cols-2">
-            <Frame label={t("nav.shop")}>
+            <Frame label={t('nav.shop')}>
               <div className="flex items-start justify-between gap-2">
                 <FlaskConical
                   size={32}
@@ -383,24 +414,26 @@ export default function LandingPage() {
                   aria-hidden="true"
                 />
                 <span className="rounded border border-zinc-800 px-2 py-0.5 text-xs uppercase tracking-wider text-zinc-400">
-                  {t("rarity.rare")}
+                  {t('rarity.rare')}
                 </span>
               </div>
-              <p className="mt-3 text-sm font-bold text-white">Elixir de disciplina</p>
+              <p className="mt-3 text-sm font-bold text-white">
+                Elixir de disciplina
+              </p>
               <p className="mt-1 text-xs leading-relaxed text-zinc-400">
-                {t("landing.market.elixirDescription")}
+                {t('landing.market.elixirDescription')}
               </p>
               <div className="mt-4 flex items-center justify-between border-t border-zinc-900 pt-3">
                 <span className="font-mono text-sm text-ritual-accent">
-                  {t("landing.market.price")}
+                  {t('landing.market.price')}
                 </span>
                 <span className="rounded-lg border border-ritual-accent/40 px-3 py-1 text-xs font-bold uppercase tracking-wider text-ritual-accent">
-                  {t("shop.buy")}
+                  {t('shop.buy')}
                 </span>
               </div>
             </Frame>
 
-            <Frame label={t("nav.inventory")}>
+            <Frame label={t('nav.inventory')}>
               <div className="flex items-start justify-between gap-2">
                 <FlaskConical
                   size={32}
@@ -411,16 +444,18 @@ export default function LandingPage() {
                   x1
                 </span>
               </div>
-              <p className="mt-3 text-sm font-bold text-white">Elixir de disciplina</p>
+              <p className="mt-3 text-sm font-bold text-white">
+                Elixir de disciplina
+              </p>
               <p className="mt-1 text-xs leading-relaxed text-zinc-400">
-                {t("landing.market.bought")}
+                {t('landing.market.bought')}
               </p>
               <div className="mt-4 flex items-center justify-between border-t border-zinc-900 pt-3">
                 <span className="text-xs uppercase tracking-wider text-zinc-400">
-                  {t("landing.market.inInventory")}
+                  {t('landing.market.inInventory')}
                 </span>
                 <span className="rounded-lg border border-zinc-700 px-3 py-1 text-xs font-bold uppercase tracking-wider text-zinc-300">
-                  {t("inventory.use")}
+                  {t('inventory.use')}
                 </span>
               </div>
             </Frame>
@@ -429,11 +464,11 @@ export default function LandingPage() {
 
         <Section
           id="analytics"
-          eyebrow={t("landing.analytics.eyebrow")}
-          title={t("landing.analytics.title")}
-          copy={t("landing.analytics.copy")}
+          eyebrow={t('landing.analytics.eyebrow')}
+          title={t('landing.analytics.title')}
+          copy={t('landing.analytics.copy')}
         >
-          <Frame label={t("landing.analytics.frame")}>
+          <Frame label={t('landing.analytics.frame')}>
             <div className="grid grid-cols-[repeat(14,minmax(0,1fr))] gap-1">
               {HEATMAP.map((level, index) => (
                 <span
@@ -444,13 +479,17 @@ export default function LandingPage() {
             </div>
             <div className="mt-4 grid gap-2 sm:grid-cols-2">
               <div className="flex items-center gap-2 rounded-xl border border-yellow-500/30 bg-yellow-500/5 p-3">
-                <Trophy size={18} className="text-yellow-500" aria-hidden="true" />
+                <Trophy
+                  size={18}
+                  className="text-yellow-500"
+                  aria-hidden="true"
+                />
                 <div>
                   <p className="text-xs font-bold text-white">
-                    {t("achievement.ach-streak-7.name")}
+                    {t('achievement.ach-streak-7.name')}
                   </p>
                   <p className="text-xs text-zinc-400">
-                    {t("notifications.achievementTitle")}
+                    {t('notifications.achievementTitle')}
                   </p>
                 </div>
               </div>
@@ -458,10 +497,10 @@ export default function LandingPage() {
                 <Lock size={18} className="text-zinc-400" aria-hidden="true" />
                 <div>
                   <p className="text-xs font-bold text-zinc-400">
-                    {t("landing.analytics.locked")}
+                    {t('landing.analytics.locked')}
                   </p>
                   <p className="text-xs text-zinc-400">
-                    {t("landing.analytics.lockedDetail")}
+                    {t('landing.analytics.lockedDetail')}
                   </p>
                 </div>
               </div>
@@ -470,19 +509,24 @@ export default function LandingPage() {
         </Section>
 
         <section className="border-t border-zinc-900/80">
-          <div data-reveal className="mx-auto max-w-3xl px-5 py-20 text-center md:py-28">
+          <div
+            data-reveal
+            className="mx-auto max-w-3xl px-5 py-20 text-center md:py-28"
+          >
             <Skull
               size={40}
               className="mx-auto text-ritual-accent/60"
               aria-hidden="true"
             />
             <h2 className="mt-5 font-display text-3xl font-black leading-tight text-white md:text-5xl">
-              {t("landing.headline")}
+              {t('landing.headline')}
               <span className="mt-2 block text-ritual-accent">
-                {t("landing.headlineAccent")}
+                {t('landing.headlineAccent')}
               </span>
             </h2>
-            <p className="mx-auto mt-4 max-w-xl text-zinc-400">{t("landing.final")}</p>
+            <p className="mx-auto mt-4 max-w-xl text-zinc-400">
+              {t('landing.final')}
+            </p>
             <div className="mt-8">
               <CTA />
             </div>
@@ -493,14 +537,21 @@ export default function LandingPage() {
       <footer className="border-t border-zinc-900 py-8">
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-3 px-5 text-xs text-zinc-400 sm:flex-row">
           <span className="inline-flex items-center gap-2">
-            <Skull size={14} className="text-ritual-accent/70" aria-hidden="true" />
+            <Skull
+              size={14}
+              className="text-ritual-accent/70"
+              aria-hidden="true"
+            />
             RitualKiller · 2026
           </span>
-          <Link to="/login" className="transition-colors hover:text-ritual-accent">
-            {t("landing.footerEnter")}
+          <Link
+            to="/login"
+            className="transition-colors hover:text-ritual-accent"
+          >
+            {t('landing.footerEnter')}
           </Link>
         </div>
       </footer>
     </div>
-  );
+  )
 }
