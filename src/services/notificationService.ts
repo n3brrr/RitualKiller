@@ -23,14 +23,16 @@ function mapNotification(row: NotificationRow): Notification {
   };
 }
 
+export const NOTIFICATIONS_PAGE = 50;
+
 export const notificationService = {
-  async list(userId: string): Promise<Notification[]> {
+  async list(userId: string, limit = NOTIFICATIONS_PAGE): Promise<Notification[]> {
     const { data, error } = await supabase
       .from("notifications")
       .select("id, type, title, message, data, read, created_at")
       .eq("user_id", userId)
       .order("created_at", { ascending: false })
-      .limit(50);
+      .limit(limit);
     if (error) throw error;
     return ((data ?? []) as NotificationRow[]).map(mapNotification);
   },

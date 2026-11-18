@@ -1,17 +1,27 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { useAuth } from "@/features/auth/useAuth";
-import { notificationService } from "@/services/notificationService";
+import { NOTIFICATIONS_PAGE, notificationService } from "@/services/notificationService";
 
 export function useNotifications() {
   const { user } = useAuth();
   const userId = user?.id;
   const queryClient = useQueryClient();
 
+  // The list grows by one page each time the user asks for more.
+  const [limit, setLimit] = useState(NOTIFICATIONS_PAGE);
+
   const query = useQuery({
-    queryKey: ["notifications", userId],
-    queryFn: () => notificationService.list(userId!),
+    queryKey: ["notifications", userId, limit],
+    queryFn: () => notificationService.list(userId!, limit),
     enabled: Boolean(userId),
     refetchInterval: 60_000,
+    placeholderData: keepPreviousData,
   });
 
   const invalidate = () =>
@@ -37,6 +47,10 @@ export function useNotifications() {
   return {
     notifications,
     unreadCount: notifications.filter((notification) => !notification.read).length,
+    /** A full page suggests there are older notifications to load. */
+    hasMore: notifications.length >= limit,
+    loadMore: () => setLimit((current) => current + NOTIFICATIONS_PAGE),
+    isFetching: query.isFetching,
     isLoading: query.isLoading,
     error: (query.error as Error | null) ?? null,
     refetch: query.refetch,

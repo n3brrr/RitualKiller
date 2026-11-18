@@ -12,6 +12,9 @@ export default function NotificationsPage() {
   const {
     notifications,
     unreadCount,
+    hasMore,
+    loadMore,
+    isFetching,
     isLoading,
     error,
     refetch,
@@ -130,6 +133,18 @@ export default function NotificationsPage() {
             </li>
           ))}
         </ul>
+      )}
+      {hasMore && (
+        <div className="flex justify-center">
+          <button
+            type="button"
+            onClick={loadMore}
+            disabled={isFetching}
+            className="inline-flex min-h-11 items-center rounded-lg border border-zinc-700 px-4 text-sm text-zinc-300 transition-colors hover:border-ritual-accent hover:text-ritual-accent disabled:opacity-50"
+          >
+            {t("notifications.loadMore")}
+          </button>
+        </div>
       )}
     </div>
   );
