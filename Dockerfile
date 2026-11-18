@@ -1,7 +1,9 @@
 # syntax=docker/dockerfile:1
 FROM node:22.21-alpine AS build
 WORKDIR /app
-RUN corepack enable
+# Corepack cannot unpack pnpm 12 (no bin/pnpm.cjs), so install it with npm.
+# Keep the version in sync with "packageManager" in package.json.
+RUN npm install -g pnpm@12.6.0
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 RUN pnpm install --frozen-lockfile
 COPY . .
