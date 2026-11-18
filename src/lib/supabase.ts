@@ -1,20 +1,20 @@
-import { createClient } from "@supabase/supabase-js";
+import { createClient } from '@supabase/supabase-js'
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
-export const isSupabaseConfigured = Boolean(supabaseUrl && supabaseKey);
+export const isSupabaseConfigured = Boolean(supabaseUrl && supabaseKey)
 
 if (!isSupabaseConfigured) {
   console.warn(
-    "Supabase credentials missing. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in .env. " +
-      "The app will render but authenticated features will not work.",
-  );
+    'Supabase credentials missing. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in .env. ' +
+      'The app will render but authenticated features will not work.',
+  )
 }
 
 export const supabase = createClient(
-  supabaseUrl || "https://placeholder.supabase.co",
-  supabaseKey || "placeholder-anon-key",
+  supabaseUrl || 'https://placeholder.supabase.co',
+  supabaseKey || 'placeholder-anon-key',
   {
     auth: {
       persistSession: true,
@@ -22,4 +22,4 @@ export const supabase = createClient(
       detectSessionInUrl: true,
     },
   },
-);
+)

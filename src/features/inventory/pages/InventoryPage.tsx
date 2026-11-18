@@ -1,92 +1,96 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
-import { Package, ShoppingBag, Zap } from "lucide-react";
-import { useShop } from "@/hooks/useShop";
-import { shopItemKey, useI18n } from "@/i18n";
-import { errorMessage } from "@/lib/errors";
-import { shopItemIcon } from "@/data/items";
-import { formatDateTime } from "@/utils/dates";
-import Loading from "@/components/animations/Loading";
-import { ErrorState } from "@/components/ui/ErrorState";
-import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { useState } from 'react'
+import { Link } from 'react-router-dom'
+import { Package, ShoppingBag, Zap } from 'lucide-react'
+import { useShop } from '@/hooks/useShop'
+import { shopItemKey, useI18n } from '@/i18n'
+import { errorMessage } from '@/lib/errors'
+import { shopItemIcon } from '@/data/items'
+import { formatDateTime } from '@/utils/dates'
+import Loading from '@/components/animations/Loading'
+import { ErrorState } from '@/components/ui/ErrorState'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 
 export default function InventoryPage() {
-  const { items, quantities, buffs, isLoading, consume, error, refetch } = useShop();
-  const { t, locale } = useI18n();
+  const { items, quantities, buffs, isLoading, consume, error, refetch } =
+    useShop()
+  const { t, locale } = useI18n()
   const [feedback, setFeedback] = useState<{
-    tone: "success" | "error";
-    text: string;
-  } | null>(null);
-  const [pendingId, setPendingId] = useState<string | null>(null);
-  const [confirmUse, setConfirmUse] = useState<{ id: string; name: string } | null>(null);
+    tone: 'success' | 'error'
+    text: string
+  } | null>(null)
+  const [pendingId, setPendingId] = useState<string | null>(null)
+  const [confirmUse, setConfirmUse] = useState<{
+    id: string
+    name: string
+  } | null>(null)
 
-  if (isLoading) return <Loading />;
+  if (isLoading) return <Loading />
   if (error) {
     return (
       <div className="mx-auto max-w-3xl">
         <ErrorState
-          title={t("inventory.errorTitle")}
+          title={t('inventory.errorTitle')}
           message={errorMessage(error, t)}
           onRetry={() => void refetch()}
         />
       </div>
-    );
+    )
   }
 
   const handleConsume = async (itemId: string, name: string) => {
-    setPendingId(itemId);
-    setFeedback(null);
+    setPendingId(itemId)
+    setFeedback(null)
     try {
-      const result = await consume(itemId);
+      const result = await consume(itemId)
       if (!result.success) {
         setFeedback({
-          tone: "error",
+          tone: 'error',
           text:
-            result.reason === "not_owned"
-              ? t("inventory.notOwned")
-              : result.reason === "nothing_to_restore"
-                ? t("inventory.nothingToRestore")
-                : result.reason === "passive_item"
-                  ? t("inventory.passive")
-                  : t("inventory.useError"),
-        });
+            result.reason === 'not_owned'
+              ? t('inventory.notOwned')
+              : result.reason === 'nothing_to_restore'
+                ? t('inventory.nothingToRestore')
+                : result.reason === 'passive_item'
+                  ? t('inventory.passive')
+                  : t('inventory.useError'),
+        })
       } else {
         setFeedback({
-          tone: "success",
+          tone: 'success',
           text: result.restored
-            ? t("inventory.usedWithRestored", { name, count: result.restored })
-            : t("inventory.usedItem", { name }),
-        });
+            ? t('inventory.usedWithRestored', { name, count: result.restored })
+            : t('inventory.usedItem', { name }),
+        })
       }
     } catch (consumeError) {
       setFeedback({
-        tone: "error",
+        tone: 'error',
         text: errorMessage(consumeError, t),
-      });
+      })
     } finally {
-      setPendingId(null);
+      setPendingId(null)
     }
-  };
+  }
 
-  const owned = items.filter((item) => (quantities[item.id] ?? 0) > 0);
+  const owned = items.filter((item) => (quantities[item.id] ?? 0) > 0)
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <header>
         <h1 className="flex items-center gap-2 font-display text-2xl font-bold sm:text-3xl">
           <Package className="text-ritual-accent" aria-hidden="true" />
-          {t("nav.inventory")}
+          {t('nav.inventory')}
         </h1>
-        <p className="text-sm text-zinc-400">{t("inventory.subtitle")}</p>
+        <p className="text-sm text-zinc-400">{t('inventory.subtitle')}</p>
       </header>
 
       {feedback && (
         <p
-          role={feedback.tone === "error" ? "alert" : "status"}
+          role={feedback.tone === 'error' ? 'alert' : 'status'}
           className={`rounded-lg border p-3 text-sm ${
-            feedback.tone === "error"
-              ? "border-red-500/30 bg-red-500/10 text-red-400"
-              : "border-ritual-accent/30 bg-ritual-accent/10 text-ritual-accent"
+            feedback.tone === 'error'
+              ? 'border-red-500/30 bg-red-500/10 text-red-400'
+              : 'border-ritual-accent/30 bg-ritual-accent/10 text-ritual-accent'
           }`}
         >
           {feedback.text}
@@ -96,27 +100,27 @@ export default function InventoryPage() {
       {buffs.length > 0 && (
         <section>
           <h2 className="mb-2 text-xs font-bold uppercase tracking-widest text-zinc-400">
-            {t("inventory.buffs")}
+            {t('inventory.buffs')}
           </h2>
           <ul className="space-y-2">
             {buffs.map((buff) => {
-              const item = items.find((shopItem) => shopItem.id === buff.itemId);
+              const item = items.find((shopItem) => shopItem.id === buff.itemId)
               return (
                 <li
                   key={buff.id}
                   className="flex items-center justify-between gap-2 rounded-lg border border-ritual-accent/30 bg-ritual-accent/5 p-3"
                 >
                   <span className="text-sm text-zinc-200">
-                    {item ? t(shopItemKey(item.id, "name")) : buff.itemId}
+                    {item ? t(shopItemKey(item.id, 'name')) : buff.itemId}
                   </span>
                   <span className="text-xs text-ritual-accent">
-                    {t("inventory.buffUntil", {
+                    {t('inventory.buffUntil', {
                       multiplier: buff.multiplier,
                       date: formatDateTime(buff.expiresAt, locale),
                     })}
                   </span>
                 </li>
-              );
+              )
             })}
           </ul>
         </section>
@@ -129,12 +133,13 @@ export default function InventoryPage() {
             size={28}
             aria-hidden="true"
           />
-          <p>{t("inventory.empty")}</p>
+          <p>{t('inventory.empty')}</p>
           <Link
             to="/app/shop"
             className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-lg bg-ritual-accent px-4 text-sm font-bold text-black transition-colors hover:bg-emerald-400"
           >
-            <ShoppingBag size={16} aria-hidden="true" /> {t("inventory.visitMarket")}
+            <ShoppingBag size={16} aria-hidden="true" />{' '}
+            {t('inventory.visitMarket')}
           </Link>
         </div>
       ) : (
@@ -150,14 +155,16 @@ export default function InventoryPage() {
                 </div>
                 <div className="min-w-0 flex-1">
                   <h2 className="font-bold text-white">
-                    {t(shopItemKey(item.id, "name"))}
+                    {t(shopItemKey(item.id, 'name'))}
                   </h2>
                   <p className="text-xs text-zinc-400">
-                    {t(shopItemKey(item.id, "description"))}
+                    {t(shopItemKey(item.id, 'description'))}
                   </p>
                   <p className="mt-1 text-xs text-zinc-400">
-                    {t("inventory.quantity")}:{" "}
-                    <strong className="text-ritual-accent">{quantities[item.id]}</strong>
+                    {t('inventory.quantity')}:{' '}
+                    <strong className="text-ritual-accent">
+                      {quantities[item.id]}
+                    </strong>
                   </p>
                 </div>
               </div>
@@ -165,17 +172,22 @@ export default function InventoryPage() {
                 <button
                   type="button"
                   onClick={() =>
-                    setConfirmUse({ id: item.id, name: t(shopItemKey(item.id, "name")) })
+                    setConfirmUse({
+                      id: item.id,
+                      name: t(shopItemKey(item.id, 'name')),
+                    })
                   }
                   disabled={pendingId === item.id}
                   className="mt-3 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg border border-zinc-700 text-sm font-bold text-zinc-200 hover:border-ritual-accent hover:text-ritual-accent disabled:cursor-not-allowed disabled:opacity-40"
                 >
-                  <Zap size={16} aria-hidden="true" />{" "}
-                  {pendingId === item.id ? t("inventory.using") : t("inventory.use")}
+                  <Zap size={16} aria-hidden="true" />{' '}
+                  {pendingId === item.id
+                    ? t('inventory.using')
+                    : t('inventory.use')}
                 </button>
               ) : (
                 <p className="mt-3 rounded-lg border border-ritual-accent/30 bg-ritual-accent/5 p-2 text-center text-xs font-bold uppercase tracking-wider text-ritual-accent">
-                  {t("inventory.passive")}
+                  {t('inventory.passive')}
                 </p>
               )}
             </article>
@@ -184,20 +196,22 @@ export default function InventoryPage() {
       )}
       <ConfirmDialog
         open={Boolean(confirmUse)}
-        title={t("inventory.confirmTitle")}
+        title={t('inventory.confirmTitle')}
         description={
-          confirmUse ? t("inventory.confirmPrompt", { name: confirmUse.name }) : ""
+          confirmUse
+            ? t('inventory.confirmPrompt', { name: confirmUse.name })
+            : ''
         }
-        confirmLabel={t("inventory.use")}
+        confirmLabel={t('inventory.use')}
         busy={Boolean(pendingId)}
         onConfirm={() => {
-          if (!confirmUse) return;
-          const item = confirmUse;
-          setConfirmUse(null);
-          void handleConsume(item.id, item.name);
+          if (!confirmUse) return
+          const item = confirmUse
+          setConfirmUse(null)
+          void handleConsume(item.id, item.name)
         }}
         onClose={() => setConfirmUse(null)}
       />
     </div>
-  );
+  )
 }

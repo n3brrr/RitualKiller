@@ -1,24 +1,24 @@
-import type { Ritual } from "@/types";
-import { Archive, Check, History, Pencil, Zap } from "lucide-react";
-import { difficultyKeys, frequencyKeys, useI18n } from "@/i18n";
+import type { Ritual } from '@/types'
+import { Archive, Check, History, Pencil, Zap } from 'lucide-react'
+import { difficultyKeys, frequencyKeys, useI18n } from '@/i18n'
 
 interface RitualCardProps {
-  ritual: Ritual;
-  isDone: boolean;
-  busy?: boolean;
-  onToggle: (ritual: Ritual) => void;
-  onEdit?: (ritual: Ritual) => void;
-  onDelete: (id: string) => void;
+  ritual: Ritual
+  isDone: boolean
+  busy?: boolean
+  onToggle: (ritual: Ritual) => void
+  onEdit?: (ritual: Ritual) => void
+  onDelete: (id: string) => void
   /** Daily rituals whose previous day is still open can be filled in. */
-  canMarkYesterday?: boolean;
-  onMarkYesterday?: (ritual: Ritual) => void;
+  canMarkYesterday?: boolean
+  onMarkYesterday?: (ritual: Ritual) => void
 }
 
 const DIFFICULTY_STYLES = {
-  novice: "border-green-900/60 text-green-500",
-  adept: "border-yellow-900/60 text-yellow-500",
-  master: "border-red-900/60 text-red-500",
-} as const;
+  novice: 'border-green-900/60 text-green-500',
+  adept: 'border-yellow-900/60 text-yellow-500',
+  master: 'border-red-900/60 text-red-500',
+} as const
 
 export function RitualCard({
   ritual,
@@ -30,27 +30,29 @@ export function RitualCard({
   canMarkYesterday = false,
   onMarkYesterday,
 }: RitualCardProps) {
-  const { t, tn } = useI18n();
+  const { t, tn } = useI18n()
   return (
     <article
       className={`relative flex items-start justify-between gap-3 rounded-xl border p-4 transition-colors sm:p-5 ${
         isDone
-          ? "border-ritual-accent/30 bg-ritual-accent/5"
-          : "border-zinc-800 bg-zinc-950 hover:border-zinc-700"
+          ? 'border-ritual-accent/30 bg-ritual-accent/5'
+          : 'border-zinc-800 bg-zinc-950 hover:border-zinc-700'
       }`}
     >
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-2">
           <h3
             className={`text-base font-bold sm:text-lg ${
-              isDone ? "text-ritual-accent line-through opacity-70" : "text-zinc-100"
+              isDone
+                ? 'text-ritual-accent line-through opacity-70'
+                : 'text-zinc-100'
             }`}
           >
             {ritual.title}
           </h3>
           {ritual.streak > 1 && (
             <span
-              aria-label={tn("habits.streakLabel", ritual.streak)}
+              aria-label={tn('habits.streakLabel', ritual.streak)}
               className="inline-flex items-center gap-1 rounded border border-yellow-500/20 bg-yellow-500/10 px-2 py-0.5 font-mono text-xs text-yellow-500"
             >
               <Zap size={10} fill="currentColor" aria-hidden="true" />
@@ -60,7 +62,9 @@ export function RitualCard({
         </div>
 
         {ritual.description && (
-          <p className="mt-1 line-clamp-2 text-sm text-zinc-400">{ritual.description}</p>
+          <p className="mt-1 line-clamp-2 text-sm text-zinc-400">
+            {ritual.description}
+          </p>
         )}
 
         <div className="mt-2 flex flex-wrap gap-1.5 text-xs uppercase tracking-wider">
@@ -73,7 +77,7 @@ export function RitualCard({
             {t(frequencyKeys[ritual.frequency])}
           </span>
           <span className="rounded border border-zinc-800 px-2 py-0.5 text-zinc-400">
-            +{ritual.essenceReward} {t("dashboard.essenceUnit")}
+            +{ritual.essenceReward} {t('dashboard.essenceUnit')}
           </span>
         </div>
       </div>
@@ -85,13 +89,13 @@ export function RitualCard({
           disabled={busy}
           aria-busy={busy}
           aria-label={`${
-            isDone ? t("habits.markUndone") : t("habits.markDone")
+            isDone ? t('habits.markUndone') : t('habits.markDone')
           } ${ritual.title}`}
           aria-pressed={isDone}
           className={`inline-flex h-11 w-11 items-center justify-center rounded-full border-2 transition-colors disabled:cursor-wait disabled:opacity-60 ${
             isDone
-              ? "border-ritual-accent bg-ritual-accent text-black"
-              : "border-zinc-700 text-zinc-400 hover:border-ritual-accent hover:text-ritual-accent"
+              ? 'border-ritual-accent bg-ritual-accent text-black'
+              : 'border-zinc-700 text-zinc-400 hover:border-ritual-accent hover:text-ritual-accent'
           }`}
         >
           <Check size={20} aria-hidden="true" />
@@ -101,8 +105,8 @@ export function RitualCard({
             type="button"
             onClick={() => onMarkYesterday(ritual)}
             disabled={busy}
-            title={t("habits.markYesterday")}
-            aria-label={t("habits.markYesterdayLabel", { name: ritual.title })}
+            title={t('habits.markYesterday')}
+            aria-label={t('habits.markYesterdayLabel', { name: ritual.title })}
             className="inline-flex h-11 w-11 items-center justify-center rounded-full text-zinc-400 transition-colors hover:text-ritual-accent disabled:cursor-wait disabled:opacity-60"
           >
             <History size={18} aria-hidden="true" />
@@ -112,7 +116,7 @@ export function RitualCard({
           <button
             type="button"
             onClick={() => onEdit(ritual)}
-            aria-label={t("habits.editLabel", { name: ritual.title })}
+            aria-label={t('habits.editLabel', { name: ritual.title })}
             className="inline-flex h-11 w-11 items-center justify-center rounded-full text-zinc-400 transition-colors hover:text-white"
           >
             <Pencil size={18} aria-hidden="true" />
@@ -121,14 +125,14 @@ export function RitualCard({
         <button
           type="button"
           onClick={() => onDelete(ritual.id)}
-          aria-label={`${t("habits.archive")} ${ritual.title}`}
+          aria-label={`${t('habits.archive')} ${ritual.title}`}
           className="inline-flex h-11 w-11 items-center justify-center rounded-full text-zinc-400 transition-colors hover:text-red-500"
         >
           <Archive size={18} aria-hidden="true" />
         </button>
       </div>
     </article>
-  );
+  )
 }
 
-export default RitualCard;
+export default RitualCard

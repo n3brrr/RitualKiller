@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { useEffect, useState } from 'react'
+import { Link, useLocation } from 'react-router-dom'
 import {
   Ban,
   Heart,
@@ -11,28 +11,28 @@ import {
   UserPlus,
   Users,
   Flag,
-} from "lucide-react";
-import { useAuth } from "@/features/auth/useAuth";
-import { useSocial } from "@/hooks/useSocial";
-import { useI18n } from "@/i18n";
-import { errorMessage } from "@/lib/errors";
-import { adminService } from "@/services/adminService";
-import type { FeedScope } from "@/services/socialService";
-import { formatDateTime } from "@/utils/dates";
-import Loading from "@/components/animations/Loading";
-import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
-import { ErrorState } from "@/components/ui/ErrorState";
-import { ReportDialog } from "@/components/ui/ReportDialog";
-import { Avatar } from "@/components/ui/Avatar";
-import type { Comment, SocialPost } from "@/types";
+} from 'lucide-react'
+import { useAuth } from '@/features/auth/useAuth'
+import { useSocial } from '@/hooks/useSocial'
+import { useI18n } from '@/i18n'
+import { errorMessage } from '@/lib/errors'
+import { adminService } from '@/services/adminService'
+import type { FeedScope } from '@/services/socialService'
+import { formatDateTime } from '@/utils/dates'
+import Loading from '@/components/animations/Loading'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
+import { ErrorState } from '@/components/ui/ErrorState'
+import { ReportDialog } from '@/components/ui/ReportDialog'
+import { Avatar } from '@/components/ui/Avatar'
+import type { Comment, SocialPost } from '@/types'
 
-type Feedback = { tone: "success" | "error"; text: string } | null;
+type Feedback = { tone: 'success' | 'error'; text: string } | null
 
 export function EnhancedSocial() {
-  const { user } = useAuth();
-  const { t, tn, locale } = useI18n();
-  const location = useLocation();
-  const [scope, setScope] = useState<FeedScope>("all");
+  const { user } = useAuth()
+  const { t, tn, locale } = useI18n()
+  const location = useLocation()
+  const [scope, setScope] = useState<FeedScope>('all')
   const {
     posts,
     following,
@@ -50,123 +50,125 @@ export function EnhancedSocial() {
     toggleFollow,
     reportPost,
     deletePost,
-  } = useSocial(scope);
+  } = useSocial(scope)
 
-  const [content, setContent] = useState("");
-  const [feedback, setFeedback] = useState<Feedback>(null);
-  const [openComments, setOpenComments] = useState<string | null>(null);
-  const [drafts, setDrafts] = useState<Record<string, string>>({});
-  const [reportTarget, setReportTarget] = useState<SocialPost | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<SocialPost | null>(null);
-  const [commentTarget, setCommentTarget] = useState<Comment | null>(null);
-  const [deleting, setDeleting] = useState(false);
-  const [pendingAction, setPendingAction] = useState<string | null>(null);
+  const [content, setContent] = useState('')
+  const [feedback, setFeedback] = useState<Feedback>(null)
+  const [openComments, setOpenComments] = useState<string | null>(null)
+  const [drafts, setDrafts] = useState<Record<string, string>>({})
+  const [reportTarget, setReportTarget] = useState<SocialPost | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<SocialPost | null>(null)
+  const [commentTarget, setCommentTarget] = useState<Comment | null>(null)
+  const [deleting, setDeleting] = useState(false)
+  const [pendingAction, setPendingAction] = useState<string | null>(null)
 
   // Shared links point to /app/social#post-<id>: scroll to the post once loaded.
   useEffect(() => {
-    if (!location.hash.startsWith("#post-") || posts.length === 0) return;
-    document.getElementById(location.hash.slice(1))?.scrollIntoView({ block: "center" });
-  }, [location.hash, posts.length]);
+    if (!location.hash.startsWith('#post-') || posts.length === 0) return
+    document
+      .getElementById(location.hash.slice(1))
+      ?.scrollIntoView({ block: 'center' })
+  }, [location.hash, posts.length])
 
-  if (!user) return null;
-  if (isLoading) return <Loading />;
+  if (!user) return null
+  if (isLoading) return <Loading />
   if (error) {
     return (
       <ErrorState
-        title={t("social.errorTitle")}
+        title={t('social.errorTitle')}
         message={errorMessage(error, t)}
         onRetry={() => void refetch()}
       />
-    );
+    )
   }
 
   const suspended = Boolean(
     user.suspendedUntil && new Date(user.suspendedUntil).getTime() > Date.now(),
-  );
+  )
 
   const fail = (actionError: unknown) =>
-    setFeedback({ tone: "error", text: errorMessage(actionError, t) });
+    setFeedback({ tone: 'error', text: errorMessage(actionError, t) })
 
   /** Runs a quick action (like, follow) with per-item busy state and errors. */
   const quick = async (key: string, action: () => Promise<unknown>) => {
-    setPendingAction(key);
+    setPendingAction(key)
     try {
-      await action();
+      await action()
     } catch (actionError) {
-      fail(actionError);
+      fail(actionError)
     } finally {
-      setPendingAction(null);
+      setPendingAction(null)
     }
-  };
+  }
 
   const handlePublish = async (event: React.FormEvent) => {
-    event.preventDefault();
-    setFeedback(null);
+    event.preventDefault()
+    setFeedback(null)
     try {
-      await createPost(content);
-      setContent("");
+      await createPost(content)
+      setContent('')
     } catch (publishError) {
-      fail(publishError);
+      fail(publishError)
     }
-  };
+  }
 
   const handleComment = async (post: SocialPost) => {
-    const draft = drafts[post.id]?.trim();
-    if (!draft) return;
-    setFeedback(null);
+    const draft = drafts[post.id]?.trim()
+    if (!draft) return
+    setFeedback(null)
     try {
-      await addComment({ postId: post.id, content: draft });
-      setDrafts((current) => ({ ...current, [post.id]: "" }));
+      await addComment({ postId: post.id, content: draft })
+      setDrafts((current) => ({ ...current, [post.id]: '' }))
     } catch (commentError) {
-      fail(commentError);
+      fail(commentError)
     }
-  };
+  }
 
   const handleReport = async (reason: string) => {
-    if (!reportTarget) return;
-    await reportPost({ postId: reportTarget.id, reason });
-    setReportTarget(null);
-    setFeedback({ tone: "success", text: t("social.reportSent") });
-  };
+    if (!reportTarget) return
+    await reportPost({ postId: reportTarget.id, reason })
+    setReportTarget(null)
+    setFeedback({ tone: 'success', text: t('social.reportSent') })
+  }
 
   const sharePost = (post: SocialPost) => {
-    const url = `${window.location.origin}/app/social#post-${post.id}`;
+    const url = `${window.location.origin}/app/social#post-${post.id}`
     void navigator.clipboard
       ?.writeText(url)
-      .then(() => setFeedback({ tone: "success", text: t("social.copied") }))
-      .catch(() => setFeedback({ tone: "error", text: t("social.copyError") }));
-  };
+      .then(() => setFeedback({ tone: 'success', text: t('social.copied') }))
+      .catch(() => setFeedback({ tone: 'error', text: t('social.copyError') }))
+  }
 
   const confirmDelete = async () => {
-    setFeedback(null);
-    setDeleting(true);
+    setFeedback(null)
+    setDeleting(true)
     try {
-      if (deleteTarget) await deletePost(deleteTarget.id);
+      if (deleteTarget) await deletePost(deleteTarget.id)
       if (commentTarget) {
         // Own comments are deleted directly; moderators use the audited RPC.
         if (commentTarget.authorId === user.id) {
-          await deleteComment(commentTarget.id);
+          await deleteComment(commentTarget.id)
         } else {
-          await adminService.deleteComment(commentTarget.id);
-          await refetch();
+          await adminService.deleteComment(commentTarget.id)
+          await refetch()
         }
       }
     } catch (deleteError) {
-      fail(deleteError);
+      fail(deleteError)
     } finally {
-      setDeleting(false);
-      setDeleteTarget(null);
-      setCommentTarget(null);
+      setDeleting(false)
+      setDeleteTarget(null)
+      setCommentTarget(null)
     }
-  };
+  }
 
   return (
     <div className="space-y-4">
       <header>
         <h1 className="font-display text-2xl font-bold sm:text-3xl">
-          {t("social.title")}
+          {t('social.title')}
         </h1>
-        <p className="text-sm text-zinc-400">{t("social.subtitle")}</p>
+        <p className="text-sm text-zinc-400">{t('social.subtitle')}</p>
       </header>
 
       {suspended && (
@@ -175,17 +177,17 @@ export function EnhancedSocial() {
           className="flex items-start gap-2 rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-300"
         >
           <Ban size={16} className="mt-0.5 shrink-0" aria-hidden="true" />
-          {t("errors.suspended")}
+          {t('errors.suspended')}
         </p>
       )}
 
       {feedback && (
         <p
-          role={feedback.tone === "success" ? "status" : "alert"}
+          role={feedback.tone === 'success' ? 'status' : 'alert'}
           className={`rounded-lg border p-3 text-sm ${
-            feedback.tone === "success"
-              ? "border-ritual-accent/30 bg-ritual-accent/10 text-ritual-accent"
-              : "border-red-500/30 bg-red-500/10 text-red-400"
+            feedback.tone === 'success'
+              ? 'border-ritual-accent/30 bg-ritual-accent/10 text-ritual-accent'
+              : 'border-red-500/30 bg-red-500/10 text-red-400'
           }`}
         >
           {feedback.text}
@@ -198,7 +200,7 @@ export function EnhancedSocial() {
           className="rounded-xl border border-zinc-800 bg-zinc-950 p-4"
         >
           <label htmlFor="post-content" className="sr-only">
-            {t("social.placeholder")}
+            {t('social.placeholder')}
           </label>
           <textarea
             id="post-content"
@@ -206,7 +208,7 @@ export function EnhancedSocial() {
             onChange={(event) => setContent(event.target.value)}
             maxLength={500}
             rows={3}
-            placeholder={t("social.placeholder")}
+            placeholder={t('social.placeholder')}
             aria-describedby="post-content-count"
             className="w-full resize-none rounded-lg border border-zinc-700 bg-black px-4 py-2 text-white outline-none focus:border-ritual-accent"
           />
@@ -218,14 +220,18 @@ export function EnhancedSocial() {
               className="inline-flex min-h-11 items-center gap-2 rounded-lg bg-ritual-accent px-4 font-bold text-black hover:bg-emerald-400 disabled:opacity-50"
             >
               <Send size={14} aria-hidden="true" />
-              {isPosting ? t("common.saving") : t("social.post")}
+              {isPosting ? t('common.saving') : t('social.post')}
             </button>
           </div>
         </form>
       )}
 
-      <div role="tablist" aria-label={t("social.feedLabel")} className="flex gap-2">
-        {(["all", "following"] as const).map((value) => (
+      <div
+        role="tablist"
+        aria-label={t('social.feedLabel')}
+        className="flex gap-2"
+      >
+        {(['all', 'following'] as const).map((value) => (
           <button
             key={value}
             type="button"
@@ -234,11 +240,13 @@ export function EnhancedSocial() {
             onClick={() => setScope(value)}
             className={`min-h-11 rounded-lg border px-4 text-sm font-bold ${
               scope === value
-                ? "border-ritual-accent bg-ritual-accent/10 text-ritual-accent"
-                : "border-zinc-800 text-zinc-400 hover:text-zinc-200"
+                ? 'border-ritual-accent bg-ritual-accent/10 text-ritual-accent'
+                : 'border-zinc-800 text-zinc-400 hover:text-zinc-200'
             }`}
           >
-            {value === "all" ? t("social.scopeAll") : t("social.scopeFollowing")}
+            {value === 'all'
+              ? t('social.scopeAll')
+              : t('social.scopeFollowing')}
           </button>
         ))}
       </div>
@@ -250,14 +258,18 @@ export function EnhancedSocial() {
             size={28}
             aria-hidden="true"
           />
-          <p>{scope === "following" ? t("social.emptyFollowing") : t("social.empty")}</p>
+          <p>
+            {scope === 'following'
+              ? t('social.emptyFollowing')
+              : t('social.empty')}
+          </p>
         </div>
       ) : (
         <ul className="space-y-3">
           {posts.map((post) => {
-            const isOwn = post.authorId === user.id;
-            const isFollowing = following.includes(post.authorId);
-            const profileUrl = `/app/profile/${encodeURIComponent(post.author)}`;
+            const isOwn = post.authorId === user.id
+            const isFollowing = following.includes(post.authorId)
+            const profileUrl = `/app/profile/${encodeURIComponent(post.author)}`
 
             return (
               <li
@@ -280,7 +292,7 @@ export function EnhancedSocial() {
                         {post.author}
                         {post.isSystem && (
                           <span className="ml-2 text-xs uppercase text-zinc-400">
-                            {t("social.system")}
+                            {t('social.system')}
                           </span>
                         )}
                       </span>
@@ -305,8 +317,8 @@ export function EnhancedSocial() {
                       aria-pressed={isFollowing}
                       className={`inline-flex min-h-11 items-center gap-1 rounded-lg border px-2 text-xs disabled:opacity-50 ${
                         isFollowing
-                          ? "border-zinc-700 text-zinc-400"
-                          : "border-ritual-accent/40 text-ritual-accent"
+                          ? 'border-zinc-700 text-zinc-400'
+                          : 'border-ritual-accent/40 text-ritual-accent'
                       }`}
                     >
                       {isFollowing ? (
@@ -314,7 +326,7 @@ export function EnhancedSocial() {
                       ) : (
                         <UserPlus size={14} aria-hidden="true" />
                       )}
-                      {isFollowing ? t("social.following") : t("social.follow")}
+                      {isFollowing ? t('social.following') : t('social.follow')}
                     </button>
                   )}
                 </div>
@@ -333,16 +345,16 @@ export function EnhancedSocial() {
                     }
                     disabled={pendingAction === `like-${post.id}`}
                     aria-pressed={post.likedByMe}
-                    aria-label={tn("social.likesLabel", post.likes)}
+                    aria-label={tn('social.likesLabel', post.likes)}
                     className={`inline-flex min-h-11 items-center gap-1 rounded-lg px-3 text-xs disabled:opacity-50 ${
                       post.likedByMe
-                        ? "text-red-400"
-                        : "text-zinc-400 hover:text-zinc-200"
+                        ? 'text-red-400'
+                        : 'text-zinc-400 hover:text-zinc-200'
                     }`}
                   >
                     <Heart
                       size={16}
-                      fill={post.likedByMe ? "currentColor" : "none"}
+                      fill={post.likedByMe ? 'currentColor' : 'none'}
                       aria-hidden="true"
                     />
                     {post.likes}
@@ -355,7 +367,10 @@ export function EnhancedSocial() {
                     }
                     aria-expanded={openComments === post.id}
                     aria-controls={`comments-${post.id}`}
-                    aria-label={tn("social.commentsLabel", post.comments.length)}
+                    aria-label={tn(
+                      'social.commentsLabel',
+                      post.comments.length,
+                    )}
                     className="inline-flex min-h-11 items-center gap-1 rounded-lg px-3 text-xs text-zinc-400 hover:text-zinc-200"
                   >
                     <MessageCircle size={16} aria-hidden="true" />
@@ -365,7 +380,7 @@ export function EnhancedSocial() {
                   <button
                     type="button"
                     onClick={() => sharePost(post)}
-                    aria-label={t("social.copyLink")}
+                    aria-label={t('social.copyLink')}
                     className="inline-flex h-11 w-11 items-center justify-center rounded-lg text-zinc-400 hover:text-zinc-300"
                   >
                     <Share2 size={16} aria-hidden="true" />
@@ -375,7 +390,7 @@ export function EnhancedSocial() {
                     <button
                       type="button"
                       onClick={() => setReportTarget(post)}
-                      aria-label={t("social.report")}
+                      aria-label={t('social.report')}
                       className="inline-flex h-11 w-11 items-center justify-center rounded-lg text-zinc-400 hover:text-yellow-500"
                     >
                       <Flag size={16} aria-hidden="true" />
@@ -386,7 +401,7 @@ export function EnhancedSocial() {
                     <button
                       type="button"
                       onClick={() => setDeleteTarget(post)}
-                      aria-label={t("social.delete")}
+                      aria-label={t('social.delete')}
                       className="inline-flex h-11 w-11 items-center justify-center rounded-lg text-zinc-400 hover:text-red-500"
                     >
                       <Trash2 size={16} aria-hidden="true" />
@@ -400,7 +415,9 @@ export function EnhancedSocial() {
                     className="mt-2 space-y-2 border-t border-zinc-900 pt-2"
                   >
                     {post.comments.length === 0 && (
-                      <p className="text-xs text-zinc-400">{t("social.noComments")}</p>
+                      <p className="text-xs text-zinc-400">
+                        {t('social.noComments')}
+                      </p>
                     )}
                     {post.comments.map((comment) => (
                       <div
@@ -414,13 +431,15 @@ export function EnhancedSocial() {
                           >
                             {comment.author}
                           </Link>
-                          <span className="ml-2 text-zinc-400">{comment.content}</span>
+                          <span className="ml-2 text-zinc-400">
+                            {comment.content}
+                          </span>
                         </p>
                         {(comment.authorId === user.id || user.isAdmin) && (
                           <button
                             type="button"
                             onClick={() => setCommentTarget(comment)}
-                            aria-label={t("social.deleteComment")}
+                            aria-label={t('social.deleteComment')}
                             className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-zinc-400 hover:text-red-500"
                           >
                             <Trash2 size={14} aria-hidden="true" />
@@ -432,14 +451,14 @@ export function EnhancedSocial() {
                     {!suspended && (
                       <form
                         onSubmit={(event) => {
-                          event.preventDefault();
-                          void handleComment(post);
+                          event.preventDefault()
+                          void handleComment(post)
                         }}
                         className="flex gap-2"
                       >
                         <input
                           type="text"
-                          value={drafts[post.id] ?? ""}
+                          value={drafts[post.id] ?? ''}
                           onChange={(event) =>
                             setDrafts((current) => ({
                               ...current,
@@ -447,13 +466,13 @@ export function EnhancedSocial() {
                             }))
                           }
                           maxLength={500}
-                          placeholder={t("social.comment")}
-                          aria-label={t("social.comment")}
+                          placeholder={t('social.comment')}
+                          aria-label={t('social.comment')}
                           className="min-h-11 flex-1 rounded-lg border border-zinc-700 bg-black px-3 text-sm text-white outline-none focus:border-ritual-accent"
                         />
                         <button
                           type="submit"
-                          aria-label={t("social.sendComment")}
+                          aria-label={t('social.sendComment')}
                           className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg border border-zinc-700 px-3 text-zinc-300 hover:border-ritual-accent"
                         >
                           <Send size={16} aria-hidden="true" />
@@ -463,7 +482,7 @@ export function EnhancedSocial() {
                   </div>
                 )}
               </li>
-            );
+            )
           })}
         </ul>
       )}
@@ -475,7 +494,7 @@ export function EnhancedSocial() {
           disabled={isLoadingMore}
           className="inline-flex min-h-11 w-full items-center justify-center rounded-lg border border-zinc-800 text-sm text-zinc-300 hover:border-ritual-accent disabled:opacity-50"
         >
-          {isLoadingMore ? t("common.loading") : t("social.loadMore")}
+          {isLoadingMore ? t('common.loading') : t('social.loadMore')}
         </button>
       )}
 
@@ -487,23 +506,27 @@ export function EnhancedSocial() {
 
       <ConfirmDialog
         open={Boolean(deleteTarget) || Boolean(commentTarget)}
-        title={commentTarget ? t("social.deleteCommentTitle") : t("social.deleteTitle")}
+        title={
+          commentTarget
+            ? t('social.deleteCommentTitle')
+            : t('social.deleteTitle')
+        }
         description={
           commentTarget
-            ? t("social.deleteCommentDescription")
-            : t("social.deleteDescription")
+            ? t('social.deleteCommentDescription')
+            : t('social.deleteDescription')
         }
-        confirmLabel={t("common.delete")}
+        confirmLabel={t('common.delete')}
         destructive
         busy={deleting}
         onConfirm={() => void confirmDelete()}
         onClose={() => {
-          setDeleteTarget(null);
-          setCommentTarget(null);
+          setDeleteTarget(null)
+          setCommentTarget(null)
         }}
       />
     </div>
-  );
+  )
 }
 
-export default EnhancedSocial;
+export default EnhancedSocial

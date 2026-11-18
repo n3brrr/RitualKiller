@@ -1,7 +1,11 @@
-import { supabase } from "@/lib/supabase";
-import { browserTimeZone } from "@/services/settingsService";
+import { supabase } from '@/lib/supabase'
+import { browserTimeZone } from '@/services/settingsService'
 
-export async function signUpWithEmail(email: string, password: string, username: string) {
+export async function signUpWithEmail(
+  email: string,
+  password: string,
+  username: string,
+) {
   return supabase.auth.signUp({
     email,
     password,
@@ -9,21 +13,21 @@ export async function signUpWithEmail(email: string, password: string, username:
       emailRedirectTo: `${window.location.origin}/auth/callback`,
       data: { username, timezone: browserTimeZone() },
     },
-  });
+  })
 }
 
 export async function signInWithEmail(email: string, password: string) {
-  return supabase.auth.signInWithPassword({ email, password });
+  return supabase.auth.signInWithPassword({ email, password })
 }
 
 export async function requestPasswordReset(email: string) {
   return supabase.auth.resetPasswordForEmail(email, {
     redirectTo: `${window.location.origin}/reset-password`,
-  });
+  })
 }
 
 export async function updatePassword(newPassword: string) {
-  return supabase.auth.updateUser({ password: newPassword });
+  return supabase.auth.updateUser({ password: newPassword })
 }
 
 /**
@@ -39,12 +43,12 @@ export async function changePassword(
   const { error: verifyError } = await supabase.auth.signInWithPassword({
     email,
     password: currentPassword,
-  });
-  if (verifyError) return { error: verifyError, wrongCurrent: true };
-  const { error } = await supabase.auth.updateUser({ password: newPassword });
-  return { error, wrongCurrent: false };
+  })
+  if (verifyError) return { error: verifyError, wrongCurrent: true }
+  const { error } = await supabase.auth.updateUser({ password: newPassword })
+  return { error, wrongCurrent: false }
 }
 
 export async function signOut() {
-  return supabase.auth.signOut();
+  return supabase.auth.signOut()
 }
